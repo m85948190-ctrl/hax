@@ -141,6 +141,7 @@ export default async function handler(req, res) {
     const result = await executeTool(parsed.name, parsed.arg);
     return send(res, { ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode, command: '/' + parsed.name, capability, capabilities, result, trace: [{ type: 'understand', input: clean(input, 2000), intent: parsed.name }, { type: 'tool_start', tool: KAI_CONTROL.identity.name, args: { command: '/' + parsed.name, url: parsed.arg || null } }] });
   } catch (e) {
+    console.error('KAI789 execution error:', e?.stack || e);
     return send(res, { ok: false, engine: KAI_CONTROL.identity.name, provider: null, providerRequired: KAI_CONTROL.identity.providerRequired, error: e?.message || 'KAI789 execution failed.' }, 400);
   }
 }
