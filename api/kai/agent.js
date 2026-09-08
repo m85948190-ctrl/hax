@@ -119,10 +119,23 @@ async function executeTool(name, arg) {
   throw new Error('KAI execution tool is not implemented.');
 }
 
-export default async function handler(req, res) {
-  if (!(await verifyKaiAuthorization(req))) return send(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
+const PUBLIC_KAI_CAPABILITIES = new Set([
+  'visit_page', 'check_status', 'get_headers', 'get_cookies',
+  'scrape_site', 'scrape_text', 'scrape_html', 'extract_links', 'extract_images',
+  'get_metadata', 'check_robots', 'check_sitemap', 'check_seo',
+  'check_performance', 'get_page_size', 'technology_detect', 'generate_report', 'generate_summary'
+]);
 
+function extractUrls(value) {
+  return [...new Set((String(value || '').match(/https?:\/\/[^\s<>'"`]+/gi) || []).map(raw => {
+    try { return new URL(raw.replace(/[),.;!?]+$/g, '')).toString(); } catch { return null; }
+  }).filter(Boolean))].slice(0, 100);
+}
+
+export default async function handler(req, res) {
   const capabilities = normalizeKaiCapabilities(req.body?.capabilities);
+  const publicSafeRequest = capabilities.length > 0 && capabilities.every(c => PUBLIC_KAI_CAPABILITIES.has(c));
+  if (!publicSafeRequest && !(await verifyKaiAuthorization(req))) return send(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
   if (req.method === 'GET') {
     return send(res, { ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode, providerRequired: KAI_CONTROL.identity.providerRequired, capabilities, tools: toolDefinitions(capabilities), policy: KAI_CONTROL.policy, behavior: KAI_CONTROL.behavior, personality: KAI_CONTROL.personality });
   }
@@ -130,6 +143,20 @@ export default async function handler(req, res) {
   try {
     const input = req.body?.command || req.body?.message || req.body?.objective || '';
     const parsed = kaiIntent(input);
+    const urls = extractUrls(input);
+    if (publicSafeRequest && urls.length > 1 && ['status', 'visit', 'report', 'headers', 'cookies', 'text', 'scrape', 'html', 'links', 'images', 'metadata', 'robots', 'sitemap', 'seo', 'performance', 'size', 'tech'].includes(parsed.name)) {
+      const results = [];
+      for (const url of urls) {
+        try { results.push({ url, ok: true, result: await executeTool(parsed.name, url) }); }
+        catch (e) { results.push({ url, ok: false, error: e?.message || 'Inspection failed.' }); }
+      }
+      return send(res, {
+        ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode,
+        command: '/' + parsed.name, capability: capabilityForCommand(parsed.name), capabilities,
+        batch: true, count: results.length, results,
+        trace: [{ type: 'understand', input: clean(input, 2000), intent: parsed.name }, { type: 'batch_complete', count: results.length }]
+      });
+    }
     if (parsed.name === 'chat') {
       return send(res, { ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode, command: 'conversation', capability: null, capabilities, result: { response: clean(parsed.reply) }, trace: [{ type: 'understand', input: clean(input, 2000), intent: 'conversation' }, { type: 'response', tool: KAI_CONTROL.identity.name }] });
     }
