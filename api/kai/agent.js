@@ -190,7 +190,16 @@ function parse(input) {
   const urlMatch = s.match(/https?:\/\/[^\s<]+/i);
   const bareMatch = s.match(/\b(?:www\.)?[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+(?:\/[^\s<]*)?/i);
   if (!urlMatch && !bareMatch) {
-    return { name: 'chat', arg: '', reply: 'I understand the request, but I need a public website address for a web inspection. Send me a domain such as example.com and tell me what you want to know. I’ll choose the right inspection automatically.' };
+    // No URL means this is ordinary conversation, not a failed web task.
+    // KAI789 stays provider-free, so keep the reply local instead of dumping
+    // the old "send me a website" fallback on every non-web message.
+    if (/\b(just\s+chat|let'?s\s+chat|chat|talk|conversation|talking)\b/i.test(s)) {
+      return { name: 'chat', arg: '', reply: 'Yeah bro 😄 — just chat. I’m listening. Say whatever you want and we’ll go from there.' };
+    }
+    if (/^(ok|okay|alright|sure|yep|yeah|yes|no|nah|cool|nice|great|bro)\b/i.test(s)) {
+      return { name: 'chat', arg: '', reply: 'Yeah bro 😄 I’m here. What’s on your mind?' };
+    }
+    return { name: 'chat', arg: '', reply: 'Got you. I’m here to chat normally too — no website is needed unless you actually want me to inspect one.' };
   }
   const arg = (urlMatch ? urlMatch[0] : 'https://' + bareMatch[0]).replace(/[),.]+$/, '');
   const t = s.toLowerCase();
