@@ -153,20 +153,42 @@ function capabilityFor(command) { return COMMANDS[command] || null; }
 
 function parse(input) {
   let s = String(input || '').trim();
-  if (!s) throw new Error('Empty KAI789 command. Use /help.');
+  if (!s) throw new Error('Tell KAI what you want me to check or do.');
 
-  // Be forgiving at the command boundary: the Admin Ultimax chat may send a
-  // bare URL or a natural "visit <url>" request. Normalize those into the
-  // canonical slash-command form instead of surfacing a misleading
-  // "connection error" to the user.
-  if (/^https?:\/\//i.test(s)) s = '/visit ' + s;
-  else if (/^visit\s+https?:\/\//i.test(s)) s = '/' + s;
+  // KAI789 is intentionally conversational and provider-free. The small
+  // intent router turns ordinary human requests into safe web operations.
+  if (s.startsWith('/')) {
+    const i = s.indexOf(' ');
+    const name = s.slice(1, i < 0 ? s.length : i).toLowerCase();
+    const arg = i < 0 ? '' : s.slice(i + 1).trim();
+    if (name === 'help') return { name, arg: '' };
+    if (!capabilityFor(name)) throw new Error(`I don't know that web action yet. Try asking me to visit, inspect, scrape, check SEO, detect technology, or generate a report.`);
+    if (!arg) throw new Error(`Tell me which URL you want me to ${name}.`);
+    return { name, arg };
+  }
 
-  if (!s.startsWith('/')) throw new Error('Use a KAI789 command beginning with /. Example: /visit https://example.com');
-  const i = s.indexOf(' '); const name = s.slice(1, i < 0 ? s.length : i).toLowerCase(); const arg = i < 0 ? '' : s.slice(i + 1).trim();
-  if (name === 'help') return { name, arg: '' };
-  if (!capabilityFor(name)) throw new Error(`Unknown command /${name}. Use /help.`);
-  if (!arg) throw new Error(`/${name} requires a URL or domain.`);
+  const urlMatch = s.match(/https?:\/\/[^\s<]+/i);
+  if (!urlMatch) {
+    if (/\b(help|what can you do|capabilit)/i.test(s)) return { name: 'help', arg: '' };
+    throw new Error('Give me a public web URL and tell me what you want checked.');
+  }
+  const arg = urlMatch[0].replace(/[),.]+$/, '');
+  const t = s.toLowerCase();
+  let name = 'visit';
+  if (/\b(report|full report|security report|audit)\b/.test(t)) name = 'report';
+  else if (/\b(seo|search engine|meta tag|title tag)\b/.test(t)) name = 'seo';
+  else if (/\b(technology|technologies|tech stack|framework|built with)\b/.test(t)) name = 'tech';
+  else if (/\b(performance|speed|fast|slow|response time|load time)\b/.test(t)) name = 'performance';
+  else if (/\b(headers|http headers|security headers)\b/.test(t)) name = 'headers';
+  else if (/\b(cookies|cookie)\b/.test(t)) name = 'cookies';
+  else if (/\b(images|pictures|photos)\b/.test(t)) name = 'images';
+  else if (/\b(links|URLs|urls)\b/.test(t)) name = 'links';
+  else if (/\b(html|source code|page source)\b/.test(t)) name = 'html';
+  else if (/\b(text|content|read|scrape|extract)\b/.test(t)) name = 'text';
+  else if (/\b(status|online|up|down|reachable)\b/.test(t)) name = 'status';
+  else if (/\b(robots)\b/.test(t)) name = 'robots';
+  else if (/\b(sitemap)\b/.test(t)) name = 'sitemap';
+  else if (/\b(size|weight|bytes)\b/.test(t)) name = 'size';
   return { name, arg };
 }
 
