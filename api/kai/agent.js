@@ -55,8 +55,11 @@ async function verifyAdmin(req) {
   const [issued, signature] = token.split('.');
   const issuedAt = Number(issued);
   if (!Number.isFinite(issuedAt) || !signature) return false;
-  const now = Date.now();
-  if (issuedAt > now + 60000 || now - issuedAt > 3600000) return false;
+  // Admin69 auth issues Unix timestamps in seconds. Keep verification in the
+  // same unit; the previous verifier compared seconds against Date.now() ms,
+  // making every freshly issued Admin69 token appear expired.
+  const now = Math.floor(Date.now() / 1000);
+  if (issuedAt > now + 60 || now - issuedAt > 3600) return false;
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const expected = b64url(new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(String(issuedAt)))));
   return timingSafeEqual(new TextEncoder().encode(expected), new TextEncoder().encode(signature));
