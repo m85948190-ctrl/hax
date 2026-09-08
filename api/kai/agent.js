@@ -104,6 +104,40 @@ async function executeTool(name, arg) {
   }
   if (name === 'size') return { url: u.toString(), bytes: p.bytes, kilobytes: Number((p.bytes / 1024).toFixed(2)) };
   if (name === 'performance') return { url: u.toString(), status: p.response.status, responseTimeMs: Date.now() - started, responseSizeBytes: p.bytes };
+  if (name === 'audit') {
+    const pageLinks = links(base, p.body);
+    const scripts = attrs(p.body, 'script', 'src');
+    const forms = (String(p.body).match(/<form\\b/gi) || []).length;
+    const securityHeaders = {
+      'strict-transport-security': h.get('strict-transport-security'),
+      'content-security-policy': h.get('content-security-policy'),
+      'x-content-type-options': h.get('x-content-type-options'),
+      'x-frame-options': h.get('x-frame-options'),
+      'referrer-policy': h.get('referrer-policy'),
+      'permissions-policy': h.get('permissions-policy'),
+      'cross-origin-opener-policy': h.get('cross-origin-opener-policy'),
+      'cross-origin-resource-policy': h.get('cross-origin-resource-policy')
+    };
+    const findings = [];
+    if (u.protocol === 'https:' && !securityHeaders['strict-transport-security']) findings.push({ severity: 'low', id: 'missing-hsts', title: 'HSTS header not observed', evidence: 'Strict-Transport-Security response header is absent.' });
+    if (!securityHeaders['content-security-policy']) findings.push({ severity: 'medium', id: 'missing-csp', title: 'Content-Security-Policy not observed', evidence: 'CSP response header is absent.' });
+    if (!securityHeaders['x-content-type-options']) findings.push({ severity: 'low', id: 'missing-nosniff', title: 'X-Content-Type-Options not observed', evidence: 'X-Content-Type-Options response header is absent.' });
+    if (!securityHeaders['x-frame-options'] && !securityHeaders['content-security-policy']?.toLowerCase().includes('frame-ancestors')) findings.push({ severity: 'low', id: 'framing-policy-missing', title: 'Clickjacking protection not observed', evidence: 'Neither X-Frame-Options nor CSP frame-ancestors was observed.' });
+    if (u.protocol === 'https:' && /<(?:img|script|link|iframe|source|video|audio)\\b[^>]+(?:src|href)\\s*=\\s*["']http:/i.test(p.body)) findings.push({ severity: 'medium', id: 'mixed-content', title: 'Potential mixed content', evidence: 'The HTML contains an HTTP resource reference on an HTTPS page.' });
+    if (forms && u.protocol === 'https:' && /<form\\b[^>]*action\\s*=\\s*["']http:/i.test(p.body)) findings.push({ severity: 'medium', id: 'insecure-form-action', title: 'Form submits over HTTP', evidence: 'An HTML form action uses http://.' });
+    if (scripts.some(s => /\.map(?:[?#]|$)/i.test(s))) findings.push({ severity: 'info', id: 'sourcemap-reference', title: 'Source-map reference observed', evidence: 'A script source appears to reference a .map file.' });
+    const checks = {
+      https: u.protocol === 'https:',
+      statusOk: p.response.status >= 200 && p.response.status < 400,
+      hsts: !!securityHeaders['strict-transport-security'],
+      csp: !!securityHeaders['content-security-policy'],
+      nosniff: !!securityHeaders['x-content-type-options'],
+      framingProtection: !!securityHeaders['x-frame-options'] || !!securityHeaders['content-security-policy']?.toLowerCase().includes('frame-ancestors'),
+      mixedContent: /<(?:img|script|link|iframe|source|video|audio)\\b[^>]+(?:src|href)\\s*=\\s*["']http:/i.test(p.body),
+      insecureFormAction: /<form\\b[^>]*action\\s*=\\s*["']http:/i.test(p.body)
+    };
+    return { url: u.toString(), finalUrl: base, status: p.response.status, responseTimeMs: Date.now() - started, responseSizeBytes: p.bytes, title: title(p.body), technologies: technologies(p.body, h), securityHeaders, checks, findings, counts: { links: pageLinks.length, images: links(base, p.body, 'img', 'src').length, scripts: scripts.length, forms, findings: findings.length }, note: 'Passive web inspection only; no exploit payloads or destructive actions were executed.' };
+  }
   if (name === 'seo') {
     const t = title(p.body); const m = meta(p.body); const d = m.find(x => x.name.toLowerCase() === 'description'); const vp = m.find(x => x.name.toLowerCase() === 'viewport');
     const h1 = (p.body.match(/<h1\b[^>]*>[\s\S]*?<\/h1>/gi) || []).map(text);
@@ -123,7 +157,7 @@ const PUBLIC_KAI_CAPABILITIES = new Set([
   'visit_page', 'check_status', 'get_headers', 'get_cookies',
   'scrape_site', 'scrape_text', 'scrape_html', 'extract_links', 'extract_images',
   'get_metadata', 'check_robots', 'check_sitemap', 'check_seo',
-  'check_performance', 'get_page_size', 'technology_detect', 'generate_report', 'generate_summary'
+  'check_performance', 'get_page_size', 'technology_detect', 'generate_report', 'web_security_audit', 'generate_summary'
 ]);
 
 function extractUrls(value) {
@@ -144,7 +178,7 @@ export default async function handler(req, res) {
     const input = req.body?.command || req.body?.message || req.body?.objective || '';
     const parsed = kaiIntent(input);
     const urls = extractUrls(input);
-    if (publicSafeRequest && urls.length > 1 && ['status', 'visit', 'report', 'headers', 'cookies', 'text', 'scrape', 'html', 'links', 'images', 'metadata', 'robots', 'sitemap', 'seo', 'performance', 'size', 'tech'].includes(parsed.name)) {
+    if (publicSafeRequest && urls.length > 1 && ['status', 'visit', 'report', 'audit', 'headers', 'cookies', 'text', 'scrape', 'html', 'links', 'images', 'metadata', 'robots', 'sitemap', 'seo', 'performance', 'size', 'tech'].includes(parsed.name)) {
       const results = [];
       for (const url of urls) {
         try { results.push({ url, ok: true, result: await executeTool(parsed.name, url) }); }
