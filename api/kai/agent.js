@@ -168,11 +168,12 @@ function parse(input) {
   }
 
   const urlMatch = s.match(/https?:\/\/[^\s<]+/i);
-  if (!urlMatch) {
-    if (/\b(help|what can you do|capabilit)/i.test(s)) return { name: 'help', arg: '' };
-    throw new Error('Give me a public web URL and tell me what you want checked.');
+  const bareMatch = s.match(/\b(?:www\.)?[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+(?:\/[^\s<]*)?/i);
+  if (!urlMatch && !bareMatch) {
+    if (/\b(help|what can you do|capabilit|hello|hi|hey|who are you)\b/i.test(s)) return { name: 'help', arg: '' };
+    throw new Error('Give me a public web URL and tell me what you want checked. You can use example.com or https://example.com.');
   }
-  const arg = urlMatch[0].replace(/[),.]+$/, '');
+  const arg = (urlMatch ? urlMatch[0] : 'https://' + bareMatch[0]).replace(/[),.]+$/, '');
   const t = s.toLowerCase();
   let name = 'visit';
   if (/\b(report|full report|security report|audit)\b/.test(t)) name = 'report';
