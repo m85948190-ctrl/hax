@@ -151,9 +151,27 @@ function technologies(html, headers) {
 
 function capabilityFor(command) { return COMMANDS[command] || null; }
 
+function conversationReply(input) {
+  const s = String(input || '').trim();
+  if (/^(hi|hello|hey|yo|hiya|good morning|good afternoon|good evening)\b/i.test(s)) {
+    return "Hi — I’m KAI789. I understand normal requests, choose the right safe web action, and explain the result. You don’t need to type slash commands. Tell me what you want, for example: ‘check the SEO of example.com’, ‘is example.com online?’, or ‘what technology is this site using?’";
+  }
+  if (/\b(who are you|what are you)\b/i.test(s)) {
+    return "I’m KAI789, HAxBRO’s provider-free web inspection engine. I understand natural-language requests and use safe public-web inspection when a website check is needed.";
+  }
+  if (/\b(what can you do|capabilities|help)\b/i.test(s)) {
+    return "I can understand requests to visit and inspect public websites, check status, headers and cookies, read or scrape text, inspect HTML, find links and images, read metadata, check robots.txt and sitemaps, detect technologies, review SEO, measure response performance and size, and generate a security-oriented report. Just describe what you need in normal language.";
+  }
+  if (/\b(thanks|thank you|thx)\b/i.test(s)) return "You’re welcome. Give me the next thing you want checked or explained.";
+  return null;
+}
+
 function parse(input) {
   let s = String(input || '').trim();
   if (!s) throw new Error('Tell KAI what you want me to check or do.');
+
+  const conversational = conversationReply(s);
+  if (conversational) return { name: 'chat', arg: '', reply: conversational };
 
   // KAI789 is intentionally conversational and provider-free. The small
   // intent router turns ordinary human requests into safe web operations.
@@ -170,8 +188,7 @@ function parse(input) {
   const urlMatch = s.match(/https?:\/\/[^\s<]+/i);
   const bareMatch = s.match(/\b(?:www\.)?[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+(?:\/[^\s<]*)?/i);
   if (!urlMatch && !bareMatch) {
-    if (/\b(help|what can you do|capabilit|hello|hi|hey|who are you)\b/i.test(s)) return { name: 'help', arg: '' };
-    throw new Error('Give me a public web URL and tell me what you want checked. You can use example.com or https://example.com.');
+    return { name: 'chat', arg: '', reply: 'I understand the request, but I need a public website address for a web inspection. Send me a domain such as example.com and tell me what you want to know. I’ll choose the right inspection automatically.' };
   }
   const arg = (urlMatch ? urlMatch[0] : 'https://' + bareMatch[0]).replace(/[),.]+$/, '');
   const t = s.toLowerCase();
@@ -197,8 +214,9 @@ function help(capabilities) {
   return Object.entries(COMMANDS).filter(([, cap]) => capabilities.includes(cap)).map(([c]) => `/${c} <url>`);
 }
 
-async function run(name, arg, capabilities) {
-  if (name === 'help') return { commands: help(capabilities), provider: null };
+async function run(name, arg, capabilities, reply = '') {
+  if (name === 'chat') return { response: clean(reply) };
+  if (name === 'help') return { response: 'Tell me what you need in normal language. I will choose the appropriate safe web inspection automatically.', commands: help(capabilities) };
   const capability = capabilityFor(name);
   if (!capabilities.includes(capability)) throw new Error(`Capability '${capability}' is disabled in the KAI789 capability box.`);
   const u = validateUrl(arg);
@@ -244,14 +262,15 @@ async function run(name, arg, capabilities) {
 
 export default async function handler(req, res) {
   if (!(await verifyAdmin(req))) return send(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
-  if (req.method === 'GET') return send(res, { ok: true, engine: 'KAI789', provider: null, providerRequired: false, capabilities: KAI_ULTIMAX_PERMISSIONS.enabledCapabilities, commands: help(KAI_ULTIMAX_PERMISSIONS.enabledCapabilities) });
+  if (req.method === 'GET') return send(res, { ok: true, engine: 'KAI789', mode: 'ADMIN ULTIMAX', providerRequired: false, behavior: 'conversational provider-free web inspection', capabilities: KAI_ULTIMAX_PERMISSIONS.enabledCapabilities });
   try {
     const requested = Array.isArray(req.body?.capabilities) ? req.body.capabilities : KAI_ULTIMAX_PERMISSIONS.enabledCapabilities;
     const capabilities = normalizeKaiCapabilities(requested);
     const input = req.body?.command || req.body?.message || req.body?.objective || '';
     const parsed = parse(input);
-    const result = await run(parsed.name, parsed.arg, capabilities);
-    return send(res, { ok: true, engine: 'KAI789', mode: 'ADMIN ULTIMAX', provider: null, providerRequired: false, command: '/' + parsed.name, capability: capabilityFor(parsed.name), capabilities, result, trace: [{ type: 'tool_start', tool: 'KAI789', args: { command: '/' + parsed.name, url: parsed.arg || null } }, { type: 'tool_result', tool: 'KAI789', ok: true, url: parsed.arg || null }] });
+    const result = await run(parsed.name, parsed.arg, capabilities, parsed.reply || '');
+    const payload = { ok: true, engine: 'KAI789', mode: 'ADMIN ULTIMAX', command: parsed.name === 'chat' ? 'conversation' : '/' + parsed.name, capability: capabilityFor(parsed.name), capabilities, result, trace: [{ type: 'understand', input: clean(input, 2000), intent: parsed.name }, { type: parsed.name === 'chat' ? 'response' : 'tool_start', tool: 'KAI789', args: { command: parsed.name === 'chat' ? 'conversation' : '/' + parsed.name, url: parsed.arg || null } }] };
+    return send(res, payload);
   } catch (e) {
     return send(res, { ok: false, engine: 'KAI789', provider: null, providerRequired: false, error: e?.message || 'KAI789 execution failed.' }, 400);
   }
