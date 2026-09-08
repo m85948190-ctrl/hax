@@ -163,6 +163,8 @@ function conversationReply(input) {
     return "I can understand requests to visit and inspect public websites, check status, headers and cookies, read or scrape text, inspect HTML, find links and images, read metadata, check robots.txt and sitemaps, detect technologies, review SEO, measure response performance and size, and generate a security-oriented report. Just describe what you need in normal language.";
   }
   if (/\b(thanks|thank you|thx)\b/i.test(s)) return "You’re welcome. Give me the next thing you want checked or explained.";
+  if (/^(ok|okay|alright|cool|nice|great|ohh|oh|just chat|let'?s chat|chat|talk)\b/i.test(s)) return "Yep — we can just chat. I’m here. You can ask me anything, talk through an idea, or switch to a website inspection whenever you want.";
+  if (/\b(how are you|how's it going|what's up|whats up)\b/i.test(s)) return "I’m good and ready. We can just chat, or you can give me a website task whenever you want.";
   return null;
 }
 
