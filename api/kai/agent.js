@@ -9,11 +9,10 @@ For HAxBRO security work, actively discover and safely validate weaknesses in th
 Return a concise report with MODE, ACTIONS, FINDINGS, EVIDENCE, ATTACK PATH, RISK, FIX, and VERIFY. Do not merely print tool logs. Findings must be based on tool evidence; distinguish confirmed findings from hypotheses.`;
 const PROVIDERS=[
   {name:'OPENROUTER_API_KEY_1',type:'openrouter',model:'openrouter/auto',url:'https://openrouter.ai/api/v1/chat/completions'},
-  {name:'OPENROUTER_API_KEY_2',type:'openrouter',model:'openrouter/auto',url:'https://openrouter.ai/api/v1/chat/completions'},
-  {name:'OPENROUTER_API_KEY_3',type:'openrouter',model:'openrouter/auto',url:'https://openrouter.ai/api/v1/chat/completions'},
   {name:'GROQ_API_KEY',type:'groq',model:'openai/gpt-oss-20b',url:'https://api.groq.com/openai/v1/chat/completions'},
+  {name:'OPENROUTER_API_KEY_2',type:'openrouter',model:'openrouter/auto',url:'https://openrouter.ai/api/v1/chat/completions'},
   {name:'GROQ_API_KEY_2',type:'groq',model:'openai/gpt-oss-20b',url:'https://api.groq.com/openai/v1/chat/completions'},
-  {name:'GROQ_API_KEY_3',type:'groq',model:'openai/gpt-oss-20b',url:'https://api.groq.com/openai/v1/chat/completions'}
+  {name:'OPENROUTER_API_KEY_3',type:'openrouter',model:'openrouter/auto',url:'https://openrouter.ai/api/v1/chat/completions'}
 ];
 const TARGET_HOST='haxbro.hatchable.site';
 
@@ -58,11 +57,11 @@ async function runWithProvider(provider,key,objective){
   const messages=[{role:'system',content:SYSTEM},{role:'user',content:objective}];const trace=[];
   for(let step=0;step<8;step++){
     const r=await fetch(provider.url,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${key}`},body:JSON.stringify({model:provider.model,messages,tools:provider.type==='openrouter'?TOOL_DEFS:TOOL_DEFS,tool_choice:'auto',max_tokens:1800,temperature:0.2})});
-    const raw=await r.text();if(!r.ok)throw new Error(`OpenRouter HTTP ${r.status}: ${clean(raw,900)}`);const data=JSON.parse(raw);const msg=data?.choices?.[0]?.message;if(!msg)throw new Error('OpenRouter returned no assistant message');messages.push(msg);
+    const raw=await r.text();if(!r.ok)throw new Error(`${provider.type.toUpperCase()} HTTP ${r.status}: ${clean(raw,900)}`);const data=JSON.parse(raw);const msg=data?.choices?.[0]?.message;if(!msg)throw new Error('OpenRouter returned no assistant message');messages.push(msg);
     const calls=Array.isArray(msg.tool_calls)?msg.tool_calls:[];if(!calls.length)return{text:clean(msg.content||'Execution completed.'),steps:step+1,trace};
     for(const call of calls){const name=call?.function?.name;let args={};try{args=JSON.parse(call?.function?.arguments||'{}')}catch{args={}};const fn=toolFns[name];trace.push({type:'tool_start',tool:name,args:{url:args.url||'',clickText:args.clickText||''},at:Date.now()});const result=fn?await fn(args):{ok:false,error:`Unknown tool: ${name}`};trace.push({type:'tool_result',tool:name,ok:!!result?.ok,status:result?.status||null,url:result?.url||args.url||'',title:result?.title||'',error:result?.error||'',at:Date.now(),security:result?.findings||null});messages.push({role:'tool',tool_call_id:call.id,name,content:JSON.stringify(result).slice(0,14000)});}
   }
-  try{const finalMessages=messages.concat([{role:'user',content:'Stop using tools. Produce the final ATTACK MODE security report from the evidence collected. Do not just repeat logs. Include confirmed findings, exact affected URLs/routes, realistic attack path, risk, fix, and verification steps. Clearly label hypotheses.'}]);const r=await fetch(provider.url,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${key}`},body:JSON.stringify({model:provider.model,messages:finalMessages,tool_choice:'none',max_tokens:2200,temperature:0.2})});const raw=await r.text();if(!r.ok)throw new Error(`OpenRouter HTTP ${r.status}: ${clean(raw,900)}`);const data=JSON.parse(raw);const text=data?.choices?.[0]?.message?.content;if(text)return{text:clean(text),steps:8,trace};}catch(e){trace.push({type:'final_synthesis_error',error:clean(e?.message||e,900),at:Date.now()})}
+  try{const finalMessages=messages.concat([{role:'user',content:'Stop using tools. Produce the final ATTACK MODE security report from the evidence collected. Do not just repeat logs. Include confirmed findings, exact affected URLs/routes, realistic attack path, risk, fix, and verification steps. Clearly label hypotheses.'}]);const r=await fetch(provider.url,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${key}`},body:JSON.stringify({model:provider.model,messages:finalMessages,tool_choice:'none',max_tokens:2200,temperature:0.2})});const raw=await r.text();if(!r.ok)throw new Error(`${provider.type.toUpperCase()} HTTP ${r.status}: ${clean(raw,900)}`);const data=JSON.parse(raw);const text=data?.choices?.[0]?.message?.content;if(text)return{text:clean(text),steps:8,trace};}catch(e){trace.push({type:'final_synthesis_error',error:clean(e?.message||e,900),at:Date.now()})}
   return{text:'KAI completed the available security checks. Use the evidence and findings returned in this report.',steps:8,trace};
 }
 
