@@ -50,11 +50,12 @@ const toolFns={
     return{ok:true,target:origin,checks,findings,home:{status:home.status,headers:Object.fromEntries(required.map(h=>[h,headers[h]||null]))},cors:{status:cors.status,allowOrigin:allow||null},canary:{reflected:isReflected},note:KAI_ULTIMAX_PERMISSIONS.toolNote};
   }
 };
-const TOOL_DEFS=[
- {type:'function',function:{name:'public_web',description:`Not an allowed Ultimax capability. ${KAI_ULTIMAX_PERMISSIONS.blockedTools[0]} is blocked.`,parameters:{type:'object',properties:{url:{type:'string'}},required:['url']}}},
- {type:'function',function:{name:'browser_visit_click',description:`Open the operator-supplied public target in managed Chromium and optionally open a visible same-origin link. ${KAI_ULTIMAX_PERMISSIONS.browserRule}`,parameters:{type:'object',properties:{url:{type:'string'},clickText:{type:'string'}},required:['url']}}},
- {type:'function',function:{name:'security_probe',description:`Run the allowed public-surface security assessment against the operator-supplied URL. ${KAI_ULTIMAX_PERMISSIONS.assessmentRule}`,parameters:{type:'object',properties:{url:{type:'string',description:'Operator-supplied public http(s) URL to assess.'}}}}}
-];
+const TOOL_DEFINITIONS={
+ public_web:{type:'function',function:{name:'public_web',description:'Public web discovery is not implemented for KAI Ultimax.',parameters:{type:'object',properties:{url:{type:'string'}},required:['url']}}},
+ browser_visit_click:{type:'function',function:{name:'browser_visit_click',description:`Open the operator-supplied public target in managed Chromium and optionally open a visible same-origin link. ${KAI_ULTIMAX_PERMISSIONS.browserRule}`,parameters:{type:'object',properties:{url:{type:'string'},clickText:{type:'string'}},required:['url']}}},
+ security_probe:{type:'function',function:{name:'security_probe',description:`Run the public-surface security assessment against the ${KAI_ULTIMAX_PERMISSIONS.targetPolicy}. ${KAI_ULTIMAX_PERMISSIONS.assessmentRule}`,parameters:{type:'object',properties:{url:{type:'string',description:'Operator-supplied public http(s) URL to assess.'}}}}}
+};
+const TOOL_DEFS=KAI_ULTIMAX_PERMISSIONS.enabledTools.filter(name=>TOOL_DEFINITIONS[name]).map(name=>TOOL_DEFINITIONS[name]);
 
 async function verifyAdmin(req){
   const cookie=String(req.headers?.cookie||'').match(/(?:^|;\s*)haxbro_admin69=([^;]+)/);const auth=String(req.headers?.authorization||'').trim();const bearer=/^Bearer\s+(.+)$/i.exec(auth)?.[1]||'';const supplied=String(req.headers?.['x-haxbro-admin69']||req.body?.adminToken||bearer||(cookie?decodeURIComponent(cookie[1]):'')).trim();const secret=String(process.env.ADMIN69_PASSWORD||'');if(!supplied||!secret)return false;
