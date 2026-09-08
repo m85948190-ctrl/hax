@@ -30,7 +30,7 @@ async function fetchPage(url) {
         accept: 'text/html,application/xhtml+xml,application/xml,text/plain;q=0.9,*/*;q=0.5'
       }
     });
-    const finalUrl = new URL(r.url);
+    const finalUrl = new URL(r.url || target.toString());
     if (KAI_CONTROL.targets.rejectPrivateRedirects && targetHostIsPrivate(finalUrl.hostname)) throw new Error('Redirected to a private/local target.');
     const declared = Number(r.headers.get('content-length') || 0);
     if (declared > KAI_CONTROL.network.maxBodyBytes) throw new Error('Response exceeds KAI789 size limit.');
