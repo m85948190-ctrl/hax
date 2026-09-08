@@ -14,6 +14,16 @@
 <div class="ultimax-shell">
   <header class="ultimax-head"><div><span class="ultimax-kicker">PRIVATE OWNER CONSOLE</span><h1>ADMIN ULTIMAX</h1><small>KAI AGENT · ISOLATED WORKSPACE</small></div><!-- KAI execution mode selector removed --><button id="ultimaxClose" type="button">×</button></header>
   <div id="ultimaxMessages" class="ultimax-messages"><div class="ultimax-empty">KAI AGENT READY.<br><span>Give KAI a task. Execution results stay inside this Ultimax workspace.</span></div></div>
+  <button id="kaiLiveButton" class="kai-live-button" type="button" aria-pressed="false" aria-label="Activate KAI Live Mode" title="KAI Live Mode">
+    <svg class="kai-live-skull" viewBox="0 0 64 64" aria-hidden="true">
+      <path d="M18 35c-2-4-3-8-2-13 2-9 10-15 16-15s14 6 16 15c1 5 0 9-2 13l-1 7c0 3-2 5-5 5h-4v6h-4v-6h-4v6h-4v-6h-4c-3 0-5-2-5-5z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M22 27l7-2m13 2l-7-2M23 37h18M26 45h12" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M25 29h5v6h-5zM34 29h5v6h-5z" fill="none" stroke="currentColor" stroke-width="2.2"/>
+      <path d="M29 40h6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+    </svg>
+    <span class="kai-live-copy"><b>KAI LIVE</b><small id="kaiLiveState">OFF</small></span>
+    <span class="kai-live-pulse" aria-hidden="true"></span>
+  </button>
   <form id="ultimaxForm" class="ultimax-composer"><span>⌁</span><textarea id="ultimaxInput" rows="1" placeholder="Command KAI Agent…"></textarea><button type="submit">EXECUTE ↗</button></form>
   <div class="ultimax-hint">KAI 1–12 · LIVE EXECUTION · PUBLIC WEB / AUTHORIZED SECURITY TESTING</div>
 </div></section>
