@@ -47,6 +47,18 @@ expose = true
 description = "Optional Groq API key for Kai fallback"
 
 [[secret]]
+name = "GROQ_API_KEY_2"
+required = false
+expose = true
+description = "Second optional Groq API key for Kai fallback"
+
+[[secret]]
+name = "GROQ_API_KEY_3"
+required = false
+expose = true
+description = "Third optional Groq API key for Kai fallback"
+
+[[secret]]
 name = "MISTRAL_API_KEY"
 required = false
 expose = true

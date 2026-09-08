@@ -7,8 +7,14 @@ const SYSTEM = `You are KAI, the execution agent inside HAxBRO ADMIN ULTIMAX.
 You are an action-oriented authorized security-testing agent, not a roleplay chatbot. Decide when a tool is needed, call it, inspect its result, and continue until the user's objective is completed or a real limitation is reached.
 For HAxBRO security work, actively discover and safely validate weaknesses in the authorized target. Use the security_probe tool for attack-surface testing: exposed files/routes, security headers, CORS, harmless input reflection, and other non-destructive checks. Use public_web and browser_visit_click for additional reconnaissance and evidence. Explain realistic ATTACK PATHS from confirmed evidence: entry point -> weakness -> what an attacker could reach -> consequence. You may describe safe proof steps and harmless request shapes, but never obtain credentials, bypass authentication or CAPTCHA, extract private data, persist access, change application state, delete data, or cause damage.
 Return a concise report with MODE, ACTIONS, FINDINGS, EVIDENCE, ATTACK PATH, RISK, FIX, and VERIFY. Do not merely print tool logs. Findings must be based on tool evidence; distinguish confirmed findings from hypotheses.`;
-const KEYS=['OPENROUTER_API_KEY_1','OPENROUTER_API_KEY_2','OPENROUTER_API_KEY_3'];
-const MODEL='openrouter/auto';
+const PROVIDERS=[
+  {name:'OPENROUTER_API_KEY_1',type:'openrouter',model:'openrouter/auto',url:'https://openrouter.ai/api/v1/chat/completions'},
+  {name:'OPENROUTER_API_KEY_2',type:'openrouter',model:'openrouter/auto',url:'https://openrouter.ai/api/v1/chat/completions'},
+  {name:'OPENROUTER_API_KEY_3',type:'openrouter',model:'openrouter/auto',url:'https://openrouter.ai/api/v1/chat/completions'},
+  {name:'GROQ_API_KEY',type:'groq',model:'openai/gpt-oss-20b',url:'https://api.groq.com/openai/v1/chat/completions'},
+  {name:'GROQ_API_KEY_2',type:'groq',model:'openai/gpt-oss-20b',url:'https://api.groq.com/openai/v1/chat/completions'},
+  {name:'GROQ_API_KEY_3',type:'groq',model:'openai/gpt-oss-20b',url:'https://api.groq.com/openai/v1/chat/completions'}
+];
 const TARGET_HOST='haxbro.hatchable.site';
 
 function clean(v,max=12000){return String(v??'').replace(/\u0000/g,'').slice(0,max)}
@@ -48,21 +54,21 @@ async function verifyAdmin(req){
   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);const raw=sig.replace(/-/g,'+').replace(/_/g,'/');const bin=atob(raw+'='.repeat((4-raw.length%4)%4));const got=Uint8Array.from(bin,c=>c.charCodeAt(0));return crypto.subtle.verify('HMAC',key,got,new TextEncoder().encode(issuedAt));
 }
 
-async function runWithKey(key,objective){
+async function runWithProvider(provider,key,objective){
   const messages=[{role:'system',content:SYSTEM},{role:'user',content:objective}];const trace=[];
   for(let step=0;step<8;step++){
-    const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${key}`},body:JSON.stringify({model:MODEL,messages,tools:TOOL_DEFS,tool_choice:'auto',max_tokens:1800,temperature:0.2})});
+    const r=await fetch(provider.url,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${key}`},body:JSON.stringify({model:provider.model,messages,tools:provider.type==='openrouter'?TOOL_DEFS:TOOL_DEFS,tool_choice:'auto',max_tokens:1800,temperature:0.2})});
     const raw=await r.text();if(!r.ok)throw new Error(`OpenRouter HTTP ${r.status}: ${clean(raw,900)}`);const data=JSON.parse(raw);const msg=data?.choices?.[0]?.message;if(!msg)throw new Error('OpenRouter returned no assistant message');messages.push(msg);
     const calls=Array.isArray(msg.tool_calls)?msg.tool_calls:[];if(!calls.length)return{text:clean(msg.content||'Execution completed.'),steps:step+1,trace};
     for(const call of calls){const name=call?.function?.name;let args={};try{args=JSON.parse(call?.function?.arguments||'{}')}catch{args={}};const fn=toolFns[name];trace.push({type:'tool_start',tool:name,args:{url:args.url||'',clickText:args.clickText||''},at:Date.now()});const result=fn?await fn(args):{ok:false,error:`Unknown tool: ${name}`};trace.push({type:'tool_result',tool:name,ok:!!result?.ok,status:result?.status||null,url:result?.url||args.url||'',title:result?.title||'',error:result?.error||'',at:Date.now(),security:result?.findings||null});messages.push({role:'tool',tool_call_id:call.id,name,content:JSON.stringify(result).slice(0,14000)});}
   }
-  try{const finalMessages=messages.concat([{role:'user',content:'Stop using tools. Produce the final ATTACK MODE security report from the evidence collected. Do not just repeat logs. Include confirmed findings, exact affected URLs/routes, realistic attack path, risk, fix, and verification steps. Clearly label hypotheses.'}]);const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${key}`},body:JSON.stringify({model:MODEL,messages:finalMessages,tool_choice:'none',max_tokens:2200,temperature:0.2})});const raw=await r.text();if(!r.ok)throw new Error(`OpenRouter HTTP ${r.status}: ${clean(raw,900)}`);const data=JSON.parse(raw);const text=data?.choices?.[0]?.message?.content;if(text)return{text:clean(text),steps:8,trace};}catch(e){trace.push({type:'final_synthesis_error',error:clean(e?.message||e,900),at:Date.now()})}
+  try{const finalMessages=messages.concat([{role:'user',content:'Stop using tools. Produce the final ATTACK MODE security report from the evidence collected. Do not just repeat logs. Include confirmed findings, exact affected URLs/routes, realistic attack path, risk, fix, and verification steps. Clearly label hypotheses.'}]);const r=await fetch(provider.url,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${key}`},body:JSON.stringify({model:provider.model,messages:finalMessages,tool_choice:'none',max_tokens:2200,temperature:0.2})});const raw=await r.text();if(!r.ok)throw new Error(`OpenRouter HTTP ${r.status}: ${clean(raw,900)}`);const data=JSON.parse(raw);const text=data?.choices?.[0]?.message?.content;if(text)return{text:clean(text),steps:8,trace};}catch(e){trace.push({type:'final_synthesis_error',error:clean(e?.message||e,900),at:Date.now()})}
   return{text:'KAI completed the available security checks. Use the evidence and findings returned in this report.',steps:8,trace};
 }
 
 export default async function(req,res){
   if(!(await verifyAdmin(req)))return res.status(401).json({ok:false,error:'Admin Ultimax authentication required.'});
   const objective=clean(req.body?.objective||req.body?.message||req.body?.prompt,12000).trim();if(!objective)return res.status(400).json({ok:false,error:'objective required'});
-  const attempts=[];for(const envName of KEYS){const key=String(process.env[envName]||'');if(!key){attempts.push({provider:envName,status:'missing'});continue}const t=Date.now();try{const result=await runWithKey(key,objective);attempts.push({provider:envName,status:'success',elapsedMs:Date.now()-t});return res.json({ok:true,agent:'KAI',mode:'ADMIN ULTIMAX · ATTACK MODE',text:result.text,tooling:Object.keys(toolFns),steps:result.steps,provider:envName,model:MODEL,attempts,trace:result.trace||[]})}catch(e){attempts.push({provider:envName,status:'failed',elapsedMs:Date.now()-t,error:clean(e?.message||e,900)})}}
-  return res.status(502).json({ok:false,agent:'KAI',error:`All OpenRouter KAI keys failed. ${attempts.map(a=>`${a.provider}: ${a.error||a.status}`).join(' | ')}`,tooling:Object.keys(toolFns),attempts});
+  const attempts=[];for(const provider of PROVIDERS){const key=String(process.env[provider.name]||'');if(!key){attempts.push({provider:provider.name,status:'missing'});continue}const t=Date.now();try{const result=await runWithProvider(provider,key,objective);attempts.push({provider:provider.name,status:'success',elapsedMs:Date.now()-t});return res.json({ok:true,agent:'KAI',mode:'ADMIN ULTIMAX · ATTACK MODE',text:result.text,tooling:Object.keys(toolFns),steps:result.steps,provider:provider.name,model:provider.model,attempts,trace:result.trace||[]})}catch(e){attempts.push({provider:provider.name,status:'failed',elapsedMs:Date.now()-t,error:clean(e?.message||e,900)})}}
+  return res.status(502).json({ok:false,agent:'KAI',error:`All KAI provider keys failed. ${attempts.map(a=>`${a.provider}: ${a.error||a.status}`).join(' | ')}`,tooling:Object.keys(toolFns),attempts});
 }
