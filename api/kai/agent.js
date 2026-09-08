@@ -152,8 +152,16 @@ function technologies(html, headers) {
 function capabilityFor(command) { return COMMANDS[command] || null; }
 
 function parse(input) {
-  const s = String(input || '').trim();
+  let s = String(input || '').trim();
   if (!s) throw new Error('Empty KAI789 command. Use /help.');
+
+  // Be forgiving at the command boundary: the Admin Ultimax chat may send a
+  // bare URL or a natural "visit <url>" request. Normalize those into the
+  // canonical slash-command form instead of surfacing a misleading
+  // "connection error" to the user.
+  if (/^https?:\/\//i.test(s)) s = '/visit ' + s;
+  else if (/^visit\s+https?:\/\//i.test(s)) s = '/' + s;
+
   if (!s.startsWith('/')) throw new Error('Use a KAI789 command beginning with /. Example: /visit https://example.com');
   const i = s.indexOf(' '); const name = s.slice(1, i < 0 ? s.length : i).toLowerCase(); const arg = i < 0 ? '' : s.slice(i + 1).trim();
   if (name === 'help') return { name, arg: '' };
