@@ -153,6 +153,9 @@ function capabilityFor(command) { return COMMANDS[command] || null; }
 
 function conversationReply(input) {
   const s = String(input || '').trim();
+  if (/\b(can you|could you|do you)\s+(hack|hacking|break into|exploit)\b/i.test(s) || /^hack(ing)?\??$/i.test(s)) {
+    return "I can help with authorized, defensive hacking and security testing — for example, inspecting a public site, finding security weaknesses from the outside, explaining an exploit concept, or helping fix a vulnerability. I won't break into systems or bypass access without authorization. And yes, you can ask me about that naturally; you don't need to phrase it as a website command.";
+  }
   if (/^(hi|hello|hey|yo|hiya|good morning|good afternoon|good evening)\b/i.test(s)) {
     return "Hi — I’m KAI789. I understand normal requests, choose the right safe web action, and explain the result. You don’t need to type slash commands. Tell me what you want, for example: ‘check the SEO of example.com’, ‘is example.com online?’, or ‘what technology is this site using?’";
   }
