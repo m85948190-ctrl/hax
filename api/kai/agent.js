@@ -196,13 +196,18 @@ function parse(input) {
     // No URL means this is ordinary conversation, not a failed web task.
     // KAI789 stays provider-free, so keep the reply local instead of dumping
     // the old "send me a website" fallback on every non-web message.
+    // Capability questions are conversation too. Do not downgrade them to the
+    // generic "just chat" reply merely because there is no URL.
+    if (/\b(?:can|cn|could|do)\s+you\s+(?:hack|hacking|break\s+into|exploit)\b/i.test(s) || /^hack(?:ing)?\??$/i.test(s)) {
+      return { name: 'chat', arg: '', reply: 'Yes — I can help with authorized ethical hacking and security testing. I can reason about vulnerabilities, inspect authorized targets, explain attack paths, and help fix weaknesses. I won’t break into systems or bypass access without authorization.' };
+    }
     if (/\b(just\s+chat|let'?s\s+chat|chat|talk|conversation|talking)\b/i.test(s)) {
       return { name: 'chat', arg: '', reply: 'Yeah bro 😄 — just chat. I’m listening. Say whatever you want and we’ll go from there.' };
     }
     if (/^(ok|okay|alright|sure|yep|yeah|yes|no|nah|cool|nice|great|bro)\b/i.test(s)) {
       return { name: 'chat', arg: '', reply: 'Yeah bro 😄 I’m here. What’s on your mind?' };
     }
-    return { name: 'chat', arg: '', reply: 'Got you. I’m here to chat normally too — no website is needed unless you actually want me to inspect one.' };
+    return { name: 'chat', arg: '', reply: 'Got you. Tell me what you want to talk about or work on — security, hacking, a website, coding, or anything else.' };
   }
   const arg = (urlMatch ? urlMatch[0] : 'https://' + bareMatch[0]).replace(/[),.]+$/, '');
   const t = s.toLowerCase();
