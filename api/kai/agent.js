@@ -1,6 +1,5 @@
 import {
   KAI_CONTROL,
-  KAI_ENABLED_CAPABILITIES,
   normalizeKaiCapabilities,
   capabilityForCommand,
   toolDefinitions,
@@ -9,6 +8,7 @@ import {
   targetHostIsPrivate,
   kaiIntent
 } from 'lib/kai-control.js';
+import { KAI_ULTIMAX_CONTROL } from 'lib/kai-ultimax-control.js';
 
 export const access = 'public';
 export const methods = ['POST', 'GET'];
@@ -167,8 +167,12 @@ function extractUrls(value) {
 }
 
 export default async function handler(req, res) {
-  const capabilities = normalizeKaiCapabilities(req.body?.capabilities);
-  // KAI is an owner-authorized assistant. Even passive tools stay behind the single central gate.
+  const requestedCapabilities = normalizeKaiCapabilities(req.body?.capabilities);
+  const capabilities = requestedCapabilities.filter(name => KAI_ULTIMAX_CONTROL.capabilities[name] === true);
+  // KAI ULTIMAX is governed by one central policy file. UI/local configuration cannot expand it.
+  if (!KAI_ULTIMAX_CONTROL.identity.ownerOnly || !KAI_ULTIMAX_CONTROL.authorization.required) {
+    return send(res, { ok: false, error: 'Invalid KAI ULTIMAX authorization policy.' }, 500);
+  }
   if (!(await verifyKaiAuthorization(req))) return send(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
   if (req.method === 'GET') {
     return send(res, { ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode, providerRequired: KAI_CONTROL.identity.providerRequired, capabilities, tools: toolDefinitions(capabilities), policy: KAI_CONTROL.policy, behavior: KAI_CONTROL.behavior, personality: KAI_CONTROL.personality });
@@ -178,6 +182,7 @@ export default async function handler(req, res) {
     const input = req.body?.command || req.body?.message || req.body?.objective || '';
     const parsed = kaiIntent(input);
     const urls = extractUrls(input);
+    const publicSafeRequest = KAI_ULTIMAX_CONTROL.safety.safeMode && KAI_ULTIMAX_CONTROL.web.passiveInspection;
     if (publicSafeRequest && urls.length > 1 && ['status', 'visit', 'report', 'audit', 'headers', 'cookies', 'text', 'scrape', 'html', 'links', 'images', 'metadata', 'robots', 'sitemap', 'seo', 'performance', 'size', 'tech'].includes(parsed.name)) {
       const results = [];
       for (const url of urls) {
