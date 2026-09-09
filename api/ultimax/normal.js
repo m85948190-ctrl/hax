@@ -1,6 +1,23 @@
-import { KAI_CONTROL, verifyKaiAuthorization, validateKaiTarget, targetHostIsPrivate } from 'lib/kai-control.js';
+import { verifyKaiAuthorization, validateKaiTarget, targetHostIsPrivate } from 'lib/kai-control.js';
 
 export const access = 'public';
+
+// NORMAL ULTIMAX owns its own provider configuration.
+// This is intentionally NOT part of the KAI-only source of truth.
+const NORMAL_API = Object.freeze({
+  openRouterModel: 'openrouter/auto',
+  groqModel: 'openai/gpt-oss-20b',
+  temperature: 0.2,
+  maxTokensDefault: 3000,
+  chain: Object.freeze([
+    Object.freeze({ provider: 'OpenRouter', keyEnv: 'OPENROUTER_API_KEY_1' }),
+    Object.freeze({ provider: 'Grook', keyEnv: 'GROQ_API_KEY' }),
+    Object.freeze({ provider: 'OpenRouter', keyEnv: 'OPENROUTER_API_KEY_2' }),
+    Object.freeze({ provider: 'Grook', keyEnv: 'GROQ_API_KEY' }),
+    Object.freeze({ provider: 'OpenRouter', keyEnv: 'OPENROUTER_API_KEY_3' }),
+    Object.freeze({ provider: 'OpenRouter', keyEnv: 'OPENROUTER_API_KEY' })
+  ])
+});
 export const methods = ['POST'];
 
 const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -150,13 +167,13 @@ function organizedReport(results) {
 }
 
 async function callOpenRouter(key, messages) {
-  const r = await fetch(OR_URL, { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', 'HTTP-Referer': 'https://haxbro.hatchable.site', 'X-Title': 'HAxBRO Ultimax Normal' }, body: JSON.stringify({ model: KAI_CONTROL.normalApi.openRouterModel, messages, temperature: KAI_CONTROL.normalApi.temperature, max_tokens: KAI_CONTROL.normalApi.maxTokensDefault }) });
+  const r = await fetch(OR_URL, { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json', 'HTTP-Referer': 'https://haxbro.hatchable.site', 'X-Title': 'HAxBRO Ultimax Normal' }, body: JSON.stringify({ model: NORMAL_API.openRouterModel, messages, temperature: NORMAL_API.temperature, max_tokens: NORMAL_API.maxTokensDefault }) });
   const text = await r.text();
   if (!r.ok) throw new Error(`OpenRouter ${r.status}: ${clean(text, 700)}`);
   const data = JSON.parse(text); return data.choices?.[0]?.message?.content || '';
 }
 async function callGrook(key, messages) {
-  const r = await fetch(GROQ_URL, { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: KAI_CONTROL.normalApi.groqModel, messages, temperature: KAI_CONTROL.normalApi.temperature, max_tokens: KAI_CONTROL.normalApi.maxTokensDefault }) });
+  const r = await fetch(GROQ_URL, { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: NORMAL_API.groqModel, messages, temperature: KAI_CONTROL.normalApi.temperature, max_tokens: KAI_CONTROL.normalApi.maxTokensDefault }) });
   const text = await r.text();
   if (!r.ok) throw new Error(`Grook ${r.status}: ${clean(text, 700)}`);
   const data = JSON.parse(text); return data.choices?.[0]?.message?.content || '';
@@ -164,7 +181,7 @@ async function callGrook(key, messages) {
 
 async function normalChat(messages) {
   const attempts = [];
-  for (const step of KAI_CONTROL.normalApi.chain) {
+  for (const step of NORMAL_API.chain) {
     const key = String(process.env[step.keyEnv] || '').trim();
     if (!key) { attempts.push({ provider: step.provider, status: 'missing_key' }); continue; }
     try {
