@@ -8,7 +8,6 @@ import {
   targetHostIsPrivate,
   kaiIntent
 } from 'lib/kai-control.js';
-import { KAI_ULTIMAX_CONTROL } from 'lib/kai-ultimax-control.js';
 
 export const access = 'public';
 export const methods = ['POST', 'GET'];
@@ -167,11 +166,10 @@ function extractUrls(value) {
 }
 
 export default async function handler(req, res) {
-  const requestedCapabilities = normalizeKaiCapabilities(req.body?.capabilities);
-  const capabilities = requestedCapabilities.filter(name => KAI_ULTIMAX_CONTROL.capabilities[name] === true);
-  // KAI ULTIMAX is governed by one central policy file. UI/local configuration cannot expand it.
-  if (!KAI_ULTIMAX_CONTROL.identity.ownerOnly || !KAI_ULTIMAX_CONTROL.authorization.required) {
-    return send(res, { ok: false, error: 'Invalid KAI ULTIMAX authorization policy.' }, 500);
+  const capabilities = normalizeKaiCapabilities(req.body?.capabilities);
+  // KAI ULTIMAX is governed by lib/kai-control.js. UI/local configuration cannot expand it.
+  if (KAI_CONTROL.authorization.required !== true || KAI_CONTROL.ai.externalModelFallback !== false) {
+    return send(res, { ok: false, error: 'Invalid KAI authorization policy.' }, 500);
   }
   if (!(await verifyKaiAuthorization(req))) return send(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
   if (req.method === 'GET') {
@@ -182,8 +180,8 @@ export default async function handler(req, res) {
     const input = req.body?.command || req.body?.message || req.body?.objective || '';
     const parsed = kaiIntent(input);
     const urls = extractUrls(input);
-    const publicSafeRequest = KAI_ULTIMAX_CONTROL.safety.safeMode && KAI_ULTIMAX_CONTROL.web.passiveInspection;
-    if (publicSafeRequest && urls.length > 1 && ['status', 'visit', 'report', 'audit', 'headers', 'cookies', 'text', 'scrape', 'html', 'links', 'images', 'metadata', 'robots', 'sitemap', 'seo', 'performance', 'size', 'tech'].includes(parsed.name)) {
+    const publicSafeRequest = KAI_CONTROL.policy.passiveScanning === true && KAI_CONTROL.targets.scope === 'public-web-passive-inspection';
+    if (urls.length > 1 && ['status', 'visit', 'report', 'audit', 'headers', 'cookies', 'text', 'scrape', 'html', 'links', 'images', 'metadata', 'robots', 'sitemap', 'seo', 'performance', 'size', 'tech'].includes(parsed.name)) {
       const results = [];
       for (const url of urls) {
         try { results.push({ url, ok: true, result: await executeTool(parsed.name, url) }); }
