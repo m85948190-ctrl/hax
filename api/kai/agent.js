@@ -168,8 +168,8 @@ function extractUrls(value) {
 
 export default async function handler(req, res) {
   const capabilities = normalizeKaiCapabilities(req.body?.capabilities);
-  const publicSafeRequest = capabilities.length > 0 && capabilities.every(c => PUBLIC_KAI_CAPABILITIES.has(c));
-  if (!publicSafeRequest && !(await verifyKaiAuthorization(req))) return send(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
+  // KAI is an owner-authorized assistant. Even passive tools stay behind the single central gate.
+  if (!(await verifyKaiAuthorization(req))) return send(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
   if (req.method === 'GET') {
     return send(res, { ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode, providerRequired: KAI_CONTROL.identity.providerRequired, capabilities, tools: toolDefinitions(capabilities), policy: KAI_CONTROL.policy, behavior: KAI_CONTROL.behavior, personality: KAI_CONTROL.personality });
   }

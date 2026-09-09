@@ -68,7 +68,13 @@ description = "Optional Mistral API key for Kai fallback"
 name = "OPENROUTER_API_KEY"
 required = false
 expose = true
-description = "Legacy OpenRouter key for the core provider chain; KAI uses OPENROUTER_API_KEY_1..3"
+description = "Final OpenRouter fallback key for the Ultimax Normal API chain"
+
+[[secret]]
+name = "XAI_API_KEY"
+required = false
+expose = true
+description = "xAI API key for the Grok steps in the Ultimax Normal API fallback chain"
 
 [[secret]]
 name = "HF_TOKEN"
