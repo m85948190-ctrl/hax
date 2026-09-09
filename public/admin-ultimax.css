@@ -1,4 +1,9 @@
-/* ADMIN ULTIMAX v2 — owner-only KAI layer while preserving the normal HAxBRO AI workspace */
+/* ADMIN ULTIMAX v3 — hard-isolated owner console; main HAxBRO chrome is never visible while Ultimax is open */
+html:has(body.overdrive-ui.ultimax-open),html:has(body.overdrive-ui.ultimax-open) body{overflow:hidden!important}
+body.overdrive-ui.ultimax-open #ultimaxMode{display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
+body.overdrive-ui.ultimax-open #ultimaxMode[hidden]{display:flex!important}
+body.overdrive-ui.ultimax-open #adminPasswordGate[hidden]{display:none!important}
+body.overdrive-ui.ultimax-open .ultimax-shell{display:flex!important}
 .admin-ultimax-header{display:none!important}
 body.ultimax-open{overflow:hidden}
 body.overdrive-ui.ultimax-open .app-shell{filter:none}
