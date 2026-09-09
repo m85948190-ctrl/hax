@@ -71,10 +71,10 @@ expose = true
 description = "Final OpenRouter fallback key for the Ultimax Normal API chain"
 
 [[secret]]
-name = "XAI_API_KEY"
+name = "GROQ_API_KEY_ULTIMAX"
 required = false
 expose = true
-description = "xAI API key for the Grok steps in the Ultimax Normal API fallback chain"
+description = "Optional dedicated Groq API key for the Grook steps in the Ultimax Normal API fallback chain"
 
 [[secret]]
 name = "HF_TOKEN"

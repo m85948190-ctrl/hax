@@ -4,7 +4,7 @@ export const access = 'public';
 export const methods = ['POST'];
 
 const OR_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const XAI_URL = 'https://api.x.ai/v1/chat/completions';
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MAX_BODY = 5000000;
 
 function clean(v, max = 12000) { return String(v ?? '').replace(/\u0000/g, '').slice(0, max); }
@@ -155,10 +155,10 @@ async function callOpenRouter(key, messages) {
   if (!r.ok) throw new Error(`OpenRouter ${r.status}: ${clean(text, 700)}`);
   const data = JSON.parse(text); return data.choices?.[0]?.message?.content || '';
 }
-async function callGrok(key, messages) {
-  const r = await fetch(XAI_URL, { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: KAI_CONTROL.normalApi.grokModel, messages, temperature: KAI_CONTROL.normalApi.temperature }) });
+async function callGrook(key, messages) {
+  const r = await fetch(GROQ_URL, { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: KAI_CONTROL.normalApi.groqModel, messages, temperature: KAI_CONTROL.normalApi.temperature, max_tokens: KAI_CONTROL.normalApi.maxTokensDefault }) });
   const text = await r.text();
-  if (!r.ok) throw new Error(`Grok ${r.status}: ${clean(text, 700)}`);
+  if (!r.ok) throw new Error(`Grook ${r.status}: ${clean(text, 700)}`);
   const data = JSON.parse(text); return data.choices?.[0]?.message?.content || '';
 }
 
@@ -168,7 +168,7 @@ async function normalChat(messages) {
     const key = String(process.env[step.keyEnv] || '').trim();
     if (!key) { attempts.push({ provider: step.provider, status: 'missing_key' }); continue; }
     try {
-      const content = step.provider === 'Grok' ? await callGrok(key, messages) : await callOpenRouter(key, messages);
+      const content = step.provider === 'Grook' ? await callGrook(key, messages) : await callOpenRouter(key, messages);
       if (content) return { content, provider: step.provider, attempts };
       attempts.push({ provider: step.provider, status: 'empty_response' });
     } catch (e) { attempts.push({ provider: step.provider, status: 'failed', error: clean(e?.message, 500) }); }
