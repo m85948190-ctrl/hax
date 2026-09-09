@@ -1,0 +1,25 @@
+/* KAI POWER CORE — dedicated Admin Ultimax KAI UI isolation layer. */
+html body.overdrive-ui.ultimax-open #ultimaxMode{display:flex!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;position:fixed!important;inset:0!important;z-index:2147480000!important}
+html body.overdrive-ui.ultimax-open #ultimaxMode[hidden]{display:flex!important}
+html body.overdrive-ui.ultimax-open>.topbar,
+html body.overdrive-ui.ultimax-open>.app-shell,
+html body.overdrive-ui.ultimax-open>.mobile-menu,
+html body.overdrive-ui.ultimax-open>.mobile-kai-log-btn,
+html body.overdrive-ui.ultimax-open>.ambient,
+html body.overdrive-ui.ultimax-open>#ultimaxLiveRail{display:none!important;visibility:hidden!important;pointer-events:none!important}
+html body.overdrive-ui.ultimax-open #ultimaxMode .ultimax-mode-switch{display:inline-flex!important}
+html body.overdrive-ui.ultimax-open #ultimaxMode .ultimax-normal-block[hidden],
+html body.overdrive-ui.ultimax-open #ultimaxMode .ultimax-kai-block[hidden]{display:none!important}
+html body.overdrive-ui.ultimax-open #ultimaxMode .ultimax-normal-block:not([hidden]),
+html body.overdrive-ui.ultimax-open #ultimaxMode .ultimax-kai-block:not([hidden]){display:block!important}
+html body.overdrive-ui.ultimax-open #ultimaxMode .kai-power-editor{display:block!important}
+html body.overdrive-ui.ultimax-open #ultimaxMode .ultimax-shell{width:min(1240px,100vw)!important;max-width:100vw!important;height:100%!important}
+/* No legacy NORMAL / BEAST / HACKING controls can appear in the owner console. */
+html body.overdrive-ui.ultimax-open .mode-buttons,
+html body.overdrive-ui.ultimax-open #adminTools,
+html body.overdrive-ui.ultimax-open .history,
+html body.overdrive-ui.ultimax-open .ai-tools,
+html body.overdrive-ui.ultimax-open .mobile-drawer{display:none!important}
+/* KAI mode gets the execution rail only through its own workspace. */
+html body.overdrive-ui.normal-api-ui #ultimaxLiveRail{display:none!important}
+html body.overdrive-ui.kai-mode-ui #ultimaxLiveRail{display:none!important}
