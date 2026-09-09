@@ -36,7 +36,7 @@ function wire(){
   const savedName=localStorage.getItem('haxbro_username')||'';
   if(savedName){const g=$('#usernameGate');if(g)g.hidden=true;updateCustomerProfile(savedName)}
   bind('#usernameForm','submit',e=>{e.preventDefault();const n=String($('#usernameInput')?.value||'').trim();if(!n)return;localStorage.setItem('haxbro_username',n);const g=$('#usernameGate');if(g)g.hidden=true;updateCustomerProfile(n);ensureChat()});
-  bind('#chatForm','submit',e=>{e.preventDefault();sendChat(input?.value||'')});
+  bind('#chatForm','submit',e=>{e.preventDefault();sendChat(input?.value||'')});bind('#ultimaxForm','submit',e=>{e.preventDefault();const field=$('#ultimaxInput');const value=field?.value||'';if(!value)return;if(input)input.value=value;if(field)field.value='';sendChat(value)});
   bind('#sendBtn','click',()=>sendChat(input?.value||''));
   bind('#promptInput','input',resize);
   bind('#promptInput','keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(input.value)}});

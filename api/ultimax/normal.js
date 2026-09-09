@@ -1,4 +1,4 @@
-import { verifyKaiAuthorization, validateKaiTarget, targetHostIsPrivate } from 'lib/kai-control.js';
+import { verifyAdmin69Authorization, validateNormalTarget, normalTargetHostIsPrivate } from 'lib/normal-ultimax-control.js';
 
 export const access = 'public';
 
@@ -30,15 +30,15 @@ function unique(xs) { return [...new Set(xs)]; }
 
 function extractUrls(value) {
   return unique((String(value || '').match(/https?:\/\/[^\s<>'"`]+/gi) || []).map(raw => {
-    try { return validateKaiTarget(raw.replace(/[),.;!?]+$/g, '')).toString(); } catch { return null; }
+    try { return validateNormalTarget(raw.replace(/[),.;!?]+$/g, '')).toString(); } catch { return null; }
   }).filter(Boolean)).slice(0, 50);
 }
 
 async function readPage(url) {
   const target = validateKaiTarget(url);
-  if (targetHostIsPrivate(target.hostname)) throw new Error('Private/local targets are not allowed.');
+  if (normalTargetHostIsPrivate(target.hostname)) throw new Error('Private/local targets are not allowed.');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), KAI_CONTROL.network.timeoutMs);
+  const timer = setTimeout(() => controller.abort(), 20000);
   const started = Date.now();
   try {
     let response = await fetch(target.toString(), {
@@ -173,7 +173,7 @@ async function callOpenRouter(key, messages) {
   const data = JSON.parse(text); return data.choices?.[0]?.message?.content || '';
 }
 async function callGrook(key, messages) {
-  const r = await fetch(GROQ_URL, { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: NORMAL_API.groqModel, messages, temperature: KAI_CONTROL.normalApi.temperature, max_tokens: KAI_CONTROL.normalApi.maxTokensDefault }) });
+  const r = await fetch(GROQ_URL, { method: 'POST', headers: { authorization: `Bearer ${key}`, 'content-type': 'application/json' }, body: JSON.stringify({ model: NORMAL_API.groqModel, messages, temperature: NORMAL_API.temperature, max_tokens: NORMAL_API.maxTokensDefault }) });
   const text = await r.text();
   if (!r.ok) throw new Error(`Grook ${r.status}: ${clean(text, 700)}`);
   const data = JSON.parse(text); return data.choices?.[0]?.message?.content || '';
@@ -194,7 +194,7 @@ async function normalChat(messages) {
 }
 
 export default async function handler(req, res) {
-  if (!(await verifyKaiAuthorization(req))) return ok(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
+  if (!(await verifyAdmin69Authorization(req))) return ok(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
   try {
     const mode = String(req.body?.mode || 'chat').toLowerCase();
     if (mode === 'scan' || mode === 'report') {
