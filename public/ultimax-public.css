@@ -1,0 +1,18 @@
+/* Public Ultimax surface: internal execution remains hidden behind the feature. */
+#adminUltimaxHeader,#adminTools,#adminPanel,#kaiPanel,#kai699Panel{display:none!important}
+.ultimax-mode-switch,.ultimax-normal-block,.ultimax-live-rail,.kai-live-button,.kai-command-grid,.kai-power-matrix,.kai-power-editor{display:none!important}
+body.ultimax-open::after{content:"";position:fixed;inset:-20%;z-index:2147481999;pointer-events:none;background:radial-gradient(circle at 50% 50%,rgba(255,30,65,.98) 0%,rgba(130,0,25,.96) 42%,rgba(20,0,8,.94) 72%,transparent 73%);transform:scale(0);animation:ultimax-red-wave 900ms cubic-bezier(.2,.75,.2,1) forwards}
+@keyframes ultimax-red-wave{0%{transform:scale(0);opacity:.95}70%{transform:scale(1.9);opacity:1}100%{transform:scale(2.8);opacity:1}}
+.ultimax-mode{background:radial-gradient(circle at 50% 0%,rgba(190,12,45,.22),transparent 45%),linear-gradient(145deg,#08070a,#14070b 55%,#070609)!important;color:#f8eef0!important}
+.ultimax-shell{max-width:1180px!important;margin:0 auto!important;padding:clamp(22px,4vw,52px)!important}
+.ultimax-head{border-bottom:1px solid rgba(255,80,105,.18)!important}
+.ultimax-kicker,.mode-panel-kicker{color:#ff5872!important;letter-spacing:.18em!important}
+.ultimax-head h1{color:#fff!important;letter-spacing:.08em!important}
+.ultimax-head small{color:#cdaeb5!important}
+.ultimax-public-intro{display:flex;justify-content:space-between;gap:30px;align-items:flex-end;margin:26px 0 24px;padding:26px;border:1px solid rgba(255,70,95,.18);border-radius:22px;background:rgba(255,255,255,.025);box-shadow:0 18px 60px rgba(0,0,0,.28)}
+.ultimax-public-intro>div:first-child{display:grid;gap:8px}.ultimax-public-intro b{font-size:clamp(20px,3vw,30px);letter-spacing:.03em}.ultimax-public-intro span{color:#cdb8bd;line-height:1.6}.ultimax-public-points{display:flex!important;flex-wrap:wrap;justify-content:flex-end;gap:8px;max-width:430px}.ultimax-public-points span{padding:8px 11px;border-radius:999px;border:1px solid rgba(255,70,95,.2);background:rgba(255,30,60,.06);color:#ff9aaa;font-size:10px;letter-spacing:.12em}
+.ultimax-kai-block{display:block!important;background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important}.ultimax-kai-block .mode-panel-head{margin-bottom:14px}.ultimax-kai-block .mode-panel-head>b{color:#fff;font-size:20px}
+.ultimax-composer{margin-top:22px!important;border:1px solid rgba(255,70,95,.28)!important;background:rgba(10,7,10,.86)!important;box-shadow:0 16px 50px rgba(0,0,0,.35),0 0 40px rgba(220,20,55,.08)!important}.ultimax-composer textarea{color:#fff!important}.ultimax-composer button{background:#c91436!important;color:#fff!important;border-color:#ef4563!important}.ultimax-hint{color:#a99096!important}
+.ultimax-messages{min-height:180px!important}
+.ultimax-messages .ultimax-empty{color:#bda8ae!important}
+@media(max-width:700px){.ultimax-public-intro{display:block;padding:20px}.ultimax-public-points{justify-content:flex-start;margin-top:18px}.ultimax-shell{padding:18px!important}}
