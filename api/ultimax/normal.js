@@ -35,7 +35,7 @@ function extractUrls(value) {
 }
 
 async function readPage(url) {
-  const target = validateKaiTarget(url);
+  const target = validateNormalTarget(url);
   if (normalTargetHostIsPrivate(target.hostname)) throw new Error('Private/local targets are not allowed.');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
@@ -46,7 +46,7 @@ async function readPage(url) {
       headers: { 'user-agent': 'HAxBRO-Ultimax-PassiveScanner/1.0', accept: 'text/html,application/xhtml+xml,application/xml,text/plain;q=0.8,*/*;q=0.5' }
     });
     const finalUrl = new URL(response.url || target.toString());
-    if (targetHostIsPrivate(finalUrl.hostname)) throw new Error('Redirected to a private/local target.');
+    if (normalTargetHostIsPrivate(finalUrl.hostname)) throw new Error('Redirected to a private/local target.');
     const declared = Number(response.headers.get('content-length') || 0);
     if (declared > MAX_BODY) throw new Error('Response exceeds scanner size limit.');
     const buf = await response.arrayBuffer();
