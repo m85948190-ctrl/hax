@@ -95,7 +95,6 @@
   $('marketingResetBtn')?.addEventListener('click',()=>{if(confirm('Reset the campaign and remove all tracked videos?')){state={targetVideos:20,targetViews:40000,goalMonths:12,startAt:null,videos:[]};save();render()}});
   $('marketingGoalMonthsInput')?.addEventListener('change',e=>{state.goalMonths=Number(e.target.value)===24?24:12;save();render()});
   $('marketingTargetVideosInput')?.addEventListener('change',e=>{state.targetVideos=Math.max(1,Math.floor(Number(e.target.value)||20));save();render()});
-  $('marketingTargetViewsInput')?.addEventListener('change',e=>{state.targetViews=Math.max(1,Math.floor(Number(e.target.value)||40000));save();render()});
-  const tv=$('marketingTargetVideosInput'),tw=$('marketingTargetViewsInput'),gm=$('marketingGoalMonthsInput');if(tv)tv.value=state.targetVideos;if(tw)tw.value=state.targetViews;if(gm)gm.value=state.goalMonths===24?'24':'12';
+  const tv=$('marketingTargetVideosInput'),gm=$('marketingGoalMonthsInput');if(tv)tv.value=state.targetVideos;if(gm)gm.value=state.goalMonths===24?'24':'12';
   render();
 })();
