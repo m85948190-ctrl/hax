@@ -4,15 +4,22 @@
   const fmt=n=>Number(n||0).toLocaleString('en-IN');
   const platformFromUrl=url=>{try{const h=new URL(url).hostname.toLowerCase();if(h.includes('youtube')||h.includes('youtu.be'))return 'YouTube';if(h.includes('instagram'))return 'Instagram';if(h.includes('tiktok'))return 'TikTok';if(h.includes('facebook')||h.includes('fb.watch'))return 'Facebook';if(h.includes('x.com')||h.includes('twitter'))return 'X';return 'Web';}catch{return 'Web'}};
   const normalize=url=>{try{const u=new URL(url.trim());u.hash='';u.hostname=u.hostname.toLowerCase();return u.toString().replace(/\/$/,'')}catch{return url.trim().toLowerCase().replace(/\/$/,'')}};
-  let state={targetVideos:20,targetViews:40000,startAt:null,videos:[]};
+  let state={targetVideos:20,targetViews:40000,goalMonths:12,startAt:null,videos:[]};
   try{state={...state,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{}
   const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
   const panel=$('marketingCounterPanel');
   if(!panel)return;
-  const open=()=>{panel.hidden=false;render()};
+  const AUTH_NAME='subham mondal';
+  let marketingUnlocked=sessionStorage.getItem('haxbro_marketing_unlocked')==='1';
+  const open=()=>{if(!marketingUnlocked){showNameGate();return}panel.hidden=false;render()};
   const close=()=>{panel.hidden=true};
+  const showNameGate=()=>{const gate=$('marketingNameGate');if(gate){gate.hidden=false;$('marketingNameInput')?.focus()}};
+  const hideNameGate=()=>{const gate=$('marketingNameGate');if(gate)gate.hidden=true};
   $('marketingCounterBtn')?.addEventListener('click',open);
   $('mobileMarketingCounterBtn')?.addEventListener('click',()=>{open();document.getElementById('mobileDrawer')?.classList.remove('open');document.getElementById('mobileDrawer')?.setAttribute('aria-hidden','true')});
+  $('marketingNameGateClose')?.addEventListener('click',hideNameGate);
+  $('marketingNameGate')?.addEventListener('click',e=>{if(e.target===$('marketingNameGate'))hideNameGate()});
+  $('marketingNameGateForm')?.addEventListener('submit',e=>{e.preventDefault();const input=$('marketingNameInput'),msg=$('marketingNameGateMessage');const name=input.value.trim().toLowerCase().replace(/\\s+/g,' ');if(name===AUTH_NAME){marketingUnlocked=true;sessionStorage.setItem('haxbro_marketing_unlocked','1');hideNameGate();panel.hidden=false;render();msg.textContent=''}else{msg.textContent='Access denied. This Marketing Center is restricted.';msg.classList.add('marketing-danger');input.select()}});
   $('marketingCounterClose')?.addEventListener('click',close);
   panel.addEventListener('click',e=>{if(e.target===panel)close()});
   const ensureCampaign=()=>{if(!state.startAt)state.startAt=Date.now();save()};
@@ -32,13 +39,17 @@
     list.querySelectorAll('.marketing-delete').forEach(b=>b.addEventListener('click',()=>{state.videos=state.videos.filter(v=>v.id!==b.dataset.id);save();render()}));
   };
   const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const addMonths=(timestamp,months)=>{const d=new Date(timestamp);const day=d.getDate();d.setMonth(d.getMonth()+months);if(d.getDate()!==day)d.setDate(0);return d.getTime()};
   const updateTimer=()=>{
     const timer=$('marketingTimer'), label=$('marketingTimerLabel');
-    if(!state.startAt){timer.textContent='30d 00:00:00';label.textContent='Campaign not started';return}
-    const end=state.startAt+30*24*60*60*1000, left=Math.max(0,end-Date.now()), sec=Math.floor(left/1000);
+    const months=Math.max(12,Math.min(24,Number(state.goalMonths)||12));
+    if(!state.startAt){timer.textContent=`${months}mo 000d 00:00:00`;label.textContent=`${months}-month campaign not started`;return}
+    const end=addMonths(state.startAt,months), left=Math.max(0,end-Date.now()), sec=Math.floor(left/1000);
     const d=Math.floor(sec/86400),h=Math.floor(sec%86400/3600),m=Math.floor(sec%3600/60),s=sec%60;
-    timer.textContent=`${d}d ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-    label.textContent=left>0?'Time remaining':'30-day campaign finished';
+    const elapsed=Math.max(0,Date.now()-state.startAt), year=Math.min(Math.floor(elapsed/(365.2425*24*60*60*1000))+1,months/12);
+    timer.textContent=`${months}mo ${String(d).padStart(3,'0')}d ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    label.textContent=left>0?`${months}-month goal · Year ${year}`:`${months}-month campaign finished`;
+    const goalYears=document.getElementById('marketingGoalYears');if(goalYears)goalYears.textContent=months===24?'2 years':'1 year';
   };
   setInterval(()=>{if(!panel.hidden)updateTimer()},1000);
   setInterval(()=>{if(!panel.hidden)refreshViews()},60000);
@@ -81,9 +92,10 @@
     finally{btn.disabled=false;btn.textContent=old}
   });
   $('marketingStartBtn')?.addEventListener('click',()=>{state.startAt=Date.now();save();render()});
-  $('marketingResetBtn')?.addEventListener('click',()=>{if(confirm('Reset the 30-day campaign and remove all tracked videos?')){state={targetVideos:20,targetViews:40000,startAt:null,videos:[]};save();render()}});
+  $('marketingResetBtn')?.addEventListener('click',()=>{if(confirm('Reset the campaign and remove all tracked videos?')){state={targetVideos:20,targetViews:40000,goalMonths:12,startAt:null,videos:[]};save();render()}});
+  $('marketingGoalMonthsInput')?.addEventListener('change',e=>{state.goalMonths=Number(e.target.value)===24?24:12;save();render()});
   $('marketingTargetVideosInput')?.addEventListener('change',e=>{state.targetVideos=Math.max(1,Math.floor(Number(e.target.value)||20));save();render()});
   $('marketingTargetViewsInput')?.addEventListener('change',e=>{state.targetViews=Math.max(1,Math.floor(Number(e.target.value)||40000));save();render()});
-  const tv=$('marketingTargetVideosInput'),tw=$('marketingTargetViewsInput');if(tv)tv.value=state.targetVideos;if(tw)tw.value=state.targetViews;
+  const tv=$('marketingTargetVideosInput'),tw=$('marketingTargetViewsInput'),gm=$('marketingGoalMonthsInput');if(tv)tv.value=state.targetVideos;if(tw)tw.value=state.targetViews;if(gm)gm.value=state.goalMonths===24?'24':'12';
   render();
 })();
