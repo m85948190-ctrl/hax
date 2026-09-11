@@ -18,7 +18,27 @@ export default async function (req, res) {
     const descriptions = [...clean.matchAll(/<meta[^>]+(?:name|property)=["'](?:description|og:title|og:description|twitter:title|twitter:description)["'][^>]+content=["']([^"']*)["'][^>]*>/gi)].map(m=>m[1]);
     const text = [title, ...descriptions].join(' ').replace(/&(?:amp|quot|#39|lt|gt);/gi,' ').toLowerCase();
     const matches = /h\s*a\s*x\s*b\s*r\s*o|haxbro/i.test(text);
-    return res.json({ ok:true, relevant:matches, title:title.trim().slice(0,300), reason:matches?'haxbro_match':'not_about_haxbro' });
+    const source = clean.replace(/\\s+/g,' ');
+    const viewPatterns = [
+      /[\"'](?:viewCount|views|view_count)[\"']\\s*[:=]\\s*[\"']?([0-9][0-9,._]*)/i,
+      /([0-9][0-9,._]*)\\s*(?:views|views?)/i,
+      /([0-9]+(?:\\.[0-9]+)?)[ ]*([KMB])\\+?[ ]*(?:views|views?)/i
+    ];
+    let views = null;
+    for (const p of viewPatterns) {
+      const m = source.match(p);
+      if (!m) continue;
+      if (m[2]) {
+        const n = Number(m[1]);
+        const mult = m[2].toUpperCase()==='K'?1000:m[2].toUpperCase()==='M'?1000000:1000000000;
+        views = Math.round(n*mult);
+      } else {
+        const n = Number(String(m[1]).replace(/,/g,''));
+        if (Number.isFinite(n)) views = Math.round(n);
+      }
+      if (views !== null) break;
+    }
+    return res.json({ ok:true, relevant:matches, title:title.trim().slice(0,300), views, reason:matches?'haxbro_match':'not_about_haxbro' });
   } catch (e) {
     return res.status(422).json({ ok:false, reason:'could_not_check' });
   }
