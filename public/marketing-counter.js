@@ -41,15 +41,23 @@
     label.textContent=left>0?'Time remaining':'30-day campaign finished';
   };
   setInterval(()=>{if(!panel.hidden)updateTimer()},1000);
-  $('marketingAddVideo')?.addEventListener('click',()=>{
-    const input=$('marketingVideoUrl'), viewsInput=$('marketingVideoViews'), msg=$('marketingCounterMessage');
+  $('marketingAddVideo')?.addEventListener('click',async()=>{
+    const input=$('marketingVideoUrl'), viewsInput=$('marketingVideoViews'), msg=$('marketingCounterMessage'), btn=$('marketingAddVideo');
     const raw=input.value.trim(), url=normalize(raw), views=Math.max(0,Math.floor(Number(viewsInput.value||0)));
     msg.textContent='';msg.classList.remove('marketing-danger');
     if(!/^https?:\/\//i.test(url)){msg.textContent='Enter a valid http(s) video link.';msg.classList.add('marketing-danger');return}
     if(state.videos.some(v=>v.url===url)){msg.textContent='That video is already counted — duplicate blocked.';msg.classList.add('marketing-danger');return}
-    ensureCampaign();
-    state.videos.push({id:crypto.randomUUID?.()||String(Date.now()+Math.random()),url,views,platform:platformFromUrl(url),addedAt:Date.now()});
-    save();input.value='';viewsInput.value='';render();
+    btn.disabled=true; const old=btn.textContent; btn.textContent='Checking HAxBRO…';
+    try{
+      const r=await fetch((window.__HATCHABLE__?.api||'/api')+'/marketing-validate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({url})});
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok || !data.ok){msg.textContent='Could not verify this video. Try again with a public video link.';msg.classList.add('marketing-danger');return}
+      if(!data.relevant){msg.textContent='This video is not about HAxBRO, so it was not submitted or counted.';msg.classList.add('marketing-danger');return}
+      ensureCampaign();
+      state.videos.push({id:crypto.randomUUID?.()||String(Date.now()+Math.random()),url,views,platform:platformFromUrl(url),addedAt:Date.now(),validated:true,title:data.title||''});
+      save();input.value='';viewsInput.value='';msg.textContent='HAxBRO video verified and counted.';render();
+    }catch(e){msg.textContent='Could not verify this video. Try again with a public video link.';msg.classList.add('marketing-danger')}
+    finally{btn.disabled=false;btn.textContent=old}
   });
   $('marketingStartBtn')?.addEventListener('click',()=>{state.startAt=Date.now();save();render()});
   $('marketingResetBtn')?.addEventListener('click',()=>{if(confirm('Reset the 30-day campaign and remove all tracked videos?')){state={targetVideos:20,targetViews:40000,startAt:null,videos:[]};save();render()}});
