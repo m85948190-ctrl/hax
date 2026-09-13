@@ -2,6 +2,9 @@
 .kai69-owner-mark{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #ff263f44;border-radius:7px;background:#120206;color:#ff8d99;font:900 7px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em}.kai69-owner-mark i{width:5px;height:5px;border-radius:50%;background:#ff263f;box-shadow:0 0 9px #ff263f}
 @media(max-width:700px){.kai69-owner-mark{font-size:6px;padding:4px 6px}}
 .kai69-badge-clearance{--kai69-composer-bottom:42px}.kai69-badge-clearance .ultimax-composer{bottom:var(--kai69-composer-bottom)!important}.kai69-badge-clearance .ultimax-hint{bottom:calc(var(--kai69-composer-bottom) - 27px)!important}
+/* Badge clearance is handled by its fixed top dock; never let it overlap the text/composer areas. */
+.kai69-badge-wrap{top:78px!important;right:16px!important;bottom:auto!important;left:auto!important;z-index:90!important}
+@media(max-width:700px){.kai69-badge-wrap{top:64px!important;right:10px!important}}
 .kai789-capability-box{margin-top:10px;padding:12px;border:1px solid rgba(0,217,255,.22);border-radius:10px;background:rgba(0,20,28,.62)}
 .kai789-capability-note{margin:5px 0 10px;color:#8da5ad;font-size:10px;line-height:1.5}
 .kai789-capability-list{display:grid;grid-template-columns:1fr;gap:5px;max-height:280px;overflow:auto}
