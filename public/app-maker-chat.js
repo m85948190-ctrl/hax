@@ -8,6 +8,17 @@
     const panel=$('appMakerPanel');
     if(!panel)return;
     installed=true;
+    if(!panel.querySelector('#appMakerWorkspaceClose')){
+      const close=document.createElement('button');
+      close.id='appMakerWorkspaceClose';
+      close.type='button';
+      close.className='app-maker-workspace-close';
+      close.setAttribute('aria-label','Close App Maker workspace');
+      close.title='Close workspace';
+      close.textContent='×';
+      close.addEventListener('click',()=>{panel.hidden=true;panel.style.display='none';panel.classList.remove('open')});
+      panel.appendChild(close);
+    }
     const wrap=document.createElement('section');
     wrap.id='appMakerChatWorkspace';
     wrap.className='app-maker-chat-workspace';
