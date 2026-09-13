@@ -16,7 +16,7 @@
       close.setAttribute('aria-label','Close App Maker workspace');
       close.title='Close workspace';
       close.textContent='×';
-      close.addEventListener('click',()=>{panel.hidden=true;panel.style.display='none';panel.classList.remove('open')});
+      close.addEventListener('click',()=>{panel.hidden=true;panel.style.display='none';panel.classList.remove('open');document.body.classList.remove('app-maker-open')});
       panel.appendChild(close);
     }
     const wrap=document.createElement('section');
