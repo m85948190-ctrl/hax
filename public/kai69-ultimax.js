@@ -15,30 +15,24 @@
   }
 
   function positionComposer() {
-    const root = $('ultimaxMode');
-    const shell = root?.querySelector('.ultimax-shell');
-    const composer = $('ultimaxForm');
-    if (!root || !shell || !composer) return;
+    const composer = $('chatForm');
+    if (!composer) return;
     const badge = findBadge();
-    if (!badge) {
-      root.classList.remove('kai69-badge-clearance');
-      shell.style.removeProperty('--kai69-composer-bottom');
-      return;
-    }
+    if (!badge) return;
     const br = badge.getBoundingClientRect();
     const cr = composer.getBoundingClientRect();
-    const vw = window.innerWidth;
     const vh = window.innerHeight;
     const horizontalOverlap = cr.left < br.right && cr.right > br.left;
     const verticalOverlap = cr.top < br.bottom && cr.bottom > br.top;
-    const badgeNearBottom = br.bottom > vh - 170;
+    const badgeNearBottom = br.bottom > vh - 150;
     if (horizontalOverlap && (verticalOverlap || badgeNearBottom)) {
-      const needed = Math.max(42, Math.ceil(vh - br.top + 16));
-      root.classList.add('kai69-badge-clearance');
-      shell.style.setProperty('--kai69-composer-bottom', needed + 'px');
+      const gap = 14;
+      const desiredBottom = Math.max(12, Math.ceil(vh - br.top + gap));
+      composer.style.setProperty('--kai69-safe-bottom', desiredBottom + 'px');
+      composer.classList.add('kai69-badge-safe');
     } else {
-      root.classList.remove('kai69-badge-clearance');
-      shell.style.removeProperty('--kai69-composer-bottom');
+      composer.classList.remove('kai69-badge-safe');
+      composer.style.removeProperty('--kai69-safe-bottom');
     }
   }
 

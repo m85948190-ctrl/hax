@@ -29,6 +29,8 @@ body.hax-modern .kai-work-canvas{background:#050505!important;border-color:#2424
 body.hax-modern .kai-work-orbit,body.hax-modern .kai-work-node,.kai-work-canvas .kai-work-core{filter:grayscale(1)}
 /* Remove unfinished/non-professional sidebar tools. */
 #fileCreatorBtn,#mobileFileCreatorBtn,#mediaConverterBtn,#mobileMediaConverterBtn,#themeBtn,#mobileThemeBtn{display:none!important}
+/* KAI 69 owns badge/composer collision handling; do not hard-dock the platform badge here. */
+.kai69-badge-wrap,[data-hatchable-badge]{z-index:90!important}
 /* Keep the Hatchable attribution badge, but dock it cleanly below the top text bar and away from the composer. */
 .kai69-badge-wrap,[data-hatchable-badge]{display:block!important;position:fixed!important;top:78px!important;right:16px!important;bottom:auto!important;left:auto!important;z-index:90!important;transform:none!important;max-width:min(220px,calc(100vw - 32px))!important}
 .kai69-badge-wrap #hb-badge{transform:none!important}

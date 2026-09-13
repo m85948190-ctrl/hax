@@ -2,9 +2,10 @@
 .kai69-owner-mark{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border:1px solid #ff263f44;border-radius:7px;background:#120206;color:#ff8d99;font:900 7px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em}.kai69-owner-mark i{width:5px;height:5px;border-radius:50%;background:#ff263f;box-shadow:0 0 9px #ff263f}
 @media(max-width:700px){.kai69-owner-mark{font-size:6px;padding:4px 6px}}
 .kai69-badge-clearance{--kai69-composer-bottom:42px}.kai69-badge-clearance .ultimax-composer{bottom:var(--kai69-composer-bottom)!important}.kai69-badge-clearance .ultimax-hint{bottom:calc(var(--kai69-composer-bottom) - 27px)!important}
-/* Badge clearance is handled by its fixed top dock; never let it overlap the text/composer areas. */
-.kai69-badge-wrap{top:78px!important;right:16px!important;bottom:auto!important;left:auto!important;z-index:90!important}
-@media(max-width:700px){.kai69-badge-wrap{top:64px!important;right:10px!important}}
+/* Kai 69 watches the platform badge and keeps the HAxBRO composer above it. */
+.kai69-badge-wrap{z-index:90!important}
+#chatForm.kai69-badge-safe{bottom:var(--kai69-safe-bottom)!important}
+@media(max-width:700px){#chatForm.kai69-badge-safe{bottom:var(--kai69-safe-bottom)!important}}
 .kai789-capability-box{margin-top:10px;padding:12px;border:1px solid rgba(0,217,255,.22);border-radius:10px;background:rgba(0,20,28,.62)}
 .kai789-capability-note{margin:5px 0 10px;color:#8da5ad;font-size:10px;line-height:1.5}
 .kai789-capability-list{display:grid;grid-template-columns:1fr;gap:5px;max-height:280px;overflow:auto}
@@ -15,3 +16,14 @@
 .kai-live-button{position:fixed;right:28px;bottom:92px;z-index:2147482000;display:flex;align-items:center;gap:10px;min-width:142px;padding:10px 13px;border:1px solid rgba(255,38,63,.55);border-radius:14px;background:rgba(10,4,7,.94);color:#ff5268;box-shadow:0 10px 35px rgba(0,0,0,.38),0 0 24px rgba(255,38,63,.08);cursor:pointer;backdrop-filter:blur(12px);transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}.kai-live-button:hover{transform:translateY(-2px);border-color:#ff5268}.kai-live-button.live{border-color:#ff263f;box-shadow:0 10px 35px rgba(0,0,0,.42),0 0 28px rgba(255,38,63,.28)}.kai-live-skull{width:36px;height:36px;flex:none}.kai-live-copy{display:flex;flex-direction:column;align-items:flex-start;line-height:1}.kai-live-copy b{font:900 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.12em}.kai-live-copy small{margin-top:5px;color:#9f7d84;font:800 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em}.kai-live-button.live .kai-live-copy small{color:#ff8090}.kai-live-pulse{width:7px;height:7px;margin-left:auto;border-radius:50%;background:#5b2830;box-shadow:none}.kai-live-button.live .kai-live-pulse{background:#ff263f;box-shadow:0 0 10px #ff263f;animation:kaiLivePulse 1.15s ease-in-out infinite}@keyframes kaiLivePulse{0%,100%{transform:scale(.8);opacity:.65}50%{transform:scale(1.25);opacity:1}}.kai-live-transcript{position:fixed;right:28px;bottom:150px;z-index:2147481999;max-width:min(420px,calc(100vw - 40px));padding:9px 12px;border:1px solid rgba(255,38,63,.25);border-radius:10px;background:rgba(8,3,6,.9);color:#e8cdd2;font:700 10px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;pointer-events:none;backdrop-filter:blur(10px)}
 @media(max-width:700px){.kai-live-button{right:14px;bottom:78px;min-width:126px;padding:9px 10px}.kai-live-skull{width:32px;height:32px}.kai-live-transcript{right:14px;bottom:136px}}
 .kai789-capability-item code{font-size:8px;color:#69d7e8}
+
+/* HAxBRO request thinking indicator — compact moving orbit, no giant loader. */
+.haxbro-thinking{display:flex;align-items:center;gap:9px;width:max-content;margin:10px 0 14px 48px;padding:7px 10px;border:1px solid rgba(0,217,255,.14);border-radius:999px;background:rgba(5,8,11,.78);color:#7f949b;font:800 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;backdrop-filter:blur(8px)}
+.haxbro-thinking[hidden]{display:none!important}
+.haxbro-thinking-orbit{position:relative;width:18px;height:18px;display:block}
+.haxbro-thinking-orbit i{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;border-radius:50%;background:#8eeeff;box-shadow:0 0 8px rgba(0,217,255,.8);animation:haxbroThink 1.15s ease-in-out infinite}
+.haxbro-thinking-orbit i:nth-child(2){animation-delay:.18s;transform:translate(6px,-2px) scale(.72)}
+.haxbro-thinking-orbit i:nth-child(3){animation-delay:.36s;transform:translate(-5px,4px) scale(.58)}
+.haxbro-thinking-text{min-width:54px}
+@keyframes haxbroThink{0%,100%{transform:translate(0,0) scale(.55);opacity:.45}50%{transform:translate(4px,-3px) scale(1.18);opacity:1}}
+@media(max-width:700px){.haxbro-thinking{margin-left:42px;margin-bottom:10px;font-size:8px}.haxbro-thinking-orbit{width:16px;height:16px}}
