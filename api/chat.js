@@ -70,10 +70,10 @@ export default async function(req,res){
   const identity=username?`\n\nPERSONALIZATION: The user's local username is ${username}. Their local agent is ${username} AI Agent. Do not reveal private information.`:'';
   const localAgent=kaiId?`\n\nKAI-61 LOCAL ID: ${kaiId}. This is only an identifier supplied by the user's browser; do not store it.`:'';
   const modelChoice=['auto','openai','google','openrouter','groq','mistral','astra'].includes(body.modelChoice)?body.modelChoice:'auto';
+  let astraWindowStarted=null;
   if(modelChoice==='astra'){
     if(!username)return res.status(400).json({error:'Choose a HAxBRO username before using ChatGPT Astra.'});
-    const now=Date.now();
-    const windowMs=2*60*60*1000;
+    const now=Date.now(),windowMs=2*60*60*1000;
     const existing=await db.query('SELECT username, window_started_at, request_count FROM haxbro_astra_usage WHERE username = $1',[username]);
     const row=existing.rows[0];
     const started=row?new Date(row.window_started_at).getTime():0;
@@ -81,16 +81,15 @@ export default async function(req,res){
       const retryAt=new Date(started+windowMs).toISOString();
       return res.status(429).json({error:'ChatGPT Astra is limited to 10 requests per 2 hours for each HAxBRO user.',astraLimit:10,astraWindowHours:2,retryAt});
     }
-    if(!row||now-started>=windowMs){
-      await db.query('INSERT INTO haxbro_astra_usage (username, window_started_at, request_count, updated_at) VALUES ($1, $2, 1, NOW()) ON CONFLICT (username) DO UPDATE SET window_started_at = EXCLUDED.window_started_at, request_count = 1, updated_at = NOW()',[username,new Date(now).toISOString()]);
-    }else{
-      await db.query('UPDATE haxbro_astra_usage SET request_count = request_count + 1, updated_at = NOW() WHERE username = $1',[username]);
-    }
+    astraWindowStarted=(!row||now-started>=windowMs)?new Date(now).toISOString():new Date(started).toISOString();
   }
   const modeSystem=requestedMode==='expert'?EXPERT_SYSTEM:requestedMode==='work'?WORK_SYSTEM:NORMAL_SYSTEM;
   const system=RESPONSE_RULES+'\n\n'+modeSystem+'\n\n'+CREATOR_RULE+identity+localAgent+godEngineContext;
   try{
     const result=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:6000,username,history,imageData,modelChoice});
+    if(modelChoice==='astra'&&astraWindowStarted){
+      await db.query('INSERT INTO haxbro_astra_usage (username, window_started_at, request_count, updated_at) VALUES ($1, $2, 1, NOW()) ON CONFLICT (username) DO UPDATE SET window_started_at = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.window_started_at ELSE EXCLUDED.window_started_at END, request_count = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.request_count + 1 ELSE 1 END, updated_at = NOW()',[username,astraWindowStarted]);
+    }
     const responseText=godEngineRoute ? `GODENGINE RECOMMENDATION — ${godEngineRoute.category}: ${godEngineRoute.label}\n${godEngineRoute.url}\n\n${result.text}` : result.text;
     return res.json({response:withChatEmoji(responseText),mode:requestedMode,provider:result.provider,model:result.model,responseMs:result.elapsedMs,status:result.status,failoverAttempts:result.attempts||[],knowledgeSource:result.status==='final-fallback'?'KAI-51 web research':'provider-api',kaiAgent:result.agent,kaiId:kaiId||null,webSteps:result.steps||[],godEngineResource:godEngineRoute?.label||null});
   }catch(err){
