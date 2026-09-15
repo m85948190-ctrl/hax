@@ -421,6 +421,55 @@ html[data-theme="dark"] .message-body .bubble{
 html[data-theme="light"] .message .meta{color:#777!important}
 html[data-theme="dark"] .message .meta{color:#a8a8a8!important}
 
+/* FINAL COMPOSER CONTROL LOCK — keep mic/send compact, stable and always rendered. */
+html[data-theme] .composer .float-tool,
+html[data-theme] .composer .mic,
+html[data-theme] .composer #micBtn,
+html[data-theme] .composer .send,
+html[data-theme] .composer #sendBtn{
+  box-sizing:border-box!important;
+  flex:0 0 36px!important;
+  width:36px!important;
+  min-width:36px!important;
+  max-width:36px!important;
+  height:36px!important;
+  min-height:36px!important;
+  max-height:36px!important;
+  padding:0!important;
+  margin:0!important;
+  display:grid!important;
+  place-items:center!important;
+  align-self:flex-end!important;
+  visibility:visible!important;
+  opacity:1!important;
+  transform:none!important;
+}
+html[data-theme] .composer .mic .voice-mic-icon{
+  width:10px!important;
+  height:16px!important;
+  transform:scale(.82)!important;
+}
+html[data-theme] .composer .mic .voice-stop-icon{
+  width:10px!important;
+  height:10px!important;
+  transform:none!important;
+}
+html[data-theme] .composer .send b{display:inline-flex!important;align-items:center!important;justify-content:center!important;font-size:18px!important;line-height:1!important;height:auto!important}
+html[data-theme] .composer .send span{display:none!important}
+html[data-theme] .composer .send{overflow:hidden!important}
+html[data-theme] .composer .send:hover{transform:none!important}
+@media(max-width:700px){
+  html[data-theme] .composer .float-tool,
+  html[data-theme] .composer .mic,
+  html[data-theme] .composer #micBtn,
+  html[data-theme] .composer .send,
+  html[data-theme] .composer #sendBtn{
+    flex-basis:34px!important;width:34px!important;min-width:34px!important;max-width:34px!important;
+    height:34px!important;min-height:34px!important;max-height:34px!important;
+  }
+  html[data-theme] .composer .mic .voice-mic-icon{width:9px!important;height:15px!important}
+}
+
 /* DARK SIDEBAR TYPOGRAPHY — text stays bright and premium without black boxes. */
 html[data-theme="dark"] .sidebar .side-title,
 html[data-theme="dark"] .sidebar .side-title b,
