@@ -32,9 +32,9 @@ async function fetchPage(url) {
     const finalUrl = new URL(r.url || target.toString());
     if (KAI_CONTROL.targets.rejectPrivateRedirects && targetHostIsPrivate(finalUrl.hostname)) throw new Error('Redirected to a private/local target.');
     const declared = Number(r.headers.get('content-length') || 0);
-    if (declared > KAI_CONTROL.network.maxBodyBytes) throw new Error('Response exceeds KAI789 size limit.');
+    if (declared > KAI_CONTROL.network.maxBodyBytes) throw new Error('Response exceeds KAI 12 size limit.');
     const buf = await r.arrayBuffer();
-    if (buf.byteLength > KAI_CONTROL.network.maxBodyBytes) throw new Error('Response exceeds KAI789 size limit.');
+    if (buf.byteLength > KAI_CONTROL.network.maxBodyBytes) throw new Error('Response exceeds KAI 12 size limit.');
     return { response: r, finalUrl, body: new TextDecoder().decode(buf), bytes: buf.byteLength, contentType: r.headers.get('content-type') || '' };
   } finally { clearTimeout(timer); }
 }
@@ -205,7 +205,7 @@ export default async function handler(req, res) {
     const result = await executeTool(parsed.name, parsed.arg);
     return send(res, { ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode, command: '/' + parsed.name, capability, capabilities, result, trace: [{ type: 'understand', input: clean(input, 2000), intent: parsed.name }, { type: 'tool_start', tool: KAI_CONTROL.identity.name, args: { command: '/' + parsed.name, url: parsed.arg || null } }] });
   } catch (e) {
-    console.error('KAI789 execution error:', e?.stack || e);
-    return send(res, { ok: false, engine: KAI_CONTROL.identity.name, provider: null, providerRequired: KAI_CONTROL.identity.providerRequired, error: e?.message || 'KAI789 execution failed.' }, 400);
+    console.error('KAI 12 execution error:', e?.stack || e);
+    return send(res, { ok: false, engine: KAI_CONTROL.identity.name, provider: null, providerRequired: KAI_CONTROL.identity.providerRequired, error: e?.message || 'KAI 12 execution failed.' }, 400);
   }
 }
