@@ -25,11 +25,7 @@
   head.position.set(1.55, .55, .05);
   root.add(head);
 
-  const headWire = new THREE.Mesh(new THREE.IcosahedronGeometry(1.75, 2), glass);
-  headWire.scale.copy(head.scale);
-  headWire.position.copy(head.position);
-  root.add(headWire);
-
+  // Keep the silhouette clean: the dense wireframe shell read as visual noise/glitch.
   const visor = new THREE.Mesh(new THREE.TorusGeometry(.48, .055, 10, 64, Math.PI * .92), cyan);
   visor.rotation.set(Math.PI / 2.8, -.18, .02);
   visor.position.set(1.82, .72, 1.25);
@@ -58,24 +54,17 @@
 
   const nodeGroup = new THREE.Group();
   brain.add(nodeGroup);
-  const points = [];
-  for (let i = 0; i < 42; i++) {
+  // A restrained neural core: fewer points, no random connecting lines.
+  for (let i = 0; i < 18; i++) {
+    const a = (i / 18) * Math.PI * 2;
     const p = new THREE.Vector3(
-      (Math.random() - .5) * 1.55,
-      (Math.random() - .5) * 1.65,
-      (Math.random() - .5) * 1.05
+      Math.cos(a) * (.42 + Math.random() * .25),
+      Math.sin(a * 1.7) * (.45 + Math.random() * .25),
+      Math.sin(a * 2.1) * (.28 + Math.random() * .2)
     );
-    if ((p.x * p.x) / 0.72 + (p.y * p.y) / 1.1 > 1.35) continue;
-    points.push(p);
-    const n = new THREE.Mesh(new THREE.SphereGeometry(.028 + Math.random() * .025, 7, 7), cyan);
+    const n = new THREE.Mesh(new THREE.SphereGeometry(.022 + Math.random() * .012, 7, 7), cyan);
     n.position.copy(p);
     nodeGroup.add(n);
-  }
-  for (let i = 0; i < points.length - 1; i += 2) {
-    const a = points[i], b = points[(i + 3) % points.length];
-    const geom = new THREE.BufferGeometry().setFromPoints([a, b]);
-    const line = new THREE.Line(geom, new THREE.LineBasicMaterial({ color: 0x138eff, transparent: true, opacity: .22 }));
-    nodeGroup.add(line);
   }
 
   const rings = new THREE.Group();
@@ -113,7 +102,6 @@
     root.rotation.y = Math.sin(t * .18) * .11;
     root.rotation.x = Math.sin(t * .14) * .025;
     head.rotation.y = Math.sin(t * .38) * .09;
-    headWire.rotation.y = head.rotation.y;
     brain.rotation.y = -Math.sin(t * .26) * .2;
     brain.rotation.z = Math.sin(t * .18) * .035;
     lobes.forEach((lobe, i) => { lobe.rotation.y += .0015 * (i ? -1 : 1); });
