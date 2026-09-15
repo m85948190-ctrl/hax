@@ -249,6 +249,39 @@ html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .compo
   html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome{border-radius:13px!important}
 }
 
+/* ---------- reliability + final polish ---------- */
+/* Native hidden state must always win. This prevents an invisible login/overlay layer from intercepting clicks. */
+html body .username-gate[hidden],
+html body .username-gate[aria-hidden="true"],
+html body #usernameGate[hidden],
+html body #usernameGate[aria-hidden="true"]{
+  display:none!important;
+  visibility:hidden!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+/* The username gate is a login surface, never an app-wide click shield after entry. */
+html[data-theme="light"] body.hax-modern .username-gate:not([hidden]){background:rgba(241,245,249,.72)!important}
+html[data-theme="dark"] body.hax-modern .username-gate:not([hidden]){background:rgba(7,10,14,.72)!important}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-toggle,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn{
+  min-height:40px!important;
+  transition:background-color .16s ease,border-color .16s ease,color .16s ease,transform .16s ease!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link:hover{transform:translateX(1px)!important}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link:hover{transform:translateX(1px)!important}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history-list{scrollbar-width:thin;scrollbar-color:#aeb8c4 transparent}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history-list{scrollbar-color:#414952 transparent}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) :focus-visible{outline:2px solid #4d9dff!important;outline-offset:2px!important}
+
+/* ---------- HAxBRO UI Command Center ---------- */
+.ui-command-center{position:fixed;inset:0;z-index:2147481000;display:grid;place-items:center;padding:24px;background:rgba(4,7,11,.58);backdrop-filter:blur(14px);opacity:0;visibility:hidden;transition:opacity .16s ease,visibility .16s ease}
+.ui-command-center.open{opacity:1;visibility:visible}
+.ui-command-card{width:min(720px,94vw);max-height:min(760px,90vh);overflow:auto;background:#171a1e;border:1px solid #343a42;border-radius:20px;box-shadow:0 30px 100px rgba(0,0,0,.45);color:#f2f4f7;padding:24px}
+.ui-command-card header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid #30353c}
+.ui-command-card header span{font:800 8px ui-monospace,monospace;letter-spacing:.16em;color:#6faef5}.ui-command-card h2{margin:7px 0 4px;font-size:24px;letter-spacing:-.03em}.ui-command-card header small{color:#929ba5;font-size:11px}.ui-command-card header button{width:34px;height:34px;border:1px solid #3b424a;background:#20242a;color:#cbd2d9;border-radius:9px;font-size:20px;cursor:pointer}.ui-command-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}.ui-command-grid label{display:grid;gap:7px;color:#89939e;font:800 9px ui-monospace,monospace;letter-spacing:.1em}.ui-command-grid input,.ui-command-grid select{width:100%;box-sizing:border-box;background:#101317;color:#eef2f5;border:1px solid #343a42;border-radius:10px;padding:11px 12px;outline:0}.ui-command-grid input:focus,.ui-command-grid select:focus{border-color:#4d9dff;box-shadow:0 0 0 3px rgba(77,157,255,.12)}.ui-command-actions{display:flex;align-items:center;gap:9px;margin-top:18px}.ui-command-actions button{border:1px solid #3a4149;background:#20242a;color:#dbe1e6;border-radius:10px;padding:10px 13px;font-weight:750;cursor:pointer}.ui-command-actions button:first-child{background:#3b7fc5;border-color:#4d9dff;color:#fff}.ui-command-actions span{margin-left:auto;color:#6f7a85;font-size:9px}.ui-command-note{margin-top:14px;padding:11px 12px;border:1px solid #2d333a;border-radius:10px;background:#121519;color:#7f8993;font-size:10px;line-height:1.5}@media(max-width:600px){.ui-command-card{padding:18px;border-radius:16px}.ui-command-grid{grid-template-columns:1fr}.ui-command-actions{flex-wrap:wrap}.ui-command-actions span{width:100%;margin-left:0}}
+
 /* Do not visually override explicitly activated security/admin special UIs. */
 html[data-theme] body.hacker-ui .topbar,
 html[data-theme] body.hacker-ui .sidebar,
