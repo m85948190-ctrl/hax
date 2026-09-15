@@ -597,4 +597,24 @@ html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) ::placeholder{color:#777!important;-webkit-text-fill-color:#777!important}
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) svg{color:#333!important}
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .send{color:#fff!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #micBtn,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .float-tool.mic{
+  width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;max-height:36px!important;
+  flex:0 0 36px!important;display:grid!important;place-items:center!important;
+  background:#f4f4f4!important;color:#111!important;border:1px solid #c8c8c8!important;
+  border-radius:10px!important;padding:0!important;opacity:1!important;visibility:visible!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #micBtn .voice-mic-icon,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .float-tool.mic .voice-mic-icon{color:#111!important;border-color:#111!important;opacity:1!important;visibility:visible!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #micBtn .voice-mic-icon:after,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #micBtn .voice-mic-icon:before{border-color:#111!important;background:#111!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #micBtn .voice-mic-icon:after{border-top:0!important;background:transparent!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #sendBtn,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .send{
+  width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;max-height:36px!important;
+  flex:0 0 36px!important;display:grid!important;place-items:center!important;visibility:visible!important;opacity:1!important;
+  padding:0!important;overflow:hidden!important;background:#111!important;color:#fff!important;border:1px solid #111!important;border-radius:10px!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #sendBtn b{display:block!important;color:#fff!important;font-size:17px!important;line-height:1!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #sendBtn span{display:none!important}
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn.active{color:#2459b8!important}
