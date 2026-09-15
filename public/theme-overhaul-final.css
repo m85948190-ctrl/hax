@@ -1,0 +1,298 @@
+/* HAxBRO AI — FINAL THEME SYSTEM v1
+   Deliberately replaces the accumulated theme overrides with one coherent visual language.
+   Light: editorial / premium software workspace. Dark: midnight / technical workspace.
+   No gradients, no glass-card overload, no neon flood, no pure-white/pure-black canvas.
+*/
+:root{
+  --hx-blue:#1677d2;
+  --hx-blue-strong:#0f63b3;
+  --hx-light-bg:#f3f5f7;
+  --hx-light-panel:#fafbfc;
+  --hx-light-surface:#ffffff;
+  --hx-light-raised:#f7f9fb;
+  --hx-light-border:#d9dfe6;
+  --hx-light-border-strong:#c6ced7;
+  --hx-light-text:#151a20;
+  --hx-light-muted:#69737e;
+  --hx-dark-bg:#0b0e12;
+  --hx-dark-panel:#101419;
+  --hx-dark-surface:#151a20;
+  --hx-dark-raised:#1a2027;
+  --hx-dark-border:#29313a;
+  --hx-dark-border-strong:#39434e;
+  --hx-dark-text:#eef2f6;
+  --hx-dark-muted:#9aa5b0;
+}
+
+html[data-theme="light"] body.hax-modern,
+html[data-theme="dark"] body.hax-modern{
+  min-height:100vh!important;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  letter-spacing:normal!important;
+}
+
+/* ---------- LIGHT ---------- */
+html[data-theme="light"] body.hax-modern,
+html[data-theme="light"] body.hax-modern .app-shell,
+html[data-theme="light"] body.hax-modern .chat-panel,
+html[data-theme="light"] body.hax-modern .messages{
+  background:var(--hx-light-bg)!important;
+  color:var(--hx-light-text)!important;
+}
+html[data-theme="light"] body.hax-modern .topbar{
+  background:var(--hx-light-panel)!important;
+  border-bottom:1px solid var(--hx-light-border)!important;
+  box-shadow:0 1px 3px rgba(22,32,42,.035)!important;
+}
+html[data-theme="light"] body.hax-modern .sidebar{
+  background:var(--hx-light-panel)!important;
+  border-right:1px solid var(--hx-light-border)!important;
+}
+html[data-theme="light"] body.hax-modern .chat-head{
+  background:rgba(243,245,247,.96)!important;
+  border-bottom:1px solid var(--hx-light-border)!important;
+}
+html[data-theme="light"] body.hax-modern .mode-card,
+html[data-theme="light"] body.hax-modern .ai-tools,
+html[data-theme="light"] body.hax-modern .history{
+  border-color:var(--hx-light-border)!important;
+}
+html[data-theme="light"] body.hax-modern .maker-link,
+html[data-theme="light"] body.hax-modern .mode-btn,
+html[data-theme="light"] body.hax-modern .top-toggle{
+  min-height:38px!important;
+  background:transparent!important;
+  color:#424b55!important;
+  border:1px solid transparent!important;
+  box-shadow:none!important;
+  border-radius:8px!important;
+  font-weight:600!important;
+}
+html[data-theme="light"] body.hax-modern .maker-link:hover,
+html[data-theme="light"] body.hax-modern .mode-btn:hover,
+html[data-theme="light"] body.hax-modern .top-toggle:hover{
+  background:var(--hx-light-raised)!important;
+  border-color:var(--hx-light-border)!important;
+  color:#151a20!important;
+  transform:none!important;
+}
+html[data-theme="light"] body.hax-modern .mode-btn.active{
+  background:#eaf3fc!important;
+  border-color:#c5def5!important;
+  color:var(--hx-blue-strong)!important;
+}
+html[data-theme="light"] body.hax-modern .history-row.selected,
+html[data-theme="light"] body.hax-modern .history-row:focus-within{
+  background:#eef2f6!important;
+  border-radius:8px!important;
+}
+html[data-theme="light"] body.hax-modern .history-item,
+html[data-theme="light"] body.hax-modern .history-more{color:#4e5862!important}
+html[data-theme="light"] body.hax-modern .history-row.selected .history-item{color:#171c22!important}
+html[data-theme="light"] body.hax-modern .section-label,
+html[data-theme="light"] body.hax-modern .mode-desc,
+html[data-theme="light"] body.hax-modern .tagline,
+html[data-theme="light"] body.hax-modern .hint,
+html[data-theme="light"] body.hax-modern .eyebrow{color:var(--hx-light-muted)!important}
+html[data-theme="light"] body.hax-modern .brand strong,
+html[data-theme="light"] body.hax-modern .side-title b,
+html[data-theme="light"] body.hax-modern .mode-name,
+html[data-theme="light"] body.hax-modern .chat-head .terminal,
+html[data-theme="light"] body.hax-modern .chat-head #headMode{color:#12171d!important}
+html[data-theme="light"] body.hax-modern .terminal{color:var(--hx-blue)!important}
+
+/* Light welcome: hierarchy without a giant card. */
+html[data-theme="light"] body.hax-modern .hero-welcome{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  padding-top:18px!important;
+}
+html[data-theme="light"] body.hax-modern .hero-welcome h1{color:#12171d!important;letter-spacing:-.035em!important}
+html[data-theme="light"] body.hax-modern .hero-welcome h1 span{color:var(--hx-blue-strong)!important}
+html[data-theme="light"] body.hax-modern .hero-welcome p{color:#65707b!important}
+html[data-theme="light"] body.hax-modern .hero-chips span,
+html[data-theme="light"] body.hax-modern .hero-capabilities>div{
+  background:var(--hx-light-surface)!important;
+  border:1px solid var(--hx-light-border)!important;
+  box-shadow:0 1px 2px rgba(20,30,40,.025)!important;
+}
+
+/* Composer is the primary interaction: elevated, compact, not a floating white slab. */
+html[data-theme="light"] body.hax-modern .composer{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"] body.hax-modern .composer .input-wrap{
+  background:var(--hx-light-surface)!important;
+  border:1px solid var(--hx-light-border-strong)!important;
+  border-radius:12px!important;
+  box-shadow:0 3px 12px rgba(20,30,40,.06)!important;
+}
+html[data-theme="light"] body.hax-modern .composer textarea{color:#151a20!important;-webkit-text-fill-color:#151a20!important}
+html[data-theme="light"] body.hax-modern .composer textarea::placeholder{color:#7b858f!important;-webkit-text-fill-color:#7b858f!important}
+html[data-theme="light"] body.hax-modern .composer .mic{
+  background:var(--hx-light-surface)!important;color:#2b333b!important;
+  border:1px solid var(--hx-light-border-strong)!important;border-radius:10px!important;
+  box-shadow:0 2px 7px rgba(20,30,40,.04)!important;
+}
+html[data-theme="light"] body.hax-modern .composer .send{
+  background:#151a20!important;color:#fff!important;border:1px solid #151a20!important;
+  border-radius:10px!important;box-shadow:0 3px 9px rgba(20,30,40,.12)!important;
+}
+html[data-theme="light"] body.hax-modern .composer .send:hover{background:#29323b!important;color:#fff!important}
+html[data-theme="light"] body.hax-modern .model-picker-btn{color:#4b5660!important}
+html[data-theme="light"] body.hax-modern .model-picker-menu{
+  background:#fff!important;border:1px solid var(--hx-light-border)!important;
+  box-shadow:0 14px 36px rgba(20,30,40,.12)!important;border-radius:11px!important;
+}
+html[data-theme="light"] body.hax-modern .model-option:hover,
+html[data-theme="light"] body.hax-modern .model-option.active{background:#f1f4f7!important}
+
+/* ---------- DARK ---------- */
+html[data-theme="dark"] body.hax-modern,
+html[data-theme="dark"] body.hax-modern .app-shell,
+html[data-theme="dark"] body.hax-modern .chat-panel,
+html[data-theme="dark"] body.hax-modern .messages{
+  background:var(--hx-dark-bg)!important;
+  color:var(--hx-dark-text)!important;
+}
+html[data-theme="dark"] body.hax-modern .topbar{
+  background:#0f1318!important;
+  border-bottom:1px solid var(--hx-dark-border)!important;
+  box-shadow:0 1px 4px rgba(0,0,0,.24)!important;
+}
+html[data-theme="dark"] body.hax-modern .sidebar{
+  background:#0f1318!important;
+  border-right:1px solid var(--hx-dark-border)!important;
+}
+html[data-theme="dark"] body.hax-modern .chat-head{
+  background:#10151b!important;
+  border-bottom:1px solid var(--hx-dark-border)!important;
+}
+html[data-theme="dark"] body.hax-modern .mode-card,
+html[data-theme="dark"] body.hax-modern .ai-tools,
+html[data-theme="dark"] body.hax-modern .history{
+  border-color:var(--hx-dark-border)!important;
+}
+html[data-theme="dark"] body.hax-modern .maker-link,
+html[data-theme="dark"] body.hax-modern .mode-btn,
+html[data-theme="dark"] body.hax-modern .top-toggle{
+  min-height:38px!important;
+  background:transparent!important;
+  color:#aeb7c1!important;
+  border:1px solid transparent!important;
+  box-shadow:none!important;
+  border-radius:8px!important;
+  font-weight:600!important;
+}
+html[data-theme="dark"] body.hax-modern .maker-link:hover,
+html[data-theme="dark"] body.hax-modern .mode-btn:hover,
+html[data-theme="dark"] body.hax-modern .top-toggle:hover{
+  background:#171d24!important;
+  border-color:var(--hx-dark-border)!important;
+  color:#f1f4f7!important;
+  transform:none!important;
+}
+html[data-theme="dark"] body.hax-modern .mode-btn.active{
+  background:#172b3f!important;
+  border-color:#31597d!important;
+  color:#a9d2f4!important;
+}
+html[data-theme="dark"] body.hax-modern .history-row.selected,
+html[data-theme="dark"] body.hax-modern .history-row:focus-within{
+  background:#171d24!important;border-radius:8px!important;
+}
+html[data-theme="dark"] body.hax-modern .history-item,
+html[data-theme="dark"] body.hax-modern .history-more{color:#aeb7c1!important}
+html[data-theme="dark"] body.hax-modern .history-row.selected .history-item{color:#f1f4f7!important}
+html[data-theme="dark"] body.hax-modern .section-label,
+html[data-theme="dark"] body.hax-modern .mode-desc,
+html[data-theme="dark"] body.hax-modern .tagline,
+html[data-theme="dark"] body.hax-modern .hint,
+html[data-theme="dark"] body.hax-modern .eyebrow{color:var(--hx-dark-muted)!important}
+html[data-theme="dark"] body.hax-modern .brand strong,
+html[data-theme="dark"] body.hax-modern .side-title b,
+html[data-theme="dark"] body.hax-modern .mode-name,
+html[data-theme="dark"] body.hax-modern .chat-head .terminal,
+html[data-theme="dark"] body.hax-modern .chat-head #headMode{color:#f2f5f8!important}
+html[data-theme="dark"] body.hax-modern .terminal{color:#68b2f4!important}
+
+/* Dark welcome: open canvas, subtle hierarchy. */
+html[data-theme="dark"] body.hax-modern .hero-welcome{
+  background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;padding-top:18px!important;
+}
+html[data-theme="dark"] body.hax-modern .hero-welcome h1{color:#f1f4f7!important;letter-spacing:-.035em!important}
+html[data-theme="dark"] body.hax-modern .hero-welcome h1 span{color:#71b9f3!important}
+html[data-theme="dark"] body.hax-modern .hero-welcome p{color:#9aa5b0!important}
+html[data-theme="dark"] body.hax-modern .hero-chips span,
+html[data-theme="dark"] body.hax-modern .hero-capabilities>div{
+  background:#121820!important;border:1px solid #29313a!important;box-shadow:none!important;
+}
+
+html[data-theme="dark"] body.hax-modern .composer{background:transparent!important;border:0!important;box-shadow:none!important}
+html[data-theme="dark"] body.hax-modern .composer .input-wrap{
+  background:#11171e!important;border:1px solid #34404c!important;border-radius:12px!important;
+  box-shadow:0 4px 18px rgba(0,0,0,.18)!important;
+}
+html[data-theme="dark"] body.hax-modern .composer textarea{color:#eef2f6!important;-webkit-text-fill-color:#eef2f6!important}
+html[data-theme="dark"] body.hax-modern .composer textarea::placeholder{color:#78838e!important;-webkit-text-fill-color:#78838e!important}
+html[data-theme="dark"] body.hax-modern .composer .mic{
+  background:#151b22!important;color:#dce3e9!important;border:1px solid #34404c!important;border-radius:10px!important;
+}
+html[data-theme="dark"] body.hax-modern .composer .send{
+  background:#e9eef3!important;color:#11171e!important;border:1px solid #e9eef3!important;border-radius:10px!important;
+}
+html[data-theme="dark"] body.hax-modern .composer .send:hover{background:#fff!important;color:#0b0e12!important}
+html[data-theme="dark"] body.hax-modern .model-picker-btn{color:#c2cad2!important}
+html[data-theme="dark"] body.hax-modern .model-picker-menu{
+  background:#141a21!important;border:1px solid #303a45!important;
+  box-shadow:0 16px 38px rgba(0,0,0,.32)!important;border-radius:11px!important;
+}
+html[data-theme="dark"] body.hax-modern .model-option:hover,
+html[data-theme="dark"] body.hax-modern .model-option.active{background:#1d252e!important}
+
+/* Theme selector: understated segmented control. */
+html[data-theme="light"] body.hax-modern .theme-switch{background:#eef1f4!important;border:1px solid #d6dce2!important;padding:2px!important;border-radius:8px!important}
+html[data-theme="light"] body.hax-modern .theme-choice{color:#68727c!important;border:0!important;background:transparent!important}
+html[data-theme="light"] body.hax-modern .theme-choice.active-theme{background:#fff!important;color:#151a20!important;box-shadow:0 1px 3px rgba(20,30,40,.08)!important}
+html[data-theme="dark"] body.hax-modern .theme-switch{background:#171d24!important;border:1px solid #2d3741!important;padding:2px!important;border-radius:8px!important}
+html[data-theme="dark"] body.hax-modern .theme-choice{color:#929da8!important;border:0!important;background:transparent!important}
+html[data-theme="dark"] body.hax-modern .theme-choice.active-theme{background:#242c35!important;color:#f1f4f7!important;box-shadow:none!important}
+
+/* Inputs, menus and overlays */
+html[data-theme="light"] body.hax-modern input,
+html[data-theme="light"] body.hax-modern textarea,
+html[data-theme="light"] body.hax-modern select{background:#fff!important;color:#151a20!important;border-color:#d5dce3!important}
+html[data-theme="dark"] body.hax-modern input,
+html[data-theme="dark"] body.hax-modern textarea,
+html[data-theme="dark"] body.hax-modern select{background:#12181f!important;color:#eef2f6!important;border-color:#303a45!important}
+html[data-theme="light"] body.hax-modern .mobile-drawer{background:#fafbfc!important;color:#151a20!important;border-color:#d9dfe6!important}
+html[data-theme="dark"] body.hax-modern .mobile-drawer{background:#101419!important;color:#eef2f6!important;border-color:#29313a!important}
+
+/* Keep creation panels in the same system. */
+html[data-theme="light"] body.hax-modern .art-generation-card,
+html[data-theme="light"] body.hax-modern .art-generation-panel{background:#f7f9fb!important;color:#151a20!important}
+html[data-theme="dark"] body.hax-modern .art-generation-card,
+html[data-theme="dark"] body.hax-modern .art-generation-panel{background:#101419!important;color:#eef2f6!important}
+
+/* Accessibility and focus: one restrained blue focus language. */
+html[data-theme] body.hax-modern :focus-visible{outline:2px solid #3c8fd7!important;outline-offset:2px!important}
+
+/* Never allow legacy theme layers to inject gradients into the core workspace. */
+html[data-theme] body.hax-modern .topbar,
+html[data-theme] body.hax-modern .sidebar,
+html[data-theme] body.hax-modern .chat-panel,
+html[data-theme] body.hax-modern .messages,
+html[data-theme] body.hax-modern .chat-head,
+html[data-theme] body.hax-modern .composer,
+html[data-theme] body.hax-modern .composer .input-wrap,
+html[data-theme] body.hax-modern .hero-welcome{background-image:none!important}
+
+@media(max-width:700px){
+  html[data-theme] body.hax-modern .topbar{height:58px!important}
+  html[data-theme] body.hax-modern .composer{width:calc(100vw - 24px)!important;bottom:10px!important}
+  html[data-theme] body.hax-modern .hero-welcome{padding-top:10px!important}
+}
