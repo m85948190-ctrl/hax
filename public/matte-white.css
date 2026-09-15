@@ -1,1 +1,226 @@
-:root{--mw-bg:#fff;--mw-surface:#fff;--mw-text:#000;--mw-border:#fff;--mw-muted:#000;--mw-accent:#000}html,body{background:#fff!important;color:#000!important}body *{background-color:#fff!important;background-image:none!important;color:#000!important;box-shadow:none!important;text-shadow:none!important;border-color:#fff!important;outline-color:#fff!important}body,button,input,textarea,select{color:#000!important}button,input,textarea,select{background:#fff!important;border-color:#fff!important;box-shadow:none!important}a,a:hover,a:focus{color:#000!important}::placeholder{color:#000!important;opacity:1!important}::selection{background:#fff!important;color:#000!important}.glass,.card,.panel,.sheet,.modal,.drawer,.sidebar,.topbar,.composer,.input-wrap,.mode-card,.maker-link,.mode-btn,.send,.chat-panel,.messages,.app-shell,[class*="card"],[class*="panel"],[class*="sheet"],[class*="glass"],[class*="composer"],[class*="input-wrap"],[class*="mode-"]{background:#fff!important;border-color:#fff!important;box-shadow:none!important;color:#000!important}.active,.selected,.highlight,.accent,.glow,.gradient{background:#fff!important;background-image:none!important;box-shadow:none!important;color:#000!important;border-color:#fff!important}.topbar,.sidebar,.chat-panel,.messages{border:0!important}.composer,.input-wrap,.mode-card,.maker-link,.mode-btn,.send{border:0!important;border-radius:0!important}.send:hover,.mode-btn:hover,.maker-link:hover,button:hover{background:#fff!important;color:#000!important;border-color:#fff!important;box-shadow:none!important}.send:active,.mode-btn:active,button:active{background:#fff!important;color:#000!important}.send svg,.mode-btn svg,.maker-link svg,button svg{color:#000!important;stroke:#000!important;fill:none!important}.hide-interaction-panel{display:none!important}
+/* HAxBRO Professional Theme System
+   Light = matte white / deep-white interaction accents.
+   Dark = restrained charcoal black.
+   One surface language; no gradients, glow, or heavy shadows.
+*/
+:root{
+  --hb-bg:#ffffff;
+  --hb-surface:#ffffff;
+  --hb-surface-2:#fdfdfd;
+  --hb-interactive:#fcfcfc;
+  --hb-border:transparent;
+  --hb-text:#0b0b0b;
+  --hb-muted:#555555;
+  --hb-soft:#808080;
+  --hb-hover:#fbfbfb;
+  --hb-strong:#111111;
+}
+
+html,body{min-height:100%;}
+html{background:var(--hb-bg)!important;transition:background .18s ease,color .18s ease;}
+body.hax-modern{
+  background:var(--hb-bg)!important;
+  color:var(--hb-text)!important;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  transition:background .18s ease,color .18s ease;
+}
+
+/* LIGHT — professional single-surface workspace */
+body.hax-modern:not(.dark),
+body.hax-modern:not(.dark) .app-shell,
+body.hax-modern:not(.dark) .topbar,
+body.hax-modern:not(.dark) .sidebar,
+body.hax-modern:not(.dark) .chat-panel,
+body.hax-modern:not(.dark) .messages,
+body.hax-modern:not(.dark) .mobile-drawer,
+body.hax-modern:not(.dark) .mobile-drawer-content,
+body.hax-modern:not(.dark) .art-generation-panel,
+body.hax-modern:not(.dark) .art-generation-card{
+  background:#fff!important;
+  color:#0b0b0b!important;
+}
+body.hax-modern:not(.dark) *{
+  background-image:none!important;
+  box-shadow:none!important;
+  text-shadow:none!important;
+}
+body.hax-modern:not(.dark) button,
+body.hax-modern:not(.dark) input,
+body.hax-modern:not(.dark) textarea,
+body.hax-modern:not(.dark) select{
+  background:#fff!important;
+  color:#0b0b0b!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.hax-modern:not(.dark) a{color:#0b0b0b!important}
+body.hax-modern:not(.dark) ::placeholder{color:#666!important;opacity:1!important}
+body.hax-modern:not(.dark) .topbar{border-bottom:1px solid #f8f8f8!important}
+body.hax-modern:not(.dark) .sidebar{border-right:1px solid #f8f8f8!important}
+body.hax-modern:not(.dark) .chat-head{background:#fff!important;border-bottom:1px solid #f8f8f8!important}
+
+/* History: selected chats use “deep white” — white with only a trace of black. */
+body.hax-modern:not(.dark) .history-list .history-row,
+body.hax-modern:not(.dark) .history-list .history-item,
+body.hax-modern:not(.dark) .history-list .history-more{
+  background:transparent!important;
+  color:#333!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.hax-modern:not(.dark) .history-list .history-row:hover,
+body.hax-modern:not(.dark) .history-list .history-row:focus-within,
+body.hax-modern:not(.dark) .history-list .history-row.selected,
+body.hax-modern:not(.dark) .history-list .history-row.selected .history-item,
+body.hax-modern:not(.dark) .history-list .history-row.selected .history-more,
+body.hax-modern:not(.dark) .history-list .history-item.active,
+body.hax-modern:not(.dark) .history-list .history-item.selected,
+body.hax-modern:not(.dark) .history-list [aria-current="true"]{
+  background:#fcfcfc!important;
+  color:#0b0b0b!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.hax-modern:not(.dark) .history-list .history-row.selected .history-item{font-weight:600!important}
+
+/* Quiet interactions: emphasis comes from type and whitespace, not blocks. */
+body.hax-modern:not(.dark) .maker-link,
+body.hax-modern:not(.dark) .mode-btn,
+body.hax-modern:not(.dark) .top-toggle,
+body.hax-modern:not(.dark) .float-tool,
+body.hax-modern:not(.dark) .send{
+  background:transparent!important;
+  color:#333!important;
+  border:0!important;
+  border-radius:7px!important;
+}
+body.hax-modern:not(.dark) .maker-link:hover,
+body.hax-modern:not(.dark) .mode-btn:hover,
+body.hax-modern:not(.dark) .top-toggle:hover,
+body.hax-modern:not(.dark) .float-tool:hover,
+body.hax-modern:not(.dark) .send:hover{
+  background:#fcfcfc!important;
+  color:#0b0b0b!important;
+}
+body.hax-modern:not(.dark) .mode-btn.active{
+  background:#fcfcfc!important;
+  color:#0b0b0b!important;
+  font-weight:600!important;
+}
+
+/* Composer: clean integrated control, not a sheet/card. */
+body.hax-modern:not(.dark) .composer{background:transparent!important;border:0!important;box-shadow:none!important}
+body.hax-modern:not(.dark) .composer .input-wrap{
+  background:#fff!important;
+  border:1px solid #f5f5f5!important;
+  border-radius:11px!important;
+  box-shadow:none!important;
+}
+body.hax-modern:not(.dark) .send{background:#fbfbfb!important;color:#111!important}
+body.hax-modern:not(.dark) .model-picker-menu{background:#fff!important;border:1px solid #f3f3f3!important;box-shadow:none!important}
+body.hax-modern:not(.dark) .model-option:hover,
+body.hax-modern:not(.dark) .model-option.active{background:#fcfcfc!important}
+
+/* DARK — charcoal black, same hierarchy, no neon. */
+body.hax-modern.dark,
+body.hax-modern.dark .app-shell,
+body.hax-modern.dark .topbar,
+body.hax-modern.dark .sidebar,
+body.hax-modern.dark .chat-panel,
+body.hax-modern.dark .messages,
+body.hax-modern.dark .mobile-drawer,
+body.hax-modern.dark .mobile-drawer-content,
+body.hax-modern.dark .art-generation-panel,
+body.hax-modern.dark .art-generation-card{
+  background:#101010!important;
+  color:#f4f4f4!important;
+}
+body.hax-modern.dark *{background-image:none!important;box-shadow:none!important;text-shadow:none!important}
+body.hax-modern.dark button,
+body.hax-modern.dark input,
+body.hax-modern.dark textarea,
+body.hax-modern.dark select{
+  background:#101010!important;
+  color:#f4f4f4!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+body.hax-modern.dark a{color:#f4f4f4!important}
+body.hax-modern.dark ::placeholder{color:#777!important;opacity:1!important}
+body.hax-modern.dark .topbar{border-bottom:1px solid #191919!important}
+body.hax-modern.dark .sidebar{border-right:1px solid #191919!important}
+body.hax-modern.dark .chat-head{background:#101010!important;border-bottom:1px solid #191919!important}
+
+body.hax-modern.dark .history-list .history-row,
+body.hax-modern.dark .history-list .history-item,
+body.hax-modern.dark .history-list .history-more{
+  background:transparent!important;
+  color:#a5a5a5!important;
+  border:0!important;
+}
+body.hax-modern.dark .history-list .history-row:hover,
+body.hax-modern.dark .history-list .history-row:focus-within,
+body.hax-modern.dark .history-list .history-row.selected,
+body.hax-modern.dark .history-list .history-row.selected .history-item,
+body.hax-modern.dark .history-list .history-row.selected .history-more,
+body.hax-modern.dark .history-list .history-item.active,
+body.hax-modern.dark .history-list .history-item.selected,
+body.hax-modern.dark .history-list [aria-current="true"]{
+  background:#202020!important;
+  color:#f4f4f4!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+body.hax-modern.dark .history-list .history-row.selected .history-item{font-weight:600!important}
+
+body.hax-modern.dark .maker-link,
+body.hax-modern.dark .mode-btn,
+body.hax-modern.dark .top-toggle,
+body.hax-modern.dark .float-tool,
+body.hax-modern.dark .send{
+  background:transparent!important;
+  color:#a5a5a5!important;
+  border:0!important;
+  border-radius:7px!important;
+}
+body.hax-modern.dark .maker-link:hover,
+body.hax-modern.dark .mode-btn:hover,
+body.hax-modern.dark .top-toggle:hover,
+body.hax-modern.dark .float-tool:hover,
+body.hax-modern.dark .send:hover{
+  background:#181818!important;
+  color:#f4f4f4!important;
+}
+body.hax-modern.dark .mode-btn.active{background:#202020!important;color:#f4f4f4!important;font-weight:600!important}
+body.hax-modern.dark .composer{background:transparent!important;border:0!important;box-shadow:none!important}
+body.hax-modern.dark .composer .input-wrap{background:#101010!important;border:1px solid #242424!important;border-radius:11px!important;box-shadow:none!important}
+body.hax-modern.dark .send{background:#1b1b1b!important;color:#f4f4f4!important}
+body.hax-modern.dark .model-picker-menu{background:#151515!important;border:1px solid #252525!important;box-shadow:none!important}
+body.hax-modern.dark .model-option:hover,
+body.hax-modern.dark .model-option.active{background:#202020!important}
+
+/* Theme control: readable, quiet, keyboard accessible. */
+#themeBtn,#mobileThemeBtn{font-weight:600!important;letter-spacing:.02em!important;cursor:pointer!important}
+#themeBtn:focus-visible,#mobileThemeBtn:focus-visible{outline:1px solid currentColor!important;outline-offset:3px!important}
+
+/* Never allow legacy mode/selected rules to introduce colored blocks. */
+body.hax-modern:not(.dark) .active,
+body.hax-modern:not(.dark) .selected,
+body.hax-modern:not(.dark) .highlight,
+body.hax-modern:not(.dark) .accent,
+body.hax-modern:not(.dark) .glow,
+body.hax-modern:not(.dark) .gradient{background-image:none!important}
+body.hax-modern.dark .active,
+body.hax-modern.dark .selected,
+body.hax-modern.dark .highlight,
+body.hax-modern.dark .accent,
+body.hax-modern.dark .glow,
+body.hax-modern.dark .gradient{background-image:none!important}
+
+@media(max-width:700px){
+  body.hax-modern .topbar{height:58px!important}
+  body.hax-modern .top-center{display:none!important}
+  body.hax-modern .sidebar{display:none!important}
+  body.hax-modern .chat-panel{min-height:100svh!important}
+  body.hax-modern .composer{bottom:10px!important;width:calc(100vw - 28px)!important}
+}
