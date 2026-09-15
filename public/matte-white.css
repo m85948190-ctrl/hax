@@ -397,6 +397,36 @@ html[data-theme="dark"] .message-body .bubble{
 html[data-theme="light"] .message .meta{color:#777!important}
 html[data-theme="dark"] .message .meta{color:#888!important}
 
+/* BRAND + NORMAL MODE: always crisp black in the Light workspace. */
+html[data-theme="light"] .topbar .brand,
+html[data-theme="light"] .topbar .brand strong,
+html[data-theme="light"] .topbar .brand strong span,
+html[data-theme="light"] .topbar .brand small,
+html[data-theme="light"] .topbar .brand .brandmark,
+html[data-theme="light"] .topbar #headMode,
+html[data-theme="light"] .topbar .mode-name,
+html[data-theme="light"] .topbar .top-username,
+html[data-theme="light"] .topbar .top-username b,
+html[data-theme="light"] .chat-head #headMode,
+html[data-theme="light"] .chat-head .terminal{
+  color:#050505!important;
+  opacity:1!important;
+  filter:none!important;
+  text-shadow:none!important;
+}
+
+/* Dim-white normal workspace surfaces. */
+html[data-theme="light"] body,
+html[data-theme="light"] .app-shell,
+html[data-theme="light"] .chat-panel,
+html[data-theme="light"] .messages,
+html[data-theme="light"] .topbar,
+html[data-theme="light"] .sidebar,
+html[data-theme="light"] .chat-head,
+html[data-theme="light"] .composer .input-wrap{
+  background:#f7f7f7!important;
+}
+
 /* v405 LIGHT TEXT + ICON AUTHORITY — keep writing, symbols, labels and controls visible. */
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax){color:#171717!important}
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .brand strong,
