@@ -83,22 +83,40 @@ expose = true
 description = "Optional Hugging Face token for Kai model fallback"
 
 [[secret]]
-name = "CLOUDFLARE_API_TOKEN"
+name = "ART_IMAGE_API_1_KEY"
 required = false
 expose = true
-description = "Cloudflare API token with Pages Write permission for public HAxBRO App Maker deployments"
+description = "Art Generation image provider slot 1 API key"
 
 [[secret]]
-name = "CLOUDFLARE_AI_API_TOKEN"
+name = "ART_IMAGE_API_2_KEY"
 required = false
 expose = true
-description = "Optional Cloudflare AI API token for the HAxBRO ChatGPT Astra model route"
+description = "Art Generation image provider slot 2 API key"
 
 [[secret]]
-name = "CLOUDFLARE_ACCOUNT_ID"
+name = "ART_IMAGE_API_3_KEY"
 required = false
 expose = true
-description = "Cloudflare account ID used for public Pages deployments"
+description = "Art Generation image provider slot 3 API key"
+
+[[secret]]
+name = "ART_VIDEO_API_1_KEY"
+required = false
+expose = true
+description = "Art Generation video provider slot 1 API key"
+
+[[secret]]
+name = "ART_VIDEO_API_2_KEY"
+required = false
+expose = true
+description = "Art Generation video provider slot 2 API key"
+
+[[secret]]
+name = "ART_VIDEO_API_3_KEY"
+required = false
+expose = true
+description = "Art Generation video provider slot 3 API key"
 
 [[secret]]
 name = "NETLIFY_OAUTH_CLIENT_ID"
