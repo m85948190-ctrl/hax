@@ -25,7 +25,7 @@ async function fetchPage(url) {
       redirect: 'follow',
       signal: controller.signal,
       headers: {
-        'user-agent': 'KAI789-WebInspector/1.0',
+        'user-agent': 'KAI12-WebInspector/1.0',
         accept: 'text/html,application/xhtml+xml,application/xml,text/plain;q=0.9,*/*;q=0.5'
       }
     });
@@ -173,7 +173,7 @@ export default async function handler(req, res) {
   }
   if (!(await verifyKaiAuthorization(req))) return send(res, { ok: false, error: 'Admin69 authentication required.' }, 401);
   if (req.method === 'GET') {
-    return send(res, { ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode, providerRequired: KAI_CONTROL.identity.providerRequired, capabilities, tools: toolDefinitions(capabilities), policy: KAI_CONTROL.policy, behavior: KAI_CONTROL.behavior, personality: KAI_CONTROL.personality });
+    return send(res, { ok: true, engine: KAI_CONTROL.identity.name, mode: KAI_CONTROL.identity.mode, providerRequired: KAI_CONTROL.identity.providerRequired, capabilities, tools: toolDefinitions(capabilities), policy: KAI_CONTROL.policy, behavior: KAI_CONTROL.behavior, personality: KAI_CONTROL.personality, mission: KAI_CONTROL.personality.mission });
   }
 
   try {
