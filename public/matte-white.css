@@ -200,8 +200,18 @@ body.hax-modern.dark .model-option:hover,
 body.hax-modern.dark .model-option.active{background:#202020!important}
 
 /* Theme control: readable, quiet, keyboard accessible. */
-#themeBtn,#mobileThemeBtn{font-weight:600!important;letter-spacing:.02em!important;cursor:pointer!important}
-#themeBtn:focus-visible,#mobileThemeBtn:focus-visible{outline:1px solid currentColor!important;outline-offset:3px!important}
+.theme-switch{display:flex!important;align-items:center;gap:2px;padding:2px!important;border:1px solid #ededed!important;border-radius:8px!important;background:#fff!important}
+.theme-switch .theme-choice{min-width:54px!important;padding:6px 9px!important;border-radius:6px!important;font-weight:600!important;letter-spacing:.02em!important;cursor:pointer!important}
+.mobile-theme-switch{display:flex!important;align-items:stretch;gap:6px!important;margin-top:4px!important}
+.mobile-theme-switch .theme-choice{flex:1!important;font-weight:600!important;letter-spacing:.02em!important;cursor:pointer!important}
+.theme-choice:focus-visible{outline:1px solid currentColor!important;outline-offset:2px!important}
+body.hax-modern:not(.dark) .theme-switch{background:#fff!important;border-color:#ededed!important}
+body.hax-modern:not(.dark) .theme-switch .theme-choice{background:transparent!important;color:#555!important}
+body.hax-modern:not(.dark) .theme-switch .theme-choice.active-theme{background:#fdfdfd!important;color:#080808!important}
+body.hax-modern.dark .theme-switch{background:#101010!important;border-color:#2a2a2a!important}
+body.hax-modern.dark .theme-switch .theme-choice{background:transparent!important;color:#8f8f8f!important}
+body.hax-modern.dark .theme-switch .theme-choice.active-theme{background:#202020!important;color:#f4f4f4!important}
+body.hax-modern.dark .mobile-theme-switch .theme-choice.active-theme{background:#202020!important;color:#f4f4f4!important}
 
 /* Never allow legacy mode/selected rules to introduce colored blocks. */
 body.hax-modern:not(.dark) .active,
@@ -244,10 +254,12 @@ body.hax-modern:not(.dark) .float-tool:hover,
 body.hax-modern:not(.dark) .send:hover{background:#fdfdfd!important;color:#050505!important}
 body.hax-modern:not(.dark) .mode-btn.active{background:#fdfdfd!important;color:#050505!important}
 
-/* Theme controls were hidden by an older shell stylesheet; make the real control visible. */
-body.hax-modern #themeBtn{display:inline-flex!important;align-items:center;justify-content:center;visibility:visible!important;opacity:1!important}
+/* Explicit theme selector visibility. The labels are commands: LIGHT always selects light, DARK always selects dark. */
+body.hax-modern .theme-switch{display:flex!important;visibility:visible!important;opacity:1!important}
+body.hax-modern .theme-switch .theme-choice{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;justify-content:center!important}
 body.hax-modern .top-actions{display:flex!important;visibility:visible!important;opacity:1!important}
-body.hax-modern #mobileThemeBtn{display:flex!important;align-items:center;justify-content:center;visibility:visible!important;opacity:1!important}
+body.hax-modern .mobile-theme-switch{display:flex!important;visibility:visible!important;opacity:1!important}
+body.hax-modern .mobile-theme-switch .theme-choice{display:flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;justify-content:center!important}
 
 /* DARK: charcoal black, explicitly including the root page background. */
 html:has(body.hax-modern.dark),
@@ -273,5 +285,5 @@ body.hax-modern.dark .history-list .history-row.selected .history-more{backgroun
   body.hax-modern .chat-panel{min-height:100svh!important}
   body.hax-modern .composer{bottom:10px!important;width:calc(100vw - 28px)!important}
   body.hax-modern .top-actions{display:none!important}
-  body.hax-modern #mobileThemeBtn{display:flex!important}
+  body.hax-modern .mobile-theme-switch{display:flex!important}
 }
