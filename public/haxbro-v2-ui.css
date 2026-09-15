@@ -48,6 +48,51 @@ body.hax-modern [style*="gradient"],body.hax-modern [class*="gradient"]{backgrou
 body.hax-modern .status i,body.hax-modern .workspace-dot{box-shadow:none!important}
 @media(max-width:900px){body.hax-modern .sidebar{width:258px!important}body.hax-modern .composer{left:50%!important;width:calc(100vw - 24px)!important}.messages{padding-left:14px!important;padding-right:14px!important}.hero-welcome{margin-top:24px!important;padding:24px 12px!important}}
 @media(max-width:700px){body.hax-modern .topbar{height:58px!important}.top-center{display:none!important}.sidebar{display:none!important}.chat-panel{min-height:100svh!important}.composer{bottom:10px!important}.hint{display:none!important}.hero-welcome h1{font-size:32px!important}.hero-capabilities{grid-template-columns:1fr 1fr!important}}
+/* Final monochrome refinement: continuous matte surfaces, almost no contrast. */
+body.hax-modern .topbar,
+body.hax-modern .sidebar,
+body.hax-modern .chat-panel,
+body.hax-modern .messages,
+body.hax-modern .mobile-drawer,
+body.hax-modern .app-shell{background:#fbfbfa!important;color:#3f3f3b!important}
+body.hax-modern .topbar,.body.hax-modern .sidebar{border-color:#eeeeea!important}
+body.hax-modern .mode-card,
+body.hax-modern .maker-link,
+body.hax-modern .customer-profile,
+body.hax-modern .composer,
+body.hax-modern .composer .input-wrap,
+body.hax-modern .hero-welcome,
+body.hax-modern .art-generation-card,
+body.hax-modern .hx-prof-card,
+body.hax-modern .art-prompt{background:#fbfbfa!important;border-color:#eeeeea!important;box-shadow:none!important}
+body.hax-modern .mode-btn,
+body.hax-modern .float-tool,
+body.hax-modern .top-toggle,
+body.hax-modern .mobile-menu,
+body.hax-modern .mobile-kai-log-btn{background:#f7f7f5!important;color:#6f6f69!important;border-color:#eeeeea!important;box-shadow:none!important}
+body.hax-modern .mode-btn.active,
+body.hax-modern .send,
+body.hax-modern .art-generate-btn{background:#efefec!important;color:#4b4b46!important;border-color:#e5e5e0!important;box-shadow:none!important}
+body.hax-modern .hero-chips span,
+body.hax-modern .hero-capabilities>div,
+body.hax-modern .ultimax-live-rail,
+body.hax-modern .ultimax-live-log,
+body.hax-modern .ultimax-live-state{background:#f7f7f5!important;border-color:#eeeeea!important;color:#77776f!important;box-shadow:none!important}
+body.hax-modern .hero-welcome h1,
+body.hax-modern .hero-welcome h1 span,
+body.hax-modern .side-title b,
+body.hax-modern .mode-name,
+body.hax-modern .section-label{color:#3e3e39!important}
+body.hax-modern .hero-welcome p,
+body.hax-modern .mode-desc,
+body.hax-modern .maker-link small,
+body.hax-modern .hint,
+body.hax-modern .status,
+body.hax-modern .top-center .tagline{color:#8b8b84!important}
+body.hax-modern .composer textarea{color:#3e3e39!important}
+body.hax-modern .composer textarea::placeholder{color:#aaa9a3!important}
+body.hax-modern .kai-live-button,[class*="kai-live-button"]{box-shadow:none!important}
+
 /* Dark mode remains available without changing the matte-white default. */
-body.hax-modern.hb-dark{--hb-bg:#252522;--hb-surface:#2b2b28;--hb-surface-2:#30302c;--hb-surface-3:#353530;--hb-line:#42423d;--hb-line-strong:#50504a;--hb-text:#e6e6e1;--hb-heading:#f0f0eb;--hb-muted:#aaa9a0;--hb-soft:#8f8e87}
-body.hax-modern.hb-dark .topbar,body.hax-modern.hb-dark .sidebar,body.hax-modern.hb-dark .mobile-drawer,body.hax-modern.hb-dark .composer,body.hax-modern.hb-dark .art-generation-card,body.hax-modern.hb-dark .hx-prof-card{background:#2b2b28!important;border-color:#42423d!important;color:#e6e6e1!important}body.hax-modern.hb-dark .chat-panel,body.hax-modern.hb-dark .messages{background:#252522!important}body.hax-modern.hb-dark .mode-card,body.hax-modern.hb-dark .maker-link,body.hax-modern.hb-dark .composer .input-wrap,body.hax-modern.hb-dark .art-prompt{background:#30302c!important;color:#e6e6e1!important;border-color:#464640!important}body.hax-modern.hb-dark .mode-btn,body.hax-modern.hb-dark .float-tool,body.hax-modern.hb-dark .top-toggle{background:#363631!important;color:#c4c4bc!important;border-color:#4b4b45!important}body.hax-modern.hb-dark .mode-btn.active,body.hax-modern.hb-dark .send,body.hax-modern.hb-dark .art-generate-btn{background:#d8d8d2!important;color:#30302c!important;border-color:#d8d8d2!important}body.hax-modern.hb-dark .hero-welcome p,body.hax-modern.hb-dark .mode-desc,body.hax-modern.hb-dark .maker-link small,body.hax-modern.hb-dark .hint,body.hax-modern.hb-dark .status{color:#aaa9a0!important}
+body.hax-modern.hb-dark{--hb-bg:#1f1f1e;--hb-surface:#222221;--hb-surface-2:#252524;--hb-surface-3:#282827;--hb-line:#2f2f2d;--hb-line-strong:#353533;--hb-text:#e7e7e3;--hb-heading:#eeeeea;--hb-muted:#a4a49e;--hb-soft:#8c8c86}
+body.hax-modern.hb-dark .topbar,body.hax-modern.hb-dark .sidebar,body.hax-modern.hb-dark .mobile-drawer,body.hax-modern.hb-dark .composer,body.hax-modern.hb-dark .art-generation-card,body.hax-modern.hb-dark .hx-prof-card{background:#20201f!important;border-color:#2d2d2b!important;color:#e7e7e3!important}body.hax-modern.hb-dark .chat-panel,body.hax-modern.hb-dark .messages,body.hax-modern.hb-dark .app-shell{background:#1d1d1c!important}body.hax-modern.hb-dark .mode-card,body.hax-modern.hb-dark .maker-link,body.hax-modern.hb-dark .composer .input-wrap,body.hax-modern.hb-dark .art-prompt{background:#222221!important;color:#e7e7e3!important;border-color:#2e2e2c!important}body.hax-modern.hb-dark .mode-btn,body.hax-modern.hb-dark .float-tool,body.hax-modern.hb-dark .top-toggle{background:#252524!important;color:#b7b7b1!important;border-color:#30302e!important}body.hax-modern.hb-dark .mode-btn.active,body.hax-modern.hb-dark .send,body.hax-modern.hb-dark .art-generate-btn{background:#2c2c2a!important;color:#dcdcd7!important;border-color:#343432!important}body.hax-modern.hb-dark .hero-welcome,body.hax-modern.hb-dark .hero-chips span,body.hax-modern.hb-dark .hero-capabilities>div,body.hax-modern.hb-dark .ultimax-live-rail,body.hax-modern.hb-dark .ultimax-live-log,body.hax-modern.hb-dark .ultimax-live-state{background:#20201f!important;border-color:#2d2d2b!important;color:#a5a59e!important}body.hax-modern.hb-dark .hero-welcome h1,body.hax-modern.hb-dark .hero-welcome h1 span,body.hax-modern.hb-dark .mode-name,body.hax-modern.hb-dark .section-label{color:#e2e2de!important}body.hax-modern.hb-dark .hero-welcome p,body.hax-modern.hb-dark .mode-desc,body.hax-modern.hb-dark .maker-link small,body.hax-modern.hb-dark .hint,body.hax-modern.hb-dark .status,body.hax-modern.hb-dark .top-center .tagline{color:#9b9b95!important}
