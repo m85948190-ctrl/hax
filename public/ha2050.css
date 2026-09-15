@@ -1,0 +1,35 @@
+/* HAxBRO 2050 visual layer — restrained sci-fi, cinematic motion, no UI clutter */
+:root{--hx-cyan:#19d9ff;--hx-blue:#4b7dff;--hx-ink:#02050a;--hx-white:#f4f8ff}
+.landing-board-body{background:#010307!important;overflow-x:hidden}
+.landing-board{isolation:isolate;background:radial-gradient(ellipse at 72% 35%,#087dff1c 0%,transparent 30%),radial-gradient(ellipse at 28% 80%,#00d9ff0b 0%,transparent 35%),linear-gradient(180deg,#02050a 0%,#010206 55%,#02060b 100%)!important;border-color:#102b40!important}
+.landing-board:after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;background:linear-gradient(90deg,transparent 0%,#19d9ff05 50%,transparent 100%);animation:hxSweep 9s ease-in-out infinite}
+.board-topbar{background:#02060bea!important;border-bottom-color:#15334a!important;box-shadow:0 8px 40px #0008}
+.board-brand-mark{border-color:#1b78b1!important;box-shadow:0 0 30px #008dff25!important;transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .5s}
+.board-brand:hover .board-brand-mark{transform:rotate(-4deg) scale(1.05);box-shadow:0 0 42px #00cfff40!important}
+.hero-scene{min-height:680px!important}
+.hero-copy h1{letter-spacing:-.075em;text-wrap:balance;text-shadow:0 0 70px #087cff12}
+.hero-copy h1 em{background:linear-gradient(105deg,#fff 10%,#d8f9ff 38%,#35d6ff 62%,#527bff 100%)!important;background-size:220% 100%;animation:hxText 7s ease-in-out infinite}
+.hero-button,.board-action{position:relative;overflow:hidden;will-change:transform}
+.hero-button:before,.board-action:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,#fff18%,transparent 45%);transform:translateX(-120%);transition:transform .65s ease}
+.hero-button:hover:before,.board-action:hover:before{transform:translateX(120%)}
+.hero-button.primary,.board-action.primary{box-shadow:0 12px 40px #087cff28,0 0 0 1px #26baff12 inset!important}
+.hero-3d{filter:drop-shadow(0 0 55px #087cff18);transform:translateZ(0)}
+.hero-3d canvas{animation:hxCanvasBreath 7s ease-in-out infinite}
+.scene-label{border-color:#1c5477!important;background:#020a12d9!important;box-shadow:0 0 30px #008dff12!important;animation:hxLabel 5s ease-in-out infinite}
+.brain-section{background:linear-gradient(110deg,#03101a,#02070d 55%,#03111c)!important;border-color:#153a55!important;box-shadow:0 30px 100px #0009,0 0 70px #008dff0d!important}
+.brain-stage{filter:drop-shadow(0 0 38px #00bfff22);animation:hxFloat 6s ease-in-out infinite}
+.brain-shell{box-shadow:inset 0 0 34px #008dff25,0 0 35px #008dff2b!important}
+.capability-strip{box-shadow:0 18px 70px #0008!important}
+.capability-strip article{transition:background .35s,transform .35s,border-color .35s}
+.capability-strip article:hover{background:#06111c88;transform:translateY(-3px)}
+.board-footer{background:#02060bea!important}
+@keyframes hxSweep{0%,100%{opacity:.25;transform:translateX(-18%)}50%{opacity:.8;transform:translateX(18%)}}
+@keyframes hxText{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes hxCanvasBreath{0%,100%{transform:scale(.985)}50%{transform:scale(1.015)}}
+@keyframes hxFloat{0%,100%{transform:perspective(700px) rotateX(8deg) translateY(0)}50%{transform:perspective(700px) rotateX(8deg) translateY(-7px)}}
+@keyframes hxLabel{0%,100%{opacity:.68;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}
+/* Prevent hidden authentication UI from ever becoming a click-blocking layer. */
+#usernameGate[hidden],#adminPasswordGate[hidden],#artGenerationPanel[hidden],#mobileDrawer[aria-hidden="true"]{display:none!important;visibility:hidden!important;pointer-events:none!important}
+#usernameGate{z-index:2000}
+@media(max-width:720px){.hero-scene{min-height:760px!important}.hero-copy h1{letter-spacing:-.065em}.hero-3d{animation:none}.hero-button{min-height:44px}.board-action{min-height:34px}}
+@media(prefers-reduced-motion:reduce){.landing-board:after,.hero-copy h1 em,.hero-3d canvas,.scene-label,.brain-stage{animation:none!important}}
