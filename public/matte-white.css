@@ -597,6 +597,19 @@ html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) ::placeholder{color:#777!important;-webkit-text-fill-color:#777!important}
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) svg{color:#333!important}
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .send{color:#fff!important}
+/* Light-mode composer controls: keep the microphone unmistakable on dim-white UI. */
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) #micBtn{
+  background:#f3f4f5!important;
+  color:#171a1d!important;
+  border:1px solid #d1d5d9!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic .voice-mic-icon,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic .voice-mic-icon:after,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic .voice-mic-icon:before{color:#171a1d!important;border-color:#171a1d!important;background-color:#171a1d!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic .voice-mic-icon{background:transparent!important}
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #micBtn,
 html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .float-tool.mic{
   width:36px!important;min-width:36px!important;max-width:36px!important;height:36px!important;min-height:36px!important;max-height:36px!important;
