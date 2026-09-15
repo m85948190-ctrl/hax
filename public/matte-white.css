@@ -319,10 +319,19 @@ html[data-theme="dark"] .username-card,
 html[data-theme="dark"] .art-generation-panel,
 html[data-theme="dark"] .art-generation-card,
 html[data-theme="dark"] .ultimax-live-rail{
-  background:#101010!important;
+  background:#151515!important;
   background-image:none!important;
   color:#f4f4f4!important;
   box-shadow:none!important;
+}
+html[data-theme="dark"] .chat-panel,
+html[data-theme="dark"] .messages,
+html[data-theme="dark"] .chat-head{
+  background:#151515!important;
+}
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .topbar{
+  background:#111111!important;
 }
 html[data-theme="light"] .ambient,
 html[data-theme="dark"] .ambient{
@@ -417,11 +426,11 @@ html[data-theme="light"] .message .bubble,
 html[data-theme="light"] .bot-msg .bubble,
 html[data-theme="light"] .user-msg .bubble,
 html[data-theme="light"] .message-body .bubble{
-  background:#fff!important;
+  background:#fdfdfd!important;
   background-image:none!important;
   color:#111!important;
-  border:1px solid #f1f1f1!important;
-  box-shadow:none!important;
+  border:1px solid #ececec!important;
+  box-shadow:0 1px 0 rgba(0,0,0,.025),0 5px 16px rgba(20,20,20,.045)!important;
 }
 html[data-theme="light"] .user-msg .bubble{background:#fdfdfd!important;color:#111!important}
 html[data-theme="dark"] .message .bubble,
