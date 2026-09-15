@@ -17,7 +17,7 @@
 }
 
 html,body{min-height:100%;}
-html{background:var(--hb-bg)!important;transition:background .18s ease,color .18s ease;}
+html{background:var(--hb-bg)!important;transition:none!important;}
 body.hax-modern{
   background:var(--hb-bg)!important;
   color:var(--hb-text)!important;
