@@ -89,6 +89,12 @@ expose = true
 description = "Cloudflare API token with Pages Write permission for public HAxBRO App Maker deployments"
 
 [[secret]]
+name = "CLOUDFLARE_AI_API_TOKEN"
+required = false
+expose = true
+description = "Optional Cloudflare AI API token for the HAxBRO ChatGPT Astra model route"
+
+[[secret]]
 name = "CLOUDFLARE_ACCOUNT_ID"
 required = false
 expose = true
