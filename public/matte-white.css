@@ -150,13 +150,10 @@ body.hax-modern.dark ::placeholder{color:#777!important;opacity:1!important}
 body.hax-modern.dark .topbar{border-bottom:1px solid #191919!important}
 body.hax-modern.dark .sidebar{border-right:1px solid #191919!important}
 body.hax-modern.dark .chat-head{background:#101010!important;border-bottom:1px solid #191919!important}
-
 body.hax-modern.dark .history-list .history-row,
 body.hax-modern.dark .history-list .history-item,
 body.hax-modern.dark .history-list .history-more{
-  background:transparent!important;
-  color:#a5a5a5!important;
-  border:0!important;
+  background:transparent!important;color:#a5a5a5!important;border:0!important;
 }
 body.hax-modern.dark .history-list .history-row:hover,
 body.hax-modern.dark .history-list .history-row:focus-within,
@@ -166,31 +163,21 @@ body.hax-modern.dark .history-list .history-row.selected .history-more,
 body.hax-modern.dark .history-list .history-item.active,
 body.hax-modern.dark .history-list .history-item.selected,
 body.hax-modern.dark .history-list [aria-current="true"]{
-  background:#202020!important;
-  color:#f4f4f4!important;
-  border:0!important;
-  box-shadow:none!important;
+  background:#202020!important;color:#f4f4f4!important;border:0!important;box-shadow:none!important;
 }
 body.hax-modern.dark .history-list .history-row.selected .history-item{font-weight:600!important}
-
 body.hax-modern.dark .maker-link,
 body.hax-modern.dark .mode-btn,
 body.hax-modern.dark .top-toggle,
 body.hax-modern.dark .float-tool,
 body.hax-modern.dark .send{
-  background:transparent!important;
-  color:#a5a5a5!important;
-  border:0!important;
-  border-radius:7px!important;
+  background:transparent!important;color:#a5a5a5!important;border:0!important;border-radius:7px!important;
 }
 body.hax-modern.dark .maker-link:hover,
 body.hax-modern.dark .mode-btn:hover,
 body.hax-modern.dark .top-toggle:hover,
 body.hax-modern.dark .float-tool:hover,
-body.hax-modern.dark .send:hover{
-  background:#181818!important;
-  color:#f4f4f4!important;
-}
+body.hax-modern.dark .send:hover{background:#181818!important;color:#f4f4f4!important}
 body.hax-modern.dark .mode-btn.active{background:#202020!important;color:#f4f4f4!important;font-weight:600!important}
 body.hax-modern.dark .composer{background:transparent!important;border:0!important;box-shadow:none!important}
 body.hax-modern.dark .composer .input-wrap{background:#101010!important;border:1px solid #242424!important;border-radius:11px!important;box-shadow:none!important}
@@ -199,7 +186,7 @@ body.hax-modern.dark .model-picker-menu{background:#151515!important;border:1px 
 body.hax-modern.dark .model-option:hover,
 body.hax-modern.dark .model-option.active{background:#202020!important}
 
-/* Theme control: readable, quiet, keyboard accessible. */
+/* Theme control */
 .theme-switch{display:flex!important;align-items:center;gap:2px;padding:2px!important;border:1px solid #ededed!important;border-radius:8px!important;background:#fff!important}
 .theme-switch .theme-choice{min-width:54px!important;padding:6px 9px!important;border-radius:6px!important;font-weight:600!important;letter-spacing:.02em!important;cursor:pointer!important}
 .mobile-theme-switch{display:flex!important;align-items:stretch;gap:6px!important;margin-top:4px!important}
@@ -213,7 +200,6 @@ body.hax-modern.dark .theme-switch .theme-choice{background:transparent!importan
 body.hax-modern.dark .theme-switch .theme-choice.active-theme{background:#202020!important;color:#f4f4f4!important}
 body.hax-modern.dark .mobile-theme-switch .theme-choice.active-theme{background:#202020!important;color:#f4f4f4!important}
 
-/* Never allow legacy mode/selected rules to introduce colored blocks. */
 body.hax-modern:not(.dark) .active,
 body.hax-modern:not(.dark) .selected,
 body.hax-modern:not(.dark) .highlight,
@@ -227,7 +213,7 @@ body.hax-modern.dark .accent,
 body.hax-modern.dark .glow,
 body.hax-modern.dark .gradient{background-image:none!important}
 
-/* ---------- FINAL THEME CONTRACT ---------- */
+/* FINAL THEME CONTRACT */
 html[data-theme="light"]{background:#fff!important;background-image:none!important;color-scheme:light!important}
 html[data-theme="dark"]{background:#101010!important;background-image:none!important;color-scheme:dark!important}
 body.hax-modern:not(.dark),
@@ -255,7 +241,6 @@ body.hax-modern:not(.dark) .float-tool:hover,
 body.hax-modern:not(.dark) .send:hover{background:#fdfdfd!important;color:#050505!important}
 body.hax-modern:not(.dark) .mode-btn.active{background:#fdfdfd!important;color:#050505!important}
 
-/* Explicit theme selector visibility. The labels are commands: LIGHT always selects light, DARK always selects dark. */
 body.hax-modern .theme-switch{display:flex!important;visibility:visible!important;opacity:1!important}
 body.hax-modern .theme-switch .theme-choice{display:inline-flex!important;visibility:visible!important;opacity:1!important;align-items:center!important;justify-content:center!important}
 body.hax-modern .top-actions{display:flex!important;visibility:visible!important;opacity:1!important}
@@ -279,7 +264,7 @@ body.hax-modern.dark .history-list .history-row.selected,
 body.hax-modern.dark .history-list .history-row.selected .history-item,
 body.hax-modern.dark .history-list .history-row.selected .history-more{background:#202020!important;color:#fff!important}
 
-/* FINAL SINGLE-SOURCE THEME OVERRIDES — this is intentionally the last visual authority. */
+/* FINAL SINGLE-SOURCE THEME OVERRIDES */
 html[data-theme="light"],
 html[data-theme="light"] body,
 html[data-theme="light"] .app-shell,
@@ -326,40 +311,23 @@ html[data-theme="dark"] .ultimax-live-rail{
 }
 html[data-theme="dark"] .chat-panel,
 html[data-theme="dark"] .messages,
-html[data-theme="dark"] .chat-head{
-  background:#151515!important;
-}
+html[data-theme="dark"] .chat-head{background:#151515!important}
 html[data-theme="dark"] .sidebar,
-html[data-theme="dark"] .topbar{
-  background:#111111!important;
-}
+html[data-theme="dark"] .topbar{background:#111111!important}
 html[data-theme="light"] .ambient,
-html[data-theme="dark"] .ambient{
-  display:none!important;
-  background:none!important;
-  background-image:none!important;
-  opacity:0!important;
-}
+html[data-theme="dark"] .ambient{display:none!important;background:none!important;background-image:none!important;opacity:0!important}
 html[data-theme="light"] .history-list .history-row.selected,
 html[data-theme="light"] .history-list .history-row.selected .history-item,
-html[data-theme="light"] .history-list .history-row.selected .history-more{
-  background:#fdfdfd!important;color:#0b0b0b!important;background-image:none!important;
-}
+html[data-theme="light"] .history-list .history-row.selected .history-more{background:#fdfdfd!important;color:#0b0b0b!important;background-image:none!important}
 html[data-theme="dark"] .history-list .history-row.selected,
 html[data-theme="dark"] .history-list .history-row.selected .history-item,
-html[data-theme="dark"] .history-list .history-row.selected .history-more{
-  background:#202020!important;color:#f4f4f4!important;background-image:none!important;
-}
-html[data-theme="light"] .theme-switch,
-html[data-theme="light"] .mobile-theme-switch{background:#fff!important;border:1px solid #ededed!important}
+html[data-theme="dark"] .history-list .history-row.selected .history-more{background:#202020!important;color:#f4f4f4!important;background-image:none!important}
+html[data-theme="light"] .theme-switch,html[data-theme="light"] .mobile-theme-switch{background:#fff!important;border:1px solid #ededed!important}
 html[data-theme="light"] .theme-choice{background:transparent!important;color:#555!important}
 html[data-theme="light"] .theme-choice.active-theme{background:#fdfdfd!important;color:#050505!important}
-html[data-theme="dark"] .theme-switch,
-html[data-theme="dark"] .mobile-theme-switch{background:#101010!important;border:1px solid #292929!important}
+html[data-theme="dark"] .theme-switch,html[data-theme="dark"] .mobile-theme-switch{background:#101010!important;border:1px solid #292929!important}
 html[data-theme="dark"] .theme-choice{background:transparent!important;color:#999!important}
 html[data-theme="dark"] .theme-choice.active-theme{background:#202020!important;color:#fff!important}
-
-/* Kill the legacy cyber ambient layer completely in the normal workspace. */
 html[data-theme] .ambient{display:none!important}
 
 @media(max-width:700px){
@@ -372,7 +340,7 @@ html[data-theme] .ambient{display:none!important}
   body.hax-modern .mobile-theme-switch{display:flex!important}
 }
 
-/* FINAL DARK OVERRIDE — outranks the legacy Light selectors which use :not(.dark). */
+/* FINAL DARK OVERRIDE — outranks legacy :not(.dark) selectors. */
 html[data-theme="dark"] body.hax-modern:not(.dark) .app-shell,
 html[data-theme="dark"] body.hax-modern:not(.dark) .topbar,
 html[data-theme="dark"] body.hax-modern:not(.dark) .sidebar,
@@ -388,40 +356,27 @@ html[data-theme="dark"] body.hax-modern:not(.dark) .username-card,
 html[data-theme="dark"] body.hax-modern:not(.dark) .art-generation-panel,
 html[data-theme="dark"] body.hax-modern:not(.dark) .art-generation-card,
 html[data-theme="dark"] body.hax-modern:not(.dark) .ultimax-live-rail{
-  background:#101010!important;
-  background-image:none!important;
-  color:#f4f4f4!important;
-  box-shadow:none!important;
+  background:#101010!important;background-image:none!important;color:#f4f4f4!important;box-shadow:none!important;
 }
 html[data-theme="dark"] body.hax-modern:not(.dark) button,
 html[data-theme="dark"] body.hax-modern:not(.dark) input,
 html[data-theme="dark"] body.hax-modern:not(.dark) textarea,
 html[data-theme="dark"] body.hax-modern:not(.dark) select{
-  background:#101010!important;
-  color:#f4f4f4!important;
-  border-color:#2a2a2a!important;
-  box-shadow:none!important;
+  background:#101010!important;color:#f4f4f4!important;border-color:#2a2a2a!important;box-shadow:none!important;
 }
 html[data-theme="dark"] body.hax-modern:not(.dark) .history-list .history-row,
 html[data-theme="dark"] body.hax-modern:not(.dark) .history-list .history-item,
-html[data-theme="dark"] body.hax-modern:not(.dark) .history-list .history-more{
-  background:transparent!important;color:#d0d0d0!important;border:0!important;
-}
+html[data-theme="dark"] body.hax-modern:not(.dark) .history-list .history-more{background:transparent!important;color:#d0d0d0!important;border:0!important}
 html[data-theme="dark"] body.hax-modern:not(.dark) .history-list .history-row.selected,
 html[data-theme="dark"] body.hax-modern:not(.dark) .history-list .history-row.selected .history-item,
-html[data-theme="dark"] body.hax-modern:not(.dark) .history-list .history-row.selected .history-more{
-  background:#202020!important;color:#fff!important;
-}
-html[data-theme="dark"] body.hax-modern:not(.dark) .theme-switch,
-html[data-theme="dark"] body.hax-modern:not(.dark) .mobile-theme-switch{
-  background:#101010!important;border:1px solid #292929!important;
-}
+html[data-theme="dark"] body.hax-modern:not(.dark) .history-list .history-row.selected .history-more{background:#202020!important;color:#fff!important}
+html[data-theme="dark"] body.hax-modern:not(.dark) .theme-switch,html[data-theme="dark"] body.hax-modern:not(.dark) .mobile-theme-switch{background:#101010!important;border:1px solid #292929!important}
 html[data-theme="dark"] body.hax-modern:not(.dark) .theme-choice{background:transparent!important;color:#999!important}
 html[data-theme="dark"] body.hax-modern:not(.dark) .theme-choice.active-theme{background:#202020!important;color:#fff!important}
 html[data-theme="dark"] body.hax-modern:not(.dark) a{color:#f4f4f4!important}
 html[data-theme="dark"] body.hax-modern:not(.dark) ::placeholder{color:#888!important;opacity:1!important}
 
-/* CHAT MESSAGES — final theme authority. Legacy professional selectors used dark !important bubbles. */
+/* CHAT MESSAGES — matte white in Light, charcoal in Dark. */
 html[data-theme="light"] .message .bubble,
 html[data-theme="light"] .bot-msg .bubble,
 html[data-theme="light"] .user-msg .bubble,
@@ -437,11 +392,47 @@ html[data-theme="dark"] .message .bubble,
 html[data-theme="dark"] .bot-msg .bubble,
 html[data-theme="dark"] .user-msg .bubble,
 html[data-theme="dark"] .message-body .bubble{
-  background:#202020!important;
-  background-image:none!important;
-  color:#f2f2f2!important;
-  border:1px solid #2a2a2a!important;
-  box-shadow:none!important;
+  background:#202020!important;background-image:none!important;color:#f2f2f2!important;border:1px solid #2a2a2a!important;box-shadow:none!important;
 }
 html[data-theme="light"] .message .meta{color:#777!important}
 html[data-theme="dark"] .message .meta{color:#888!important}
+
+/* v405 LIGHT TEXT + ICON AUTHORITY — keep writing, symbols, labels and controls visible. */
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax){color:#171717!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .brand strong,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .brand strong span,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .side-title b,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-name,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome h1,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome h1 span,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-capabilities b{color:#161616!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .brand small,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .side-title,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .section-label,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-desc,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .tagline,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .eyebrow,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hint,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-kicker,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome p,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-capabilities span,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .message .meta{color:#666!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history-item,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history-more,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .float-tool{color:#454545!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link:hover,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history-item:hover,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history-item.selected,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history-more:hover{color:#111!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .terminal{color:#1b78ad!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .input-wrap textarea,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) input,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) select,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) textarea{color:#171717!important;-webkit-text-fill-color:#171717!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .input-wrap textarea::placeholder,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) ::placeholder{color:#777!important;-webkit-text-fill-color:#777!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) svg{color:#333!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .send{color:#fff!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn.active{color:#2459b8!important}
