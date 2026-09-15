@@ -1,0 +1,264 @@
+/* HAxBRO AI — final professional visual system
+   Target: calm, technical, premium workspace. Visual-only overrides.
+   Functional/special-mode behavior remains owned by the existing app CSS/JS.
+*/
+:root{
+  --hb-blue:#4d9dff;
+  --hb-blue-soft:#79b6ff;
+  --hb-light-bg:#f4f6f8;
+  --hb-light-surface:#ffffff;
+  --hb-light-surface-2:#eef1f4;
+  --hb-light-border:#dfe4e9;
+  --hb-light-text:#15191e;
+  --hb-light-muted:#68727d;
+  --hb-dark-bg:#181a1d;
+  --hb-dark-surface:#1d2024;
+  --hb-dark-surface-2:#22262b;
+  --hb-dark-border:#30353c;
+  --hb-dark-text:#f2f4f7;
+  --hb-dark-muted:#a4acb6;
+}
+
+/* ---------- shared shell ---------- */
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax){
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  letter-spacing:normal!important;
+}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .topbar,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .sidebar,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .chat-panel,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .messages,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .chat-head{
+  transition:background-color .18s ease,border-color .18s ease,color .18s ease!important;
+}
+
+/* ---------- LIGHT ---------- */
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax){
+  background:var(--hb-light-bg)!important;
+  color:var(--hb-light-text)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .topbar{
+  background:rgba(255,255,255,.96)!important;
+  border-bottom:1px solid var(--hb-light-border)!important;
+  box-shadow:0 1px 10px rgba(20,30,40,.04)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .sidebar{
+  background:#f7f8fa!important;
+  border-right:1px solid var(--hb-light-border)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .chat-panel,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .messages{
+  background:var(--hb-light-bg)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .chat-head{
+  background:rgba(244,246,248,.92)!important;
+  border-bottom:1px solid var(--hb-light-border)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-card,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .ai-tools,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .customer-profile{
+  background:transparent!important;
+  border-color:var(--hb-light-border)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-toggle,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .float-tool{
+  background:var(--hb-light-surface)!important;
+  color:#3f4852!important;
+  border:1px solid var(--hb-light-border)!important;
+  box-shadow:0 1px 2px rgba(20,30,40,.025)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link:hover,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn:hover,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-toggle:hover,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .float-tool:hover{
+  background:var(--hb-light-surface-2)!important;
+  border-color:#cbd2d9!important;
+  color:#15191e!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn.active{
+  background:#e9f2ff!important;
+  color:#245fae!important;
+  border-color:#bdd8fb!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome{
+  background:rgba(255,255,255,.76)!important;
+  border:1px solid var(--hb-light-border)!important;
+  border-radius:16px!important;
+  box-shadow:0 8px 28px rgba(20,30,40,.045)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome h1,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome h1 span{color:#15191e!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome h1 span{color:#286bb8!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-chips span,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-capabilities>div{
+  background:#f7f9fb!important;
+  border:1px solid var(--hb-light-border)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer{
+  background:linear-gradient(to top,rgba(244,246,248,.98),rgba(244,246,248,.86),transparent)!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .input-wrap{
+  background:#fff!important;
+  border:1px solid #d6dce2!important;
+  border-radius:14px!important;
+  box-shadow:0 4px 18px rgba(20,30,40,.055)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer textarea{color:#15191e!important}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .send{
+  background:#1e6fca!important;color:#fff!important;border:1px solid #1e6fca!important;
+  border-radius:10px!important;box-shadow:0 3px 10px rgba(30,111,202,.18)!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic{
+  background:#fff!important;color:#303841!important;border:1px solid #cfd6dd!important;border-radius:10px!important;
+}
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hint,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-center .tagline,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-center .eyebrow,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .section-label,
+html[data-theme="light"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-desc{color:var(--hb-light-muted)!important}
+
+/* ---------- DARK / charcoal ---------- */
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax){
+  background:var(--hb-dark-bg)!important;
+  color:var(--hb-dark-text)!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .topbar{
+  background:rgba(20,22,25,.96)!important;
+  border-bottom:1px solid var(--hb-dark-border)!important;
+  box-shadow:0 1px 14px rgba(0,0,0,.18)!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .sidebar{
+  background:#15171a!important;
+  border-right:1px solid var(--hb-dark-border)!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .chat-panel,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .messages{
+  background:var(--hb-dark-bg)!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .chat-head{
+  background:#1a1d21!important;
+  border-bottom:1px solid var(--hb-dark-border)!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-card,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .ai-tools,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .customer-profile{
+  background:transparent!important;
+  border-color:var(--hb-dark-border)!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-toggle,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .float-tool{
+  background:var(--hb-dark-surface)!important;
+  color:#c9d0d8!important;
+  border:1px solid var(--hb-dark-border)!important;
+  box-shadow:none!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .maker-link:hover,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn:hover,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-toggle:hover,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .float-tool:hover{
+  background:var(--hb-dark-surface-2)!important;
+  border-color:#3b424b!important;
+  color:#fff!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-btn.active{
+  background:#273c55!important;
+  color:#dceeff!important;
+  border-color:#42698f!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome{
+  background:#1d2024!important;
+  border:1px solid #30353c!important;
+  border-radius:16px!important;
+  box-shadow:0 10px 32px rgba(0,0,0,.14)!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome h1,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome h1 span{color:#f2f4f7!important}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome h1 span{color:#79b6ff!important}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-chips span,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-capabilities>div{
+  background:#202328!important;
+  border:1px solid #30353c!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer{
+  background:linear-gradient(to top,rgba(24,26,29,.99),rgba(24,26,29,.88),transparent)!important;
+  border:0!important;box-shadow:none!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .input-wrap{
+  background:#1d2024!important;
+  border:1px solid #363c44!important;
+  border-radius:14px!important;
+  box-shadow:0 5px 20px rgba(0,0,0,.16)!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer textarea{color:#f2f4f7!important}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .send{
+  background:#3d82c9!important;color:#fff!important;border:1px solid #4d95df!important;
+  border-radius:10px!important;box-shadow:none!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic{
+  background:#20242a!important;color:#e4e9ee!important;border:1px solid #3a4149!important;border-radius:10px!important;
+}
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hint,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-center .tagline,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-center .eyebrow,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .section-label,
+html[data-theme="dark"] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-desc{color:var(--hb-dark-muted)!important}
+
+/* ---------- readable typography + controls ---------- */
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .brand strong,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .side-title b,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .mode-name{font-weight:700!important}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .status i{background:#4ca77b!important;box-shadow:none!important}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .terminal{color:var(--hb-blue)!important}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .top-toggle{border-radius:8px!important}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .history-row.selected .history-item{font-weight:600!important}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .chat-head{min-height:46px!important}
+
+/* Keep the composer stable: no oversized icons or duplicate arrow rendering. */
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #micBtn,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .send,
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #sendBtn{
+  width:38px!important;min-width:38px!important;max-width:38px!important;
+  height:38px!important;min-height:38px!important;max-height:38px!important;
+  flex:0 0 38px!important;padding:0!important;margin:0!important;
+  display:grid!important;place-items:center!important;overflow:hidden!important;
+}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #sendBtn b{display:block!important;font-size:17px!important;line-height:1!important}
+html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #sendBtn span{display:none!important}
+
+/* ---------- mobile ---------- */
+@media(max-width:700px){
+  html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .topbar{height:58px!important}
+  html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer{width:calc(100vw - 24px)!important;bottom:10px!important}
+  html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .mic,
+  html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #micBtn,
+  html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer .send,
+  html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .composer #sendBtn{
+    width:36px!important;min-width:36px!important;max-width:36px!important;
+    height:36px!important;min-height:36px!important;max-height:36px!important;
+    flex-basis:36px!important;
+  }
+  html[data-theme] body.hax-modern:not(.overdrive-ui):not(.ui-only-ultimax) .hero-welcome{border-radius:13px!important}
+}
+
+/* Do not visually override explicitly activated security/admin special UIs. */
+html[data-theme] body.hacker-ui .topbar,
+html[data-theme] body.hacker-ui .sidebar,
+html[data-theme] body.hacker-ui .chat-panel,
+html[data-theme] body.hacker-ui .messages,
+html[data-theme] body.overdrive-ui .topbar,
+html[data-theme] body.overdrive-ui .sidebar,
+html[data-theme] body.overdrive-ui .chat-panel,
+html[data-theme] body.overdrive-ui .messages,
+html[data-theme] body.ui-only-ultimax .topbar,
+html[data-theme] body.ui-only-ultimax .sidebar,
+html[data-theme] body.ui-only-ultimax .chat-panel,
+html[data-theme] body.ui-only-ultimax .messages{transition:none!important}
