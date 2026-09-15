@@ -1,1 +1,34 @@
-<div id="artGenerationPanel" class="art-generation-panel" hidden aria-label="Art Generation"><div class="art-generation-card"><div class="art-generation-head"><div><div class="art-generation-kicker">HAXBRO AI · CREATION INFRASTRUCTURE</div><h2 class="art-generation-title">Art Generation</h2></div><button id="artClose" class="art-generation-close" type="button" aria-label="Close">×</button></div><div class="art-generation-tabs"><button type="button" class="active" data-art-type="image">IMAGE</button><button type="button" data-art-type="video">VIDEO</button></div><div id="artStatus" class="art-status">Checking infrastructure…</div><div id="artProviderGrid" class="art-provider-grid"></div><textarea id="artPrompt" class="art-prompt" placeholder="Describe the image or video you want to create…"></textarea><button id="artGenerateBtn" class="art-generate-btn" type="button">GENERATE</button><div id="artResult" class="art-note">Generation is intentionally locked until a provider API key is configured.</div></div></div>
+<section id="artGenerationPanel" class="art-workspace" hidden aria-label="HAxBRO Art Generation Workspace">
+  <aside class="art-workspace-side">
+    <div class="art-side-brand"><img src="/logo-symbol.svg?v=218" alt="HAxBRO"><span>ART</span></div>
+    <button class="art-side-new" id="artNewBtn" type="button">＋ <span>New creation</span></button>
+    <nav class="art-side-nav" aria-label="Art workspace navigation">
+      <button class="active" type="button" data-art-nav="create">✦ <span>Create</span></button>
+      <button type="button" data-art-nav="history">◷ <span>History</span></button>
+      <button type="button" data-art-nav="assets">▧ <span>Assets</span></button>
+    </nav>
+    <div class="art-side-bottom"><div class="art-key-state"><i></i><span id="artKeyState">0 providers ready</span></div><button id="artClose" type="button" class="art-close-side">Close workspace</button></div>
+  </aside>
+  <main class="art-workspace-main">
+    <header class="art-workspace-top">
+      <div><span class="art-eyebrow">HAxBRO AI</span><h1>Art Generation</h1></div>
+      <div class="art-top-actions"><span id="artStatus" class="art-status">Checking providers…</span><button id="artCloseTop" type="button" aria-label="Close workspace">×</button></div>
+    </header>
+    <div class="art-workspace-tabs"><button class="active" type="button" data-art-type="image">Image</button><button type="button" data-art-type="video">Video</button></div>
+    <section class="art-canvas-area">
+      <div class="art-canvas" id="artCanvas">
+        <div class="art-canvas-empty"><div class="art-canvas-mark">✦</div><h2 id="artCanvasTitle">Create something</h2><p>Describe what you want to see. Your generated work will appear here.</p></div>
+      </div>
+      <div class="art-history-strip" id="artHistoryStrip"><span>Your creations will appear here</span></div>
+    </section>
+    <section class="art-composer-wrap">
+      <div class="art-controls-row">
+        <div class="art-provider-select"><span>Model</span><select id="artProviderSelect" aria-label="Art model"></select></div>
+        <div class="art-control-group"><button type="button" class="art-control active" data-ratio="1:1">1:1</button><button type="button" class="art-control" data-ratio="16:9">16:9</button><button type="button" class="art-control" data-ratio="9:16">9:16</button></div>
+        <button type="button" id="artUploadBtn" class="art-control">＋ Reference</button><input id="artUpload" type="file" accept="image/*,video/*" hidden>
+      </div>
+      <div class="art-prompt-box"><textarea id="artPrompt" rows="2" placeholder="Describe your image or video…"></textarea><button id="artGenerateBtn" type="button" class="art-generate-btn"><span>Generate</span><b>↗</b></button></div>
+      <div id="artResult" class="art-result">Add an API key to activate generation. The workspace is ready.</div>
+    </section>
+  </main>
+</section>
