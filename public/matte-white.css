@@ -328,6 +328,30 @@ html[data-theme="light"] .theme-choice.active-theme{background:#fdfdfd!important
 html[data-theme="dark"] .theme-switch,html[data-theme="dark"] .mobile-theme-switch{background:#101010!important;border:1px solid #292929!important}
 html[data-theme="dark"] .theme-choice{background:transparent!important;color:#999!important}
 html[data-theme="dark"] .theme-choice.active-theme{background:#202020!important;color:#fff!important}
+
+/* COMPOSER CONTROLS — keep mic/send compact and visible in every theme. */
+html[data-theme] .composer{display:flex!important;align-items:flex-end!important;gap:8px!important}
+html[data-theme] .composer .float-tool,
+html[data-theme] .composer .mic,
+html[data-theme] .composer #micBtn{
+  flex:0 0 42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;
+  height:42px!important;min-height:42px!important;max-height:42px!important;
+  padding:0!important;margin:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  box-sizing:border-box!important;overflow:hidden!important;
+}
+html[data-theme] .composer .send,
+html[data-theme] .composer #sendBtn{
+  flex:0 0 42px!important;width:42px!important;min-width:42px!important;max-width:42px!important;
+  height:42px!important;min-height:42px!important;max-height:42px!important;
+  padding:0!important;margin:0!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  box-sizing:border-box!important;visibility:visible!important;opacity:1!important;overflow:hidden!important;
+}
+html[data-theme] .composer .input-wrap{flex:1 1 auto!important;min-width:0!important}
+html[data-theme] .composer .mic .voice-stop-icon,
+html[data-theme] .composer .mic .voice-mic-icon{transform:scale(.9)!important}
+html[data-theme] .composer .send b,
+html[data-theme] .composer .send span{display:inline-flex!important;align-items:center!important;justify-content:center!important}
+
 html[data-theme] .ambient{display:none!important}
 
 @media(max-width:700px){
