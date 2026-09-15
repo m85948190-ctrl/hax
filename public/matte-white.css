@@ -217,10 +217,61 @@ body.hax-modern.dark .accent,
 body.hax-modern.dark .glow,
 body.hax-modern.dark .gradient{background-image:none!important}
 
+/* ---------- FINAL THEME CONTRACT ---------- */
+html{background:#fff!important}
+body.hax-modern:not(.dark),
+body.hax-modern:not(.dark) .app-shell,
+body.hax-modern:not(.dark) .topbar,
+body.hax-modern:not(.dark) .sidebar,
+body.hax-modern:not(.dark) .chat-panel,
+body.hax-modern:not(.dark) .messages,
+body.hax-modern:not(.dark) .chat-head,
+body.hax-modern:not(.dark) .mobile-drawer,
+body.hax-modern:not(.dark) .mobile-drawer-content,
+body.hax-modern:not(.dark) .composer .input-wrap{background:#fff!important}
+body.hax-modern:not(.dark) .history-list .history-row.selected,
+body.hax-modern:not(.dark) .history-list .history-row.selected .history-item,
+body.hax-modern:not(.dark) .history-list .history-row.selected .history-more{background:#fdfdfd!important}
+body.hax-modern:not(.dark) .history-list .history-row:hover,
+body.hax-modern:not(.dark) .history-list .history-row:focus-within{background:#fefefe!important}
+body.hax-modern:not(.dark) .history-list .history-item,
+body.hax-modern:not(.dark) .history-list .history-more{background:transparent!important;color:#111!important}
+body.hax-modern:not(.dark) .history-list .history-row.selected .history-item{color:#050505!important;font-weight:600!important}
+body.hax-modern:not(.dark) .maker-link:hover,
+body.hax-modern:not(.dark) .mode-btn:hover,
+body.hax-modern:not(.dark) .top-toggle:hover,
+body.hax-modern:not(.dark) .float-tool:hover,
+body.hax-modern:not(.dark) .send:hover{background:#fdfdfd!important;color:#050505!important}
+body.hax-modern:not(.dark) .mode-btn.active{background:#fdfdfd!important;color:#050505!important}
+
+/* Theme controls were hidden by an older shell stylesheet; make the real control visible. */
+body.hax-modern #themeBtn{display:inline-flex!important;align-items:center;justify-content:center;visibility:visible!important;opacity:1!important}
+body.hax-modern .top-actions{display:flex!important;visibility:visible!important;opacity:1!important}
+body.hax-modern #mobileThemeBtn{display:flex!important;align-items:center;justify-content:center;visibility:visible!important;opacity:1!important}
+
+/* DARK: charcoal black, explicitly including the root page background. */
+html:has(body.hax-modern.dark),
+html:has(body.hax-modern.dark) body,
+body.hax-modern.dark,
+body.hax-modern.dark .app-shell,
+body.hax-modern.dark .topbar,
+body.hax-modern.dark .sidebar,
+body.hax-modern.dark .chat-panel,
+body.hax-modern.dark .messages,
+body.hax-modern.dark .chat-head,
+body.hax-modern.dark .mobile-drawer,
+body.hax-modern.dark .mobile-drawer-content,
+body.hax-modern.dark .composer .input-wrap{background:#101010!important;color:#f2f2f2!important}
+body.hax-modern.dark .history-list .history-row.selected,
+body.hax-modern.dark .history-list .history-row.selected .history-item,
+body.hax-modern.dark .history-list .history-row.selected .history-more{background:#202020!important;color:#fff!important}
+
 @media(max-width:700px){
   body.hax-modern .topbar{height:58px!important}
   body.hax-modern .top-center{display:none!important}
   body.hax-modern .sidebar{display:none!important}
   body.hax-modern .chat-panel{min-height:100svh!important}
   body.hax-modern .composer{bottom:10px!important;width:calc(100vw - 28px)!important}
+  body.hax-modern .top-actions{display:none!important}
+  body.hax-modern #mobileThemeBtn{display:flex!important}
 }
