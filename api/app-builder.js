@@ -5,6 +5,25 @@ export const access = 'public';
 export const methods = ['POST'];
 
 const safe=(s)=>String(s||'').slice(0,12000);
+const cleanName=(s)=>String(s||'').replace(/[<>]/g,'').replace(/[\"'`]/g,'').replace(/\s+/g,' ').trim().slice(0,60);
+function requestedName(prompt){
+  const s=String(prompt||'');
+  const patterns=[
+    /\b(?:called|named|name(?:d)?\s+it|call\s+it|name\s+it)\s+[\"']?([^\"'\n,.!?]{1,60})[\"']?/i,
+    /\b(?:make|build|create|develop|design)\s+(?:me\s+)?(?:an?\s+)?(?:ai|app|application|website|site|game|assistant|agent|bot)\s+(?:called|named)\s+[\"']?([^\"'\n,.!?]{1,60})[\"']?/i,
+    /\b(?:make|build|create)\s+[\"']([^\"']{1,60})[\"']\s+(?:ai|app|application|website|game|assistant|agent|bot)\b/i,
+    /\b(?:make|build|create)\s+(?:me\s+)?(?:an?\s+)?([A-Za-z][A-Za-z0-9 _-]{1,40}?)\s+(?:AI|app|application|website|game|assistant|agent|bot)\b/i
+  ];
+  for(const re of patterns){const m=s.match(re);if(m?.[1])return cleanName(m[1]);}
+  return '';
+}
+function enforceIdentity(result,identity){
+  if(!identity||!result)return result;
+  const name=cleanName(identity)||identity;
+  const replacements=[/Hacks Bro AI/gi,/HAxBRO AI/gi,/HAxBRO App/gi,/HAxBRO Workspace/gi,/HAxBRO Starter App/gi,/HAxBRO Game/gi,/HAxBRO Calculator/gi,/HAxBRO Weather/gi];
+  const files=Array.isArray(result.files)?result.files.map(f=>{let content=String(f.content||'');for(const re of replacements)content=content.replace(re,name);return {...f,content};}):result.files;
+  return {...result,name,files};
+}
 const weatherLike=(s)=>/\b(weather|forecast|temperature|rain|humidity|climate)\b/i.test(s);
 const calculatorLike=(s)=>/\b(calculator|calculate|calc)\b/i.test(s);
 const gameLike=(s)=>/\b(game|games|arcade|runner|platformer|puzzle|quiz|snake|pong|tetris|shooter)\b/i.test(s);const aiLike=(s)=>/\b(ai|assistant|chatbot|agent|copilot|llm|artificial intelligence)\b/i.test(s);const marketingLike=(s)=>/\b(marketing advisor|marketing assistant|marketing strategist|marketing tool|marketing app|marketing dashboard|marketing planner|campaign planner|content strategist)\b/i.test(s);
@@ -55,15 +74,17 @@ function fallback(prompt,ctx){
 }
 
 export default async function(req,res){
- const prompt=safe(req.body?.prompt); const username=safe(req.body?.username||'local-user',64); if(!prompt)return res.status(400).json({error:'Tell HAxBRO what app to build.'});
+ const prompt=safe(req.body?.prompt); const username=safe(req.body?.username||'local-user',64); const identity=requestedName(prompt)||cleanName(req.body?.appName); if(!prompt)return res.status(400).json({error:'Tell KAI what app to build.'});
  let ctx=null; if(weatherLike(prompt)){const m=prompt.match(/(?:in|for|at)\s+([A-Za-z .'-]{2,40})/i);ctx=await weatherContext(m?.[1]||'Kolkata');}
  if(weatherLike(prompt)||calculatorLike(prompt)){
-   const built=fallback(prompt,ctx);
+   const built=enforceIdentity(fallback(prompt,ctx),identity);
    built.kai={version:'2.0',understood:weatherLike(prompt)?'Weather app':'Calculator app',researched:weatherLike(prompt)?'Open-Meteo current + 7-day weather structure':'Standard calculator UX',researchContext:ctx};
    return res.json(built);
  }
  try{
-  const result=await complete({username:username,maxTokens:4200,system:`You are KAI 2.0, the HAxBRO App Builder — a product designer + senior frontend engineer + interaction designer. You are the actual builder, NOT a spec writer.
+  const result=await complete({username:username,maxTokens:4200,system:`You are KAI 2.0, the App Builder — a product designer + senior frontend engineer + interaction designer. You are the actual builder, NOT a spec writer.
+
+IDENTITY RULE: The user's requested product name is authoritative. If a name is supplied, use it everywhere the product brands itself. Never substitute HAxBRO, Hacks Bro AI, or another default name. If the user is modifying an existing product and no new name is supplied, preserve the existing product identity from the provided context.
 
 KAI 2.0 MUST THINK ABOUT THE PRODUCT BEFORE WRITING CODE:
 1) Understand what the user is trying to accomplish and who will use it.
@@ -96,14 +117,14 @@ APP-SPECIFIC RULES:
 - MARKETING ADVISOR: build a real marketing command center, not a title card. Include navigation or tabs, campaign objective and audience inputs, positioning guidance, channel strategy, content planning, KPI/metrics views, a concrete campaign-plan generation interaction, loading/success/error feedback, responsive mobile behavior and persistent client-side state. The primary action must produce a useful structured plan from the user's inputs. Never reduce a marketing request to a static page saying the app name.
 - COMMERCE: products, cart and checkout-like interactions.
 
-Return ONLY valid JSON: {"name":"...","summary":"...","files":[{"path":"index.html","content":"..."},{"path":"style.css","content":"..."},{"path":"app.js","content":"..."}]}. Keep it self-contained and client-side unless the request truly requires a backend. Do not return a plan, markdown fences, or prose outside JSON. KAI should build the product, not explain how the user could build it.`,prompt:`USER REQUEST:\n${prompt}\n\nRESEARCH CONTEXT:\n${JSON.stringify(ctx||{})}`,history:''});
+Return ONLY valid JSON: {"name":"...","summary":"...","files":[{"path":"index.html","content":"..."},{"path":"style.css","content":"..."},{"path":"app.js","content":"..."}]}. Keep it self-contained and client-side unless the request truly requires a backend. Do not return a plan, markdown fences, or prose outside JSON. KAI should build the product, not explain how the user could build it.`,prompt:`USER REQUEST:\n${prompt}\n\nREQUESTED PRODUCT NAME (must be preserved exactly when present):\n${identity||'(none supplied — infer from the existing product if modifying)'}\n\nRESEARCH CONTEXT:\n${JSON.stringify(ctx||{})}`,history:''});
   let parsed; try{
     const raw=String(result.text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
     parsed=JSON.parse(raw);
   }catch{
     parsed=null;
   }
-  if(!parsed?.files?.length) return res.json(fallback(prompt,ctx));
-  return res.json(parsed);
+  if(!parsed?.files?.length) return res.json(enforceIdentity(fallback(prompt,ctx),identity));
+  return res.json(enforceIdentity(parsed,identity));
  }catch(e){console.error(e);return res.json(fallback(prompt,ctx));}
 }
