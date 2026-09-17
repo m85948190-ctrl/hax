@@ -124,6 +124,31 @@ Repair broken HTML/CSS/JS, selectors, event handlers, responsive controls and st
   return json(r.text);
 }
 
+async function buildAll(prompt,identity,existing,researchData,kai12){
+  const r=await fastComplete({maxTokens:6800,system:`You are the unified KAI 1.0 → KAI 3.0 → KAI 2.0 build engine inside HAxBRO App Maker. Execute the three roles in one pass for speed: KAI 1.0 determines the real product and complete behavior contract; KAI 3.0 designs and implements the product UI/UX; KAI 2.0 compiles, repairs and QA-tests the finished code before delivery. Do not return planning prose. Return ONLY JSON {name,summary,files:[{path,content}]}.
+
+YOUR JOB IS TO SHIP A REAL PRODUCT. The output is opened by a normal end user, not a developer. Never produce a static mockup, text-only demo, decorative card, fake result, or unexplained RUN button. Infer obvious missing mechanics yourself.
+
+PRODUCT-TYPE INTELLIGENCE:
+AI/AGENT: it must have a visible composer, real SEND action, Enter-to-send, user/assistant message history, immediate thinking/processing state, useful response generation, continued context, retry/error recovery, clear composer state and mobile keyboard-safe layout. Never make the main answer 'you typed X'. Use a real public/free no-key inference path when feasible and a useful task-aware local fallback when it is unavailable. Do not expose chain-of-thought.
+GAME: actual repeatable play loop, controls, challenge/enemies or obstacles appropriate to the game, rules/collision, score, feedback, progression/levels, pause, restart, win/lose, keyboard plus touch controls, responsive HUD and replay. START only begins the real loop.
+CALCULATOR/UTILITY: real inputs, correct computation/transformation, validation, clear/reset, keyboard behavior, visible result and useful history/state when appropriate.
+EDITOR/CREATIVE: real editable state and a live result that visibly changes from user actions.
+DASHBOARD: controls/filters change the displayed state/data, with useful empty/loading/error states.
+WEBSITE/COMMERCE/EDUCATION: real navigation and meaningful actions, not just presentation.
+
+REAL-PERSON QA: mentally open the result and execute the primary flow twice. If a button has no event, a form does not submit, a response is fake, a game cannot really be played, a calculation is wrong, or the second interaction cannot continue from the first, repair it before returning code.
+
+PHONE + LAPTOP: design both as first-class experiences. Use responsive composition rather than simply shrinking desktop. Include viewport meta, touch-safe controls, keyboard/focus behavior, safe-area support where useful, no horizontal overflow, readable type and no hover-only critical actions.
+
+VISUAL QUALITY: create a deliberate visual system with hierarchy, typography, spacing, depth, polished surfaces, meaningful states and purposeful motion. Avoid terminal-green, plain monospace, browser-default, bare-canvas, raw-card, generic dashboard and placeholder aesthetics.
+
+CONTINUOUS BUILD: if existing product files are supplied, they are the source of truth. Modify/extend/refactor the requested parts and preserve unrelated working functionality. KAI 12.0 context may contain many noisy or contradictory messages; preserve useful intent, prioritize the newest explicit instruction, and do not throw away working features just because a later message is vague.
+
+INDEPENDENCE: generated apps must run independently of the HAxBRO editor. Never use HAxBRO private APIs, /api/chat, lib/core, process.env, owner-only routes or embedded secrets. Public generated apps may use browser APIs, public/free no-key services, and local fallbacks. Keep all required UI and logic inside the shipped files.` ,prompt:`USER REQUEST:\n${prompt}\nREQUESTED NAME:\n${identity||'(infer)'}\nEXISTING PRODUCT:\n${existing||'(new)'}\nKAI 12.0 CONTEXT:\n${kai12||'(none)'}\nPUBLIC RESEARCH:\n${JSON.stringify(researchData||{})}`});
+  return json(r.text);
+}
+
 export default async function(req,res){
   const prompt=safe(req.body?.prompt);if(!prompt)return res.status(400).json({error:'Tell KAI what app to build.'});
   const identity=requestedName(prompt)||cleanName(req.body?.appName);
@@ -131,14 +156,12 @@ export default async function(req,res){
   const kai12=req.body?.kai12Context?safe(JSON.stringify(req.body.kai12Context),60000):'';
   const researchData=await research(prompt);
   try{
-    const plan=await kai1(prompt,identity,existing,researchData,kai12);
-    const ui=await kai3(prompt,plan,existing,researchData,kai12);
-    const compiled=ui?.files?.length?await kai2(prompt,plan,ui,existing,kai12):null;
-    const result=responsiveHardening(identityLayer(compiled?.files?.length?compiled:ui?.files?.length?ui:emergency(prompt),identity));
-    result.kai={version:'2.0',pipeline:['KAI 1.0 · intent + architecture','KAI 3.0 · UI selector + implementation','KAI 2.0 · compile + repair + acceptance test'],architecture:plan,researched:Boolean(researchData),ownerSecretsExcluded:true};
+    const compiled=await buildAll(prompt,identity,existing,researchData,kai12);
+    const result=responsiveHardening(identityLayer(compiled?.files?.length?compiled:emergency(prompt),identity));
+    result.kai={version:'2.0',pipeline:['KAI 1.0 · intent + architecture','KAI 3.0 · UI selector + implementation','KAI 2.0 · compile + repair + acceptance test'],architecture:'Unified execution of the three KAI roles for faster real-product delivery.',researched:Boolean(researchData),ownerSecretsExcluded:true};
     return res.json(result);
   }catch(e){
-    console.error('KAI pipeline failed',e);
+    console.error('KAI unified pipeline failed',e);
     const result=responsiveHardening(identityLayer(emergency(prompt),identity));result.kai={version:'2.0',pipeline:['KAI 1.0','KAI 3.0','KAI 2.0'],fallback:true,ownerSecretsExcluded:true};return res.json(result);
   }
 }
