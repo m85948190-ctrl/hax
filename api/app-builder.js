@@ -1,4 +1,5 @@
 import { complete } from 'lib/core';
+import { browser } from 'hatchable';
 import { buildMarketingApp } from 'lib/marketing-app';
 
 export const access = 'public';
@@ -54,6 +55,21 @@ const calculatorLike=(s)=>/\b(calculator|calculate|calc)\b/i.test(s);
 const gameLike=(s)=>/\b(game|games|arcade|runner|platformer|puzzle|quiz|snake|pong|tetris|shooter)\b/i.test(s);const aiLike=(s)=>/\b(ai|assistant|chatbot|agent|copilot|llm|artificial intelligence)\b/i.test(s);const marketingLike=(s)=>/\b(marketing advisor|marketing assistant|marketing strategist|marketing tool|marketing app|marketing dashboard|marketing planner|campaign planner|content strategist)\b/i.test(s);
 const appType=(s)=>calculatorLike(s)?'calculator':weatherLike(s)?'weather':gameLike(s)?'game':'general';
 
+async function webResearch(prompt){
+  const q=String(prompt||'').replace(/\s+/g,' ').trim().slice(0,240);
+  if(!q)return {searched:false,results:[]};
+  try{
+    const html=String(await browser.html('https://www.bing.com/search?q='+encodeURIComponent(q))||'');
+    const results=[];
+    const re=/<li[^>]*class=[\"'][^\"']*b_algo[^\"']*[\"'][^>]*>[\s\S]*?<h2[^>]*>\s*<a[^>]+href=[\"']([^\"']+)[\"'][^>]*>([\s\S]*?)<\/a>[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>[\s\S]*?<\/li>/gi;
+    let m; while((m=re.exec(html))&&results.length<6){
+      const clean=v=>String(v||'').replace(/<[^>]+>/g,' ').replace(/&amp;/g,'&').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
+      results.push({title:clean(m[2]).slice(0,180),url:m[1].slice(0,500),snippet:clean(m[3]).slice(0,500)});
+    }
+    return {searched:true,engine:'Bing',query:q,results};
+  }catch(e){return {searched:true,engine:'Bing',query:q,results:[],error:'web research unavailable'};}
+}
+
 async function weatherContext(city='Kolkata'){
   try{
     const geo=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
@@ -101,9 +117,13 @@ function fallback(prompt,ctx){
 export default async function(req,res){
  const prompt=safe(req.body?.prompt); const username=safe(req.body?.username||'local-user',64); const identity=requestedName(prompt)||cleanName(req.body?.appName); if(!prompt)return res.status(400).json({error:'Tell KAI what app to build.'});
  let ctx=null; if(weatherLike(prompt)){const m=prompt.match(/(?:in|for|at)\s+([A-Za-z .'-]{2,40})/i);ctx=await weatherContext(m?.[1]||'Kolkata');}
+ const existing=Array.isArray(req.body?.existingProduct?.files)?req.body.existingProduct:null;
+ const shouldResearch=!weatherLike(prompt)&&!calculatorLike(prompt);
+ const research=shouldResearch?await webResearch(prompt):null;
+ const existingContext=existing?JSON.stringify({name:existing.name||'',summary:existing.summary||'',files:existing.files.slice(0,40).map(f=>({path:f.path,content:String(f.content||'').slice(0,50000)}))}):'';
  if(weatherLike(prompt)||calculatorLike(prompt)){
    const built=enforceIdentity(fallback(prompt,ctx),identity);
-   built.kai={version:'2.0',understood:weatherLike(prompt)?'Weather app':'Calculator app',researched:weatherLike(prompt)?'Open-Meteo current + 7-day weather structure':'Standard calculator UX',researchContext:ctx};
+   built.kai={version:'2.0',understood:weatherLike(prompt)?'Weather app':'Calculator app',researched:weatherLike(prompt)?'Open-Meteo current + 7-day weather structure':'Standard calculator UX',researchContext:ctx,webResearch:research};
    return res.json(built);
  }
  try{
@@ -150,15 +170,17 @@ APP-SPECIFIC RULES:
 - EDITORS: real editing controls and a working editing surface.
 - MARKETING ADVISOR: build a real marketing command center, not a title card. Include navigation or tabs, campaign objective and audience inputs, positioning guidance, channel strategy, content planning, KPI/metrics views, a concrete campaign-plan generation interaction, loading/success/error feedback, responsive mobile behavior and persistent client-side state. The primary action must produce a useful structured plan from the user's inputs. Never reduce a marketing request to a static page saying the app name.
 - COMMERCE: products, cart and checkout-like interactions.
+- WEB RESEARCH: KAI may have live web research context below. Use it to improve product decisions, terminology, current patterns, factual content and requested integrations. Do not blindly copy search snippets. Prefer direct, useful product behavior over a bibliography.
+- CONTINUATION: if existing product files are supplied below, preserve the product's identity and unrelated functionality. Modify the smallest coherent set of files necessary for the requested change; do not restart from a generic template.
 
-Return ONLY valid JSON: {"name":"...","summary":"...","files":[{"path":"index.html","content":"..."},{"path":"style.css","content":"..."},{"path":"app.js","content":"..."}]}. Keep it self-contained and client-side unless the request truly requires a backend. Do not return a plan, markdown fences, or prose outside JSON. KAI should build the product, not explain how the user could build it.`,prompt:`USER REQUEST:\n${prompt}\n\nREQUESTED PRODUCT NAME (must be preserved exactly when present):\n${identity||'(none supplied — infer from the existing product if modifying)'}\n\nRESEARCH CONTEXT:\n${JSON.stringify(ctx||{})}`,history:''});
+Return ONLY valid JSON: {"name":"...","summary":"...","files":[{"path":"index.html","content":"..."},{"path":"style.css","content":"..."},{"path":"app.js","content":"..."}]}. Keep it self-contained and client-side unless the request truly requires a backend. Do not return a plan, markdown fences, or prose outside JSON. KAI should build the product, not explain how the user could build it.`,prompt:`USER REQUEST:\n${prompt}\n\nREQUESTED PRODUCT NAME (must be preserved exactly when present):\n${identity||'(none supplied — infer from the existing product if modifying)'}\n\nLIVE WEB RESEARCH:\n${JSON.stringify(research||{})}\n\nSPECIALIZED CONTEXT:\n${JSON.stringify(ctx||{})}\n\nEXISTING PRODUCT TO CONTINUE (preserve unrelated behavior):\n${existingContext||'(none — new product)'}`,history:''});
   let parsed; try{
     const raw=String(result.text||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
     parsed=JSON.parse(raw);
   }catch{
     parsed=null;
   }
-  if(!parsed?.files?.length) return res.json(enforceIdentity(fallback(prompt,ctx),identity));
-  return res.json(enforceIdentity(parsed,identity));
+  if(!parsed?.files?.length){const fb=enforceIdentity(fallback(prompt,ctx),identity);fb.kai={version:'2.0',webResearch:research,continued:Boolean(existing)};return res.json(fb);}
+  const shipped=enforceIdentity(parsed,identity); shipped.kai={version:'2.0',webResearch:research,continued:Boolean(existing),researched:research?.results?.length||0}; return res.json(shipped);
  }catch(e){console.error(e);return res.json(fallback(prompt,ctx));}
 }
