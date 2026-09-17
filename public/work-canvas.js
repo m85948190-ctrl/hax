@@ -21,7 +21,7 @@
     el.querySelector('#kaiWorkClose').onclick=()=>{el.classList.remove('active','ready');document.body.style.overflow=''};
     el.querySelector('#kaiWorkOpen').onclick=()=>{const f=el.querySelector('#kaiWorkPreview');if(f?.srcdoc)window.open(URL.createObjectURL(new Blob([f.srcdoc],{type:'text/html'})),'_blank','noopener')};
     el.querySelector('#kaiWorkCode').onclick=()=>el.classList.toggle('show-code');
-    el.querySelector('#kaiWorkContinue').onclick=()=>{const inp=$('promptInput');if(inp){inp.value='Continue building this app. Keep the existing product and visual language. Apply my next instruction directly.';inp.focus();inp.dispatchEvent(new Event('input',{bubbles:true}))}};
+    el.querySelector('#kaiWorkContinue').onclick=()=>{const inp=$('promptInput');if(!inp)return;inp.value='Continue building this app. Keep the existing product and visual language. Apply my next instruction directly.';inp.focus();inp.dispatchEvent(new Event('input',{bubbles:true}));inp.setSelectionRange(inp.value.length,inp.value.length);const send=$('sendBtn');if(send){send.classList.add('kai-continue-ready');setTimeout(()=>send.classList.remove('kai-continue-ready'),1400)}};
     return el;
   }
 
