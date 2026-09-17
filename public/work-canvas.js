@@ -77,9 +77,10 @@
   }
 
   async function publish(name,files){
-    const r=await fetch('/api/app-publish',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name||'Hacks Bro AI App',files})});
+    // KAI-69-9 is the external-hosting path. Do not store generated app files in HAxBRO hosting.
+    const r=await fetch('/api/kai-699',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name||'KAI App',files})});
     const d=await r.json().catch(()=>({}));
-    if(!r.ok||!d.ok)throw new Error(d.error||'Public publishing failed');
+    if(!r.ok||!d.ok)throw new Error(d.error||'External publishing failed');
     return d.url||d.publicUrl||d.appUrl||'';
   }
 
