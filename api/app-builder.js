@@ -125,9 +125,9 @@ export default async function(req,res){
  const shouldResearch=!weatherLike(prompt)&&!calculatorLike(prompt)&&(/\b(research|look up|search|current|latest|real[- ]world|competitor|competitors|integration|api|library|framework|market|trend|reference|source)\b/i.test(prompt));
  const research=shouldResearch?await webResearch(prompt):null;
  const existingContext=existing?JSON.stringify({name:existing.name||'',summary:existing.summary||'',files:existing.files.slice(0,40).map(f=>({path:f.path,content:String(f.content||'').slice(0,50000)}))}):'';
- if(weatherLike(prompt)||calculatorLike(prompt)){
+ if(weatherLike(prompt)||calculatorLike(prompt)||aiLike(prompt)){
    const built=enforceIdentity(fallback(prompt,ctx),identity);
-   built.kai={version:'2.0',understood:weatherLike(prompt)?'Weather app':'Calculator app',researched:weatherLike(prompt)?'Open-Meteo current + 7-day weather structure':'Standard calculator UX',researchContext:ctx,webResearch:research};
+   built.kai={version:'2.0',understood:weatherLike(prompt)?'Weather app':calculatorLike(prompt)?'Calculator app':'AI assistant',researched:weatherLike(prompt)?'Open-Meteo current + 7-day weather structure':null,researchContext:ctx,webResearch:research,ownerSecretsExcluded:true,publicAiFallback:true};
    return res.json(built);
  }
  try{
