@@ -15,17 +15,32 @@
       <i class="kai-work-node n1"></i><i class="kai-work-node n2"></i><i class="kai-work-node n3"></i><i class="kai-work-node n4"></i>
       <div class="kai-work-head"><div class="kai-work-brand"><span class="kai-work-orb-mini"></span><div><div class="kai-work-kicker">KAI · WORK ENGINE</div><div class="kai-work-title">LIVE BUILD ENVIRONMENT</div></div></div><div class="kai-work-head-actions"><span id="kaiWorkStatus" class="kai-work-status">INITIALIZING</span><button id="kaiWorkClose" class="kai-work-close" type="button" aria-label="Close workspace" title="Close workspace">×</button></div></div>
       <div class="kai-work-body"><div class="kai-work-left"><div id="kaiWorkPhase" class="kai-work-phase">THINKING</div><div id="kaiWorkMessage" class="kai-work-message">Turning your idea into a real product.</div><div id="kaiWorkSub" class="kai-work-sub">KAI is planning the experience, implementation and validation path.</div><div id="kaiWorkProgress" class="kai-work-progress"><i></i><i></i><i></i><i></i><i></i></div><div id="kaiWorkActivity" class="kai-work-activity"></div></div><div class="kai-work-preview-shell"><div class="kai-work-preview-head"><div class="kai-work-preview-dots"><i></i><i></i><i></i></div><span id="kaiWorkPreviewLabel">PREVIEW · WAITING</span></div><iframe id="kaiWorkPreview" class="kai-work-preview-frame" title="KAI live app preview" sandbox="allow-scripts allow-forms allow-modals"></iframe></div></div>
-      <div class="kai-work-actions"><a id="kaiWorkLive" class="primary" target="_blank" rel="noopener" hidden>OPEN LIVE APP ↗</a><button id="kaiWorkOpen" type="button">OPEN PREVIEW ↗</button><button id="kaiWorkCode" type="button">VIEW FILES</button><button id="kaiWorkContinue" type="button">CONTINUE BUILDING</button><span id="kaiWorkFiles" class="kai-work-files"></span></div>
+      <div class="kai-work-actions"><a id="kaiWorkLive" class="primary" target="_blank" rel="noopener" hidden>OPEN LIVE APP ↗</a><button id="kaiWorkOpen" type="button">OPEN PREVIEW ↗</button><button id="kaiWorkCode" type="button">VIEW FILES</button><span id="kaiWorkFiles" class="kai-work-files"></span></div>
       <pre id="kaiWorkCodeBlock" class="kai-work-code"></pre>`;
     document.body.appendChild(el);
     el.querySelector('#kaiWorkClose').onclick=()=>{el.classList.remove('active','ready');document.body.style.overflow=''};
     el.querySelector('#kaiWorkOpen').onclick=()=>{const f=el.querySelector('#kaiWorkPreview');if(f?.srcdoc)window.open(URL.createObjectURL(new Blob([f.srcdoc],{type:'text/html'})),'_blank','noopener')};
     el.querySelector('#kaiWorkCode').onclick=()=>el.classList.toggle('show-code');
-    el.querySelector('#kaiWorkContinue').onclick=()=>{const inp=$('promptInput');if(!inp)return;inp.value='Continue building this app. Keep the existing product and visual language. Apply my next instruction directly.';inp.focus();inp.dispatchEvent(new Event('input',{bubbles:true}));inp.setSelectionRange(inp.value.length,inp.value.length);const send=$('sendBtn');if(send){send.classList.add('kai-continue-ready');setTimeout(()=>send.classList.remove('kai-continue-ready'),1400)}};
     return el;
   }
 
+  function inlineState(title,message,active=true){
+    const form=$('chatForm');if(!form)return;
+    let bar=$('kaiInlineWork');
+    if(!bar){
+      bar=document.createElement('div');
+      bar.id='kaiInlineWork';
+      bar.className='kai-inline-work';
+      bar.innerHTML='<span class="kai-inline-orbit"><i></i><i></i><i></i></span><span class="kai-inline-copy"><b></b><small></small></span>';
+      form.appendChild(bar);
+    }
+    bar.classList.toggle('active',active);
+    bar.querySelector('b').textContent=title||'KAI';
+    bar.querySelector('small').textContent=message||'';
+  }
+
   function phase(n,title,message,sub,status){
+    inlineState(title,message,true);
     const el=ensure();
     el.classList.add('active');el.classList.remove('ready');el.dataset.stage=String(n);
     el.querySelector('#kaiWorkPhase').textContent=title;
@@ -91,6 +106,7 @@
     el.classList.add('ready');
     phase(6,'YOUR APP IS READY',currentUrl?'The finished product is live. Ask KAI to change anything and it will continue from this version.':'The product is ready in the workspace preview.','KAI keeps the build context so your next instruction can continue the same product.','KAI · READY');
     el.querySelector('#kaiWorkPreviewLabel').textContent=`PREVIEW · READY${checks?` · ${checks}/3 CHECKS`:''}`;
+    inlineState(currentUrl?'READY':'READY · PREVIEW',currentUrl?'Build complete. You can type the next change directly below.':'Build complete in the workspace preview. Type the next change directly below.',false);
     return {...result,publicUrl:currentUrl};
   }
 
