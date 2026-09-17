@@ -1,0 +1,91 @@
+/* HAxBRO APP MAKER // 2050 CREATION INTERFACE
+   Scope: App Maker only. The main workspace is intentionally untouched. */
+#hxAppMakerPanel{position:fixed!important;inset:0!important;z-index:2147481000!important;padding:0!important;display:block!important;background:#020305!important;overflow:hidden!important;backdrop-filter:none!important}
+#hxAppMakerPanel[hidden]{display:none!important}
+#hxAppMakerPanel:before{content:"";position:absolute;inset:0;background:radial-gradient(70vw 55vw at 58% 45%,rgba(83,210,255,.12),transparent 58%),radial-gradient(35vw 45vw at 92% 18%,rgba(111,76,255,.09),transparent 68%),radial-gradient(45vw 40vw at 8% 90%,rgba(27,255,191,.055),transparent 70%);pointer-events:none}
+#hxAppMakerPanel:after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.28;background:linear-gradient(90deg,transparent 0 49.7%,rgba(149,234,255,.08) 50%,transparent 50.3%),linear-gradient(180deg,transparent 0 49.7%,rgba(149,234,255,.045) 50%,transparent 50.3%);background-size:100% 100%;mask-image:radial-gradient(circle at 58% 48%,#000,transparent 70%)}
+#hxAppMakerPanel .hx-prof-card{position:relative!important;width:100%!important;height:100%!important;max-width:none!important;border:0!important;border-radius:0!important;background:#020305!important;box-shadow:none!important;overflow:hidden!important;display:grid!important;grid-template-rows:76px 1fr!important}
+#hxAppMakerPanel .hx-prof-head{position:relative!important;z-index:10;padding:0 28px!important;height:76px!important;border-bottom:1px solid rgba(170,230,255,.11)!important;background:rgba(2,5,9,.72)!important;backdrop-filter:blur(26px) saturate(130%)!important}
+#hxAppMakerPanel .hx-prof-head:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent 0 7%,rgba(113,229,255,.6) 28%,rgba(157,111,255,.55) 58%,rgba(90,255,202,.45) 82%,transparent 100%);animation:hx2050Beam 5s linear infinite}
+#hxAppMakerPanel .hx-prof-head strong{font:900 13px/1 ui-monospace,SFMono-Regular,Menlo,monospace!important;letter-spacing:.28em!important;color:#ecfbff!important}
+#hxAppMakerPanel .hx-prof-head small{font:700 8px/1 ui-monospace,SFMono-Regular,Menlo,monospace!important;letter-spacing:.2em!important;color:#5e7b8d!important;margin-top:8px!important}
+#hxAppMakerPanel .hx-prof-head small:before{content:"●  ";color:#72e8ff;animation:hx2050Blink 1.4s ease-in-out infinite}
+#hxAppMakerPanel .hx-prof-close{width:40px!important;height:40px!important;border:1px solid rgba(177,229,255,.14)!important;border-radius:50%!important;background:rgba(255,255,255,.025)!important;color:#8ba8b8!important;font-size:22px!important;transition:.25s!important}
+#hxAppMakerPanel .hx-prof-close:hover{color:#fff!important;border-color:rgba(112,229,255,.5)!important;background:rgba(112,229,255,.08)!important;transform:rotate(90deg)!important}
+#hxAppMakerPanel .hx-prof-body{position:relative!important;z-index:3;display:grid!important;grid-template-columns:300px minmax(0,1fr)!important;min-height:0!important;overflow:hidden!important}
+#hxAppMakerPanel .hx-prof-controls{position:relative!important;padding:28px 22px 24px!important;border-right:1px solid rgba(170,230,255,.09)!important;background:linear-gradient(180deg,rgba(5,12,20,.78),rgba(2,5,9,.92))!important;display:flex!important;flex-direction:column!important;gap:14px!important;overflow:auto!important}
+#hxAppMakerPanel .hx-prof-controls:before{content:"";position:absolute;top:0;right:-1px;width:1px;height:100%;background:linear-gradient(180deg,transparent,rgba(104,226,255,.35),transparent);animation:hx2050Rail 4s ease-in-out infinite}
+#hxAppMakerPanel .hx-prof-label{font:800 8px/1 ui-monospace,SFMono-Regular,monospace!important;letter-spacing:.25em!important;color:#66899a!important}
+#hxAppMakerPanel .hx-prof-controls textarea{min-height:205px!important;resize:none!important;border:0!important;border-top:1px solid rgba(158,224,246,.13)!important;border-bottom:1px solid rgba(158,224,246,.13)!important;border-radius:0!important;background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.008))!important;color:#eafaff!important;padding:16px 2px!important;font:500 14px/1.7 Inter,system-ui,sans-serif!important;outline:0!important;box-shadow:none!important}
+#hxAppMakerPanel .hx-prof-controls textarea::placeholder{color:#547184!important}
+#hxAppMakerPanel .hx-prof-controls textarea:focus{border-top-color:rgba(105,228,255,.45)!important;border-bottom-color:rgba(105,228,255,.45)!important}
+#hxAppMakerPanel .hx-prof-primary{position:relative!important;overflow:hidden!important;border:1px solid rgba(177,243,255,.38)!important;border-radius:999px!important;background:linear-gradient(100deg,#dffcff,#78e4ff 44%,#8c7bff)!important;color:#041017!important;padding:14px 18px!important;font:900 10px/1 ui-monospace,SFMono-Regular,monospace!important;letter-spacing:.18em!important;box-shadow:0 0 30px rgba(104,224,255,.12),inset 0 1px rgba(255,255,255,.8)!important;transition:.25s!important}
+#hxAppMakerPanel .hx-prof-primary:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent,rgba(255,255,255,.65),transparent);transform:translateX(-120%);animation:hx2050Button 2.8s ease-in-out infinite}
+#hxAppMakerPanel .hx-prof-primary:hover{transform:translateY(-2px)!important;box-shadow:0 12px 45px rgba(76,214,255,.2),0 0 50px rgba(139,123,255,.1)!important}
+#hxAppMakerPanel .hx-prof-status{min-height:34px!important;color:#6e8998!important;font:600 9px/1.55 ui-monospace,SFMono-Regular,monospace!important;letter-spacing:.04em!important}
+#hxAppMakerPanel .hx-prof-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;padding-top:3px!important}
+#hxAppMakerPanel .hx-prof-secondary{border:1px solid rgba(160,222,242,.12)!important;background:rgba(255,255,255,.025)!important;color:#7793a2!important;border-radius:999px!important;padding:10px 8px!important;font:800 8px ui-monospace,SFMono-Regular,monospace!important;letter-spacing:.1em!important;transition:.2s!important}
+#hxAppMakerPanel .hx-prof-secondary:hover:not(:disabled){border-color:rgba(112,228,255,.35)!important;color:#dffaff!important;background:rgba(90,215,255,.06)!important}
+#hxAppMakerPanel .hx-prof-secondary:disabled{opacity:.28!important}
+#hxAppMakerPanel .hx-prof-preview{position:relative!important;min-width:0!important;min-height:0!important;display:grid!important;grid-template-rows:52px 1fr!important;background:#010204!important;overflow:hidden!important}
+#hxAppMakerPanel .hx-prof-preview:before{content:"";position:absolute;inset:52px 0 0;background:radial-gradient(circle at 50% 48%,rgba(78,205,255,.08),transparent 28%),linear-gradient(rgba(118,226,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(118,226,255,.018) 1px,transparent 1px);background-size:auto,44px 44px,44px 44px;mask-image:linear-gradient(#000,transparent 92%);animation:hx2050Grid 12s linear infinite;pointer-events:none}
+#hxAppMakerPanel .hx-prof-preview:after{content:"";position:absolute;left:12%;right:12%;top:51%;height:1px;background:linear-gradient(90deg,transparent,rgba(107,229,255,.16),rgba(155,119,255,.16),transparent);box-shadow:0 0 40px rgba(100,220,255,.14);pointer-events:none}
+#hxAppMakerPanel .hx-prof-preview-head{position:relative!important;z-index:5;padding:0 20px!important;border-bottom:1px solid rgba(170,230,255,.09)!important;background:rgba(2,5,9,.56)!important;color:#5c7888!important;font:800 8px ui-monospace,SFMono-Regular,monospace!important;letter-spacing:.24em!important}
+#hxAppMakerPanel #hxAppPreviewState{color:#8deaff!important;text-shadow:0 0 18px rgba(104,224,255,.4);animation:hx2050Blink 1.8s ease-in-out infinite}
+#hxAppMakerPanel .hx-prof-preview iframe{position:relative!important;z-index:4;width:calc(100% - 52px)!important;height:calc(100% - 42px)!important;margin:21px 26px!important;border:1px solid rgba(147,225,246,.13)!important;border-radius:22px!important;background:#fff!important;box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 0 1px rgba(115,225,255,.03),0 0 80px rgba(50,180,255,.055)!important;transform:translateZ(0);transition:.45s cubic-bezier(.2,.8,.2,1)!important}
+#hxAppMakerPanel .hx-prof-preview iframe[srcdoc]:not([srcdoc=""]){animation:hx2050PreviewIn .7s cubic-bezier(.16,1,.3,1) both}
+#hxAppMakerPanel .app-maker-chat-workspace{position:absolute!important;left:322px!important;right:28px!important;bottom:22px!important;z-index:20!important;display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:auto auto!important;gap:10px 14px!important;padding:11px 12px 11px 16px!important;border:1px solid rgba(128,222,247,.18)!important;border-radius:18px!important;background:rgba(2,7,12,.86)!important;backdrop-filter:blur(22px) saturate(130%)!important;box-shadow:0 20px 70px rgba(0,0,0,.55),0 0 50px rgba(64,189,255,.06)!important}
+#hxAppMakerPanel .app-maker-chat-head{grid-column:1/-1!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important}
+#hxAppMakerPanel .app-maker-chat-head>div{display:grid!important;gap:3px!important}
+#hxAppMakerPanel .app-maker-chat-head .section-label{padding:0!important;color:#67dfff!important;font:800 7px ui-monospace,monospace!important;letter-spacing:.22em!important}
+#hxAppMakerPanel .app-maker-chat-head b{font:800 11px/1.2 Inter,system-ui,sans-serif!important;color:#dffaff!important}
+#hxAppMakerPanel .app-maker-chat-head small{font:500 8px/1.4 Inter,system-ui,sans-serif!important;color:#648091!important}
+#hxAppMakerPanel .app-maker-chat-state{padding:5px 8px!important;border:1px solid rgba(91,231,255,.2)!important;border-radius:999px!important;color:#72e7ff!important;font:900 7px ui-monospace,monospace!important;letter-spacing:.14em!important}
+#hxAppMakerPanel .app-maker-chat-messages{display:none!important}
+#hxAppMakerPanel .app-maker-chat-form{display:contents!important}
+#hxAppMakerPanel #appMakerChatInput{grid-column:1!important;min-height:44px!important;max-height:100px!important;resize:none!important;border:1px solid rgba(131,220,242,.12)!important;border-radius:12px!important;background:rgba(255,255,255,.025)!important;color:#eaffff!important;padding:12px 13px!important;outline:0!important;font:500 11px/1.5 Inter,system-ui,sans-serif!important}
+#hxAppMakerPanel #appMakerChatInput::placeholder{color:#557181!important}
+#hxAppMakerPanel #appMakerChatInput:focus{border-color:rgba(100,225,255,.42)!important;box-shadow:0 0 0 3px rgba(76,214,255,.05)!important}
+#hxAppMakerPanel .app-maker-chat-form button{grid-column:2!important;align-self:stretch!important;min-width:88px!important;border:1px solid rgba(180,244,255,.38)!important;border-radius:12px!important;background:linear-gradient(135deg,#dffcff,#79ddff)!important;color:#041017!important;font:900 8px ui-monospace,monospace!important;letter-spacing:.14em!important;box-shadow:0 8px 28px rgba(67,211,255,.14)!important}
+#hxAppMakerPanel .app-maker-workspace-close{position:absolute!important;right:30px!important;top:17px!important;z-index:30!important;opacity:0!important;pointer-events:none!important}
+/* Hide the old close control's duplicate visual without disabling its click target. */
+#hxAppMakerPanel>.app-maker-workspace-close{display:none!important}
+#hxAppMakerPanel .hx-prof-head:before{content:"THOUGHT → PRODUCT";position:absolute;right:142px;top:31px;color:#526f80;font:800 7px ui-monospace,monospace;letter-spacing:.22em}
+#hxAppMakerPanel .hx2050-mode-badge{position:absolute;right:72px;top:27px;padding:6px 9px;border:1px solid rgba(105,225,255,.16);border-radius:999px;color:#71ddf7;background:rgba(77,201,232,.035);font:900 6px ui-monospace,monospace;letter-spacing:.16em;box-shadow:0 0 22px rgba(74,205,255,.05)}
+#hxAppMakerPanel .hx2050-orbit-core{position:absolute;z-index:2;left:50%;top:50%;width:240px;height:240px;transform:translate(-50%,-50%);pointer-events:none;opacity:.42}
+#hxAppMakerPanel .hx2050-orbit-core:before,#hxAppMakerPanel .hx2050-orbit-core:after{content:"";position:absolute;inset:12px;border:1px solid rgba(114,228,255,.11);border-radius:50%;box-shadow:0 0 50px rgba(71,200,255,.04);animation:hx2050Orbit 10s linear infinite}
+#hxAppMakerPanel .hx2050-orbit-core:after{inset:39px;border-color:rgba(156,119,255,.12);animation-duration:7s;animation-direction:reverse}
+#hxAppMakerPanel .hx2050-orbit-core i{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px;border-radius:50%;background:#a9f4ff;box-shadow:0 0 18px #65dcff;transform-origin:0 0;animation:hx2050OrbitNode 5s linear infinite}
+#hxAppMakerPanel .hx2050-orbit-core i:nth-child(2){animation-duration:7s;animation-delay:-2s;background:#a28cff}
+#hxAppMakerPanel .hx2050-orbit-core i:nth-child(3){animation-duration:9s;animation-delay:-4s;background:#7dffd4}
+#hxAppMakerPanel .hx2050-orbit-core b{position:absolute;left:50%;top:50%;width:42px;height:42px;transform:translate(-50%,-50%);border:1px solid rgba(204,249,255,.35);border-radius:50%;background:radial-gradient(circle,#eaffff 0 3%,rgba(84,218,255,.45) 13%,rgba(59,89,255,.12) 48%,transparent 72%);box-shadow:0 0 45px rgba(82,217,255,.16)}
+@keyframes hx2050Orbit{to{transform:rotate(360deg)}}
+@keyframes hx2050OrbitNode{from{transform:rotate(0deg) translateX(112px) rotate(0deg)}to{transform:rotate(360deg) translateX(112px) rotate(-360deg)}}
+@keyframes hx2050Beam{to{background-position:200% 0}}
+@keyframes hx2050Blink{50%{opacity:.42}}
+@keyframes hx2050Rail{0%,100%{transform:translateY(-15%);opacity:0}35%{opacity:1}65%{transform:translateY(25%);opacity:.2}}
+@keyframes hx2050Button{50%,70%{transform:translateX(120%)}}
+@keyframes hx2050Grid{to{background-position:0 44px,0 44px}}
+@keyframes hx2050PreviewIn{from{opacity:0;transform:scale(.985) translateY(8px);filter:brightness(.65)}to{opacity:1;transform:none;filter:none}}
+@media(max-width:900px){
+ #hxAppMakerPanel .hx-prof-card{grid-template-rows:66px 1fr!important}
+ #hxAppMakerPanel .hx-prof-head{height:66px!important;padding:0 16px!important}
+ #hxAppMakerPanel .hx-prof-head:before{display:none}
+ #hxAppMakerPanel .hx-prof-body{grid-template-columns:1fr!important;grid-template-rows:245px minmax(0,1fr)!important}
+ #hxAppMakerPanel .hx-prof-controls{border-right:0!important;border-bottom:1px solid rgba(170,230,255,.09)!important;padding:17px 16px!important;gap:9px!important}
+ #hxAppMakerPanel .hx-prof-controls textarea{min-height:76px!important}
+ #hxAppMakerPanel .hx-prof-preview{min-height:0!important}
+ #hxAppMakerPanel .hx-prof-preview iframe{width:calc(100% - 24px)!important;height:calc(100% - 24px)!important;margin:12px!important;border-radius:16px!important}
+ #hxAppMakerPanel .app-maker-chat-workspace{left:12px!important;right:12px!important;bottom:12px!important;grid-template-columns:minmax(0,1fr) auto!important}
+ #hxAppMakerPanel .app-maker-chat-head small{display:none!important}
+}
+@media(max-width:520px){
+ #hxAppMakerPanel .hx-prof-head strong{font-size:10px!important;letter-spacing:.18em!important}
+ #hxAppMakerPanel .hx-prof-head small{font-size:6px!important}
+ #hxAppMakerPanel .hx-prof-body{grid-template-rows:215px minmax(0,1fr)!important}
+ #hxAppMakerPanel .hx-prof-controls{padding:13px!important}
+ #hxAppMakerPanel .hx-prof-actions{grid-template-columns:1fr 1fr!important}
+ #hxAppMakerPanel .app-maker-chat-workspace{grid-template-columns:1fr!important}
+ #hxAppMakerPanel .app-maker-chat-form button{grid-column:1!important;min-height:38px!important}
+}
+@media(prefers-reduced-motion:reduce){#hxAppMakerPanel:after,#hxAppMakerPanel .hx-prof-head:after,#hxAppMakerPanel .hx-prof-controls:before,#hxAppMakerPanel .hx-prof-primary:before,#hxAppMakerPanel .hx-prof-preview:before,#hxAppMakerPanel #hxAppPreviewState{animation:none!important}}
