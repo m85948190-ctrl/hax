@@ -56,7 +56,11 @@ const gameLike=(s)=>/\b(game|games|arcade|runner|platformer|puzzle|quiz|snake|po
 const appType=(s)=>calculatorLike(s)?'calculator':weatherLike(s)?'weather':gameLike(s)?'game':'general';
 
 async function webResearch(prompt){
-  const q=String(prompt||'').replace(/\s+/g,' ').trim().replace(/^(create|build|make|develop|design)\s+(me\s+)?/i,'').replace(/\b(an?|the)\s+(ai|app|application|website|game|assistant|agent|bot)\s+(called|named)\s+[A-Za-z0-9_-]+/i,'').slice(0,240);
+  let q=String(prompt||'').replace(/\s+/g,' ').trim().replace(/^(create|build|make|develop|design)\s+(me\s+)?/i,'').replace(/\b(an?|the)\s+(ai|app|application|website|game|assistant|agent|bot)\s+(called|named)\s+[A-Za-z0-9_-]+/i,'').replace(/^\s*(that|which|who)\s+/i,'');
+  if(/math|mathematics|study|student|tutor/i.test(q))q='AI math tutor student study apps learning modes '+q;
+  else if(/game|arcade|platformer|puzzle|runner/i.test(q))q='browser game UX interaction patterns '+q;
+  else if(/dashboard|analytics|finance|productivity/i.test(q))q='modern product dashboard UX patterns '+q;
+  q=q.slice(0,240);
   if(!q)return {searched:false,results:[]};
   try{
     const html=String(await browser.html('https://www.bing.com/search?q='+encodeURIComponent(q))||'');
@@ -160,6 +164,7 @@ QUALITY BAR:
 - realistic sample data when useful
 - no unexplained placeholder blocks
 - use CSS for a rich interface; do not make the UI depend on external assets unless necessary
+- FEATURE COMPLETENESS GATE: before returning JSON, mentally extract every concrete requirement from the user request (named product identity, capabilities, screens, controls, game rules, tone, visual constraints, requested modes, etc.). Every concrete requirement must have a corresponding implemented element or behavior. Never silently omit a requested feature. If the user requests an AI, it must have a real conversational interaction; if the user requests a game, it must be playable; if the user requests a study mode, it must change the product behavior/state rather than merely display a label.
 
 APP-SPECIFIC RULES:
 - CALCULATOR: build a premium, genuinely usable calculator UI — not a row of digits/operators. Include a large readable display, expression/history area, grouped keypad, clear/backspace, decimal, percentage, operators, equals, keyboard support and robust calculation/error handling. Add useful scientific functions when the request is broad enough. Make the visual design feel like a polished standalone calculator product.
