@@ -1,0 +1,44 @@
+:root{--hb-accent:#3b82f6;--hb-light:#f6f7f9;--hb-light-panel:#fff;--hb-light-border:#e1e5ea;--hb-dark:#0b0c0e;--hb-dark-panel:#111317;--hb-dark-panel2:#171a1f;--hb-dark-border:#282d35}
+html[data-theme="light"] body.hax-modern{background:var(--hb-light)!important;color:#15181c!important}
+html[data-theme="dark"] body.hax-modern{background:var(--hb-dark)!important;color:#eef1f5!important}
+html[data-theme="light"] body.hax-modern .topbar{background:rgba(255,255,255,.94)!important;border-color:var(--hb-light-border)!important;box-shadow:0 1px 16px rgba(15,23,42,.04)!important}
+html[data-theme="dark"] body.hax-modern .topbar{background:rgba(11,12,14,.94)!important;border-color:var(--hb-dark-border)!important;box-shadow:0 1px 18px rgba(0,0,0,.22)!important}
+html[data-theme="light"] body.hax-modern .sidebar{background:#fafbfc!important;border-color:var(--hb-light-border)!important}
+html[data-theme="dark"] body.hax-modern .sidebar{background:#0f1114!important;border-color:var(--hb-dark-border)!important}
+html[data-theme="light"] body.hax-modern .chat-panel,html[data-theme="light"] body.hax-modern .messages{background:var(--hb-light)!important}
+html[data-theme="dark"] body.hax-modern .chat-panel,html[data-theme="dark"] body.hax-modern .messages{background:var(--hb-dark)!important}
+html[data-theme="light"] body.hax-modern .chat-head{background:rgba(246,247,249,.88)!important;border-color:var(--hb-light-border)!important}
+html[data-theme="dark"] body.hax-modern .chat-head{background:#101216!important;border-color:var(--hb-dark-border)!important}
+html[data-theme="light"] body.hax-modern .hero-welcome{background:#fff!important;border:1px solid var(--hb-light-border)!important;box-shadow:0 12px 36px rgba(15,23,42,.05)!important}
+html[data-theme="dark"] body.hax-modern .hero-welcome{background:#111317!important;border:1px solid var(--hb-dark-border)!important;box-shadow:0 14px 42px rgba(0,0,0,.2)!important}
+html[data-theme="light"] body.hax-modern .maker-link,html[data-theme="light"] body.hax-modern .mode-btn,html[data-theme="light"] body.hax-modern .top-toggle,html[data-theme="light"] body.hax-modern .float-tool{background:#fff!important;color:#333941!important;border-color:var(--hb-light-border)!important}
+html[data-theme="dark"] body.hax-modern .maker-link,html[data-theme="dark"] body.hax-modern .mode-btn,html[data-theme="dark"] body.hax-modern .top-toggle,html[data-theme="dark"] body.hax-modern .float-tool{background:var(--hb-dark-panel)!important;color:#d9dee5!important;border-color:var(--hb-dark-border)!important}
+html[data-theme="light"] body.hax-modern .maker-link:hover,html[data-theme="light"] body.hax-modern .mode-btn:hover,html[data-theme="light"] body.hax-modern .top-toggle:hover{background:#f0f3f6!important;border-color:#cbd2da!important;transform:translateY(-1px)!important}
+html[data-theme="dark"] body.hax-modern .maker-link:hover,html[data-theme="dark"] body.hax-modern .mode-btn:hover,html[data-theme="dark"] body.hax-modern .top-toggle:hover{background:#1a1e24!important;border-color:#3a414b!important;transform:translateY(-1px)!important}
+html[data-theme] body.hax-modern .maker-link,html[data-theme] body.hax-modern .mode-btn,html[data-theme] body.hax-modern .top-toggle{transition:transform .16s ease,background .16s ease,border-color .16s ease,color .16s ease!important}
+html[data-theme="light"] body.hax-modern .mode-btn.active{background:#eaf3ff!important;color:#215d9e!important;border-color:#bcd8f6!important}
+html[data-theme="dark"] body.hax-modern .mode-btn.active{background:#1b3653!important;color:#dceeff!important;border-color:#3d6e9f!important}
+html[data-theme="light"] body.hax-modern .composer .input-wrap{background:#fff!important;border:1px solid #d7dde3!important;box-shadow:0 8px 24px rgba(15,23,42,.07)!important}
+html[data-theme="dark"] body.hax-modern .composer .input-wrap{background:#15181d!important;border:1px solid #303640!important;box-shadow:0 8px 28px rgba(0,0,0,.3)!important}
+html[data-theme="light"] body.hax-modern .composer{background:linear-gradient(to top,rgba(246,247,249,.99),rgba(246,247,249,.82),transparent)!important}
+html[data-theme="dark"] body.hax-modern .composer{background:linear-gradient(to top,rgba(11,12,14,.99),rgba(11,12,14,.84),transparent)!important}
+html[data-theme="light"] body.hax-modern .composer .send{background:#246fca!important;border-color:#246fca!important;color:#fff!important}
+html[data-theme="dark"] body.hax-modern .composer .send{background:#326fae!important;border-color:#4a8bc9!important;color:#fff!important}
+html[data-theme="light"] body.hax-modern .composer textarea{color:#15181c!important}html[data-theme="dark"] body.hax-modern .composer textarea{color:#f1f4f7!important}
+html[data-theme] body.hax-modern .messages{padding-bottom:clamp(180px,22vh,250px)!important;scroll-padding-bottom:220px!important}
+html[data-theme] body.hax-modern .haxbro-thinking{position:relative!important;z-index:20!important;visibility:visible!important;opacity:1!important;margin:14px 0 28px 48px!important;transform:none!important;pointer-events:none!important}
+html[data-theme="light"] body.hax-modern .haxbro-thinking{background:#fff!important;color:#626b75!important;border-color:#dce1e6!important;box-shadow:0 7px 22px rgba(15,23,42,.08)!important}
+html[data-theme="dark"] body.hax-modern .haxbro-thinking{background:#171a1f!important;color:#aeb6c0!important;border-color:#303640!important;box-shadow:0 8px 24px rgba(0,0,0,.28)!important}
+/* App Maker: premium build-room treatment, not a toy/robot UI. */
+html[data-theme="light"] body.hax-modern .kai-work-canvas{background:#f7f8fa!important;color:#15181c!important}
+html[data-theme="dark"] body.hax-modern .kai-work-canvas{background:#090b0e!important;color:#eef1f5!important}
+html[data-theme] body.hax-modern .kai-work-head,.html[data-theme] body.hax-modern .kai-work-bottom{backdrop-filter:blur(16px)!important}
+html[data-theme="light"] body.hax-modern .kai-work-head,html[data-theme="light"] body.hax-modern .kai-work-bottom,html[data-theme="light"] body.hax-modern .kai-forge-panel,html[data-theme="light"] body.hax-modern .kai-work-center,html[data-theme="light"] body.hax-modern .kai-preview-panel{background:rgba(255,255,255,.92)!important;border-color:#dfe4e9!important;box-shadow:0 14px 42px rgba(15,23,42,.06)!important}
+html[data-theme="dark"] body.hax-modern .kai-work-head,html[data-theme="dark"] body.hax-modern .kai-work-bottom,html[data-theme="dark"] body.hax-modern .kai-forge-panel,html[data-theme="dark"] body.hax-modern .kai-work-center,html[data-theme="dark"] body.hax-modern .kai-preview-panel{background:rgba(17,19,23,.94)!important;border-color:#292f38!important;box-shadow:0 18px 50px rgba(0,0,0,.28)!important}
+html[data-theme] body.hax-modern .kai-work-canvas .build-core-circle{box-shadow:0 0 0 1px rgba(59,130,246,.35),0 0 55px rgba(59,130,246,.18)!important}
+html[data-theme] body.hax-modern .kai-work-canvas .build-block{filter:drop-shadow(0 0 10px rgba(59,130,246,.2))!important}
+html[data-theme] body.hax-modern .kai-work-canvas .build-pentagon{filter:drop-shadow(0 0 16px rgba(59,130,246,.22))!important}
+html[data-theme] body.hax-modern .kai-work-canvas .kai-forge-action{font-weight:750!important;letter-spacing:.08em!important}
+html[data-theme] body.hax-modern .kai-work-canvas .kai-forge-detail{max-width:52ch!important;line-height:1.55!important}
+@media(max-width:700px){html[data-theme] body.hax-modern .messages{padding-bottom:clamp(185px,30vh,270px)!important}html[data-theme] body.hax-modern .haxbro-thinking{margin-left:42px!important;margin-bottom:30px!important}.kai-work-canvas{border-radius:14px!important}}
+@media(prefers-reduced-motion:reduce){html[data-theme] body.hax-modern *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}

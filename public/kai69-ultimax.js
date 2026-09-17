@@ -80,19 +80,11 @@
   }
 
   function init() {
-    // KAI-69 is explicitly in WHITE mode now. A previous saved dark profile
-    // must not silently override the owner's latest instruction.
-    const migration = 'haxbro_kai69_white_v1';
-    if (localStorage.getItem(migration) !== '1') {
-      setTheme('light');
-      localStorage.setItem(migration, '1');
-      const profileKey = `haxbro_ui_admin_${String(localStorage.getItem('haxbro_username') || 'guest').toLowerCase().replace(/[^a-z0-9_-]/g, '_').slice(0, 32)}`;
-      try {
-        const profile = JSON.parse(localStorage.getItem(profileKey) || '{}');
-        profile.theme = 'light';
-        localStorage.setItem(profileKey, JSON.stringify(profile));
-      } catch {}
-    }
+    // Respect the user's saved theme. If none exists, prefer the system theme;
+    // never force a one-time light-mode migration over an explicit choice.
+    const saved = localStorage.getItem('haxbro_theme');
+    const initial = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    setTheme(initial);
     positionComposer();
     window.addEventListener('resize', positionComposer, { passive: true });
     window.addEventListener('orientationchange', () => setTimeout(positionComposer, 50), { passive: true });
