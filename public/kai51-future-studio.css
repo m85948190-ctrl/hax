@@ -1,4 +1,25 @@
 /* KAI 51 APP STUDIO — futuristic without toy geometry. */
+@keyframes kaiGridDrift{from{background-position:0 0,0 0}to{background-position:32px 18px,18px 32px}}
+@keyframes kaiScan{0%{transform:translateY(-120%);opacity:0}15%{opacity:.7}85%{opacity:.7}100%{transform:translateY(120%);opacity:0}}
+@keyframes kaiPulse{0%,100%{opacity:.45;box-shadow:0 0 0 0 #7ed6ff00}50%{opacity:1;box-shadow:0 0 18px 2px #7ed6ff33}}
+@keyframes kaiShimmer{0%{transform:translateX(-120%)}100%{transform:translateX(260%)}}
+@keyframes kaiReveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.kai-work-canvas.active .kai-studio-noise{animation:kaiGridDrift 9s linear infinite}
+.kai-work-canvas.active .kai-studio-head{animation:kaiReveal .35s ease-out both}
+.kai-work-canvas.active .kai-studio-rail,.kai-work-canvas.active .kai-studio-main,.kai-work-canvas.active .kai-studio-inspector{animation:kaiReveal .45s ease-out both}
+.kai-work-canvas.active .kai-studio-step.active i{animation:kaiPulse 1.8s ease-in-out infinite}
+.kai-work-canvas .kai-runtime-stage:after{content:"";position:absolute;inset:36px 0 0;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(126,214,255,.06),transparent);transform:translateY(-120%);opacity:0}
+.kai-work-canvas.active .kai-runtime-stage:after{animation:kaiScan 4.5s ease-in-out infinite}
+.kai-work-canvas .kai-runtime-stage{position:relative;overflow:hidden}
+.kai-work-canvas .telemetry i{position:relative;overflow:hidden}
+.kai-work-canvas .telemetry i:after{content:"";position:absolute;inset:0;width:35%;background:linear-gradient(90deg,transparent,#fff8,transparent);transform:translateX(-120%)}
+.kai-work-canvas.active .telemetry i:after{animation:kaiShimmer 2.8s linear infinite}
+.kai-work-canvas .kai-studio-command i{animation:kaiPulse 1.5s ease-in-out infinite}
+.kai-work-canvas .kai-work-activity-line{animation:kaiReveal .25s ease-out both}
+.kai-work-canvas .studio-btn.live-publish:not(:disabled){position:relative;overflow:hidden;box-shadow:0 0 0 1px #78d6ff33,0 0 24px #78d6ff18}
+.kai-work-canvas .studio-btn.live-publish:not(:disabled):before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent,#fff6,transparent);transform:translateX(-120%);animation:kaiShimmer 2.2s linear infinite}
+.kai-work-canvas .studio-btn.live-publish:disabled{opacity:.42;cursor:not-allowed}
+@media(prefers-reduced-motion:reduce){.kai-work-canvas.active .kai-studio-noise,.kai-work-canvas.active .kai-studio-head,.kai-work-canvas.active .kai-studio-rail,.kai-work-canvas.active .kai-studio-main,.kai-work-canvas.active .kai-studio-inspector,.kai-work-canvas.active .kai-studio-step.active i,.kai-work-canvas.active .kai-runtime-stage:after,.kai-work-canvas.active .telemetry i:after,.kai-work-canvas .kai-studio-command i,.kai-work-canvas .kai-work-activity-line,.kai-work-canvas .studio-btn.live-publish:not(:disabled):before{animation:none!important}}
 .kai-work-canvas.active{background:#06080b!important;color:#eef3f8!important}
 .kai-work-canvas .kai-studio-noise{opacity:.22!important;background-image:linear-gradient(rgba(110,170,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(110,170,255,.045) 1px,transparent 1px)!important;background-size:32px 32px!important}
 .kai-work-canvas .kai-studio-head{height:70px!important;background:rgba(5,8,12,.94)!important;border-bottom:1px solid #25303c!important;box-shadow:0 8px 35px #0008!important}
