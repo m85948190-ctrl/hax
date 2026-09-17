@@ -31,10 +31,9 @@ body.hax-modern .kai-work-orbit,body.hax-modern .kai-work-node,.kai-work-canvas 
 #fileCreatorBtn,#mobileFileCreatorBtn,#mediaConverterBtn,#mobileMediaConverterBtn{display:none!important}
 /* KAI 69 owns badge/composer collision handling; do not hard-dock the platform badge here. */
 .kai69-badge-wrap,[data-hatchable-badge]{z-index:90!important}
-/* Keep the Hatchable attribution badge, but dock it cleanly below the top text bar and away from the composer. */
-.kai69-badge-wrap,[data-hatchable-badge]{display:block!important;position:fixed!important;top:78px!important;right:16px!important;bottom:auto!important;left:auto!important;z-index:90!important;transform:none!important;max-width:min(220px,calc(100vw - 32px))!important}
-.kai69-badge-wrap #hb-badge{transform:none!important}
-@media(max-width:700px){.kai69-badge-wrap,[data-hatchable-badge]{top:64px!important;right:10px!important;max-width:190px!important}}
+/* Hatchable owns the badge's native placement. KAI-69 only controls composer
+   clearance around it; never relocate or resize the required platform badge. */
+.kai69-badge-wrap,[data-hatchable-badge],#hb-badge{z-index:90!important}
 /* Professional tool panels */
 .hx-prof-panel{position:fixed;inset:0;z-index:2147481000;background:rgba(0,0,0,.82);backdrop-filter:blur(18px);display:grid;place-items:center;padding:24px}
 .hx-prof-card{width:min(1180px,96vw);height:min(780px,92vh);display:flex;flex-direction:column;background:#080808;border:1px solid #292929;border-radius:16px;box-shadow:0 40px 140px #000;overflow:hidden}
