@@ -25,6 +25,21 @@ function identityLayer(result,identity){
   return {...result,name,files};
 }
 
+function responsiveHardening(result){
+  if(!result?.files?.length)return result;
+  const files=result.files.map(f=>({...f,content:String(f.content||'')}));
+  const html=files.find(f=>/^index\.html$/i.test(f.path))||files.find(f=>/\.html?$/i.test(f.path));
+  if(html&&!/name=[\"']viewport[\"']/i.test(html.content)){
+    const meta='<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">';
+    html.content=/<head[^>]*>/i.test(html.content)?html.content.replace(/<head[^>]*>/i,m=>m+meta):meta+html.content;
+  }
+  const css=files.find(f=>/\.css$/i.test(f.path));
+  if(css&&!css.content.includes('/* KAI RESPONSIVE HARDENING */')){
+    css.content+=`\n/* KAI RESPONSIVE HARDENING */\n*,*::before,*::after{box-sizing:border-box}\nhtml{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}\nbody{width:100%;max-width:100%;overflow-x:hidden}\nimg,video,svg{max-width:100%}\nbutton,input,textarea,select{font:inherit;max-width:100%}\nbutton,a,[role=button],input[type=button],input[type=submit]{touch-action:manipulation}\n@media (max-width:720px){button,a,[role=button],input[type=button],input[type=submit]{min-height:44px}input,textarea,select{font-size:16px;min-width:0}pre{max-width:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere}}\n@media (min-width:721px){body{min-width:0}}\n`;
+  }
+  return {...result,files};
+}
+
 async function research(prompt){
   if(!/\b(research|search|latest|current|competitor|integration|api|library|framework|reference|trend)\b/i.test(prompt))return null;
   try{
@@ -104,11 +119,11 @@ export default async function(req,res){
     const plan=await kai1(prompt,identity,existing,researchData,kai12);
     const ui=await kai3(prompt,plan,existing,researchData,kai12);
     const compiled=ui?.files?.length?await kai2(prompt,plan,ui,existing,kai12):null;
-    const result=identityLayer(compiled?.files?.length?compiled:ui?.files?.length?ui:emergency(prompt),identity);
+    const result=responsiveHardening(identityLayer(compiled?.files?.length?compiled:ui?.files?.length?ui:emergency(prompt),identity));
     result.kai={version:'2.0',pipeline:['KAI 1.0 · intent + architecture','KAI 3.0 · UI selector + implementation','KAI 2.0 · compile + repair + acceptance test'],architecture:plan,researched:Boolean(researchData),ownerSecretsExcluded:true};
     return res.json(result);
   }catch(e){
     console.error('KAI pipeline failed',e);
-    const result=identityLayer(emergency(prompt),identity);result.kai={version:'2.0',pipeline:['KAI 1.0','KAI 3.0','KAI 2.0'],fallback:true,ownerSecretsExcluded:true};return res.json(result);
+    const result=responsiveHardening(identityLayer(emergency(prompt),identity));result.kai={version:'2.0',pipeline:['KAI 1.0','KAI 3.0','KAI 2.0'],fallback:true,ownerSecretsExcluded:true};return res.json(result);
   }
 }
