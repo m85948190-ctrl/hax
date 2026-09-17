@@ -66,6 +66,17 @@
     safeBottom += safeArea;
     composer.style.setProperty('--kai69-safe-bottom', `${safeBottom}px`);
     composer.dataset.kai69BadgeState = badge ? 'detected' : 'reserved';
+
+    // Reserve the entire composer zone for the chat stream. This keeps KAI's
+    // thinking pill, generated answers, attachments and the Hatchable logo
+    // visibly above the input instead of allowing content to disappear behind it.
+    const messages = $('messages');
+    if (messages) {
+      const cr = composer.getBoundingClientRect();
+      const reserve = Math.max(132, Math.ceil(viewportHeight - cr.top + 24));
+      messages.style.setProperty('--kai69-content-bottom', `${reserve}px`);
+      messages.style.paddingBottom = `${reserve}px`;
+    }
   }
 
   function init() {
