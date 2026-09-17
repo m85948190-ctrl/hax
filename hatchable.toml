@@ -22,11 +22,7 @@ expose = true
 description = "Tertiary OpenRouter key for HAxBRO KAI failover"
 
 [auth]
-enabled = true
-providers = ["email", "google"]
-signup = "open"
-hosted_login = false
-login_path = "/login"
+enabled = false
 
 [[secret]]
 name = "OPENAI_API_KEY"

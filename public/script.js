@@ -25,8 +25,11 @@ function renderHistorySafe(){try{renderHistory()}catch(e){}}
 function bind(id,event,fn){const el=$(id);if(el)el.addEventListener(event,fn)}
 function wire(){
   const savedName=localStorage.getItem('haxbro_username')||'';
-  if(savedName){const g=$('#usernameGate');if(g)g.hidden=true;updateCustomerProfile(savedName)}
-  bind('#usernameForm','submit',e=>{e.preventDefault();const n=String($('#usernameInput')?.value||'').trim();if(!n)return;localStorage.setItem('haxbro_username',n);const g=$('#usernameGate');if(g)g.hidden=true;updateCustomerProfile(n);ensureChat()});
+  const gate=$('#usernameGate');
+  const openUsernameLogin=()=>{if(!gate)return;gate.hidden=false;gate.setAttribute('aria-hidden','false');const field=$('#usernameInput');if(field){field.value=localStorage.getItem('haxbro_username')||'';setTimeout(()=>field.focus(),40)}};
+  if(savedName){if(gate)gate.hidden=true;updateCustomerProfile(savedName)}else openUsernameLogin();
+  bind('#usernameLoginBtn','click',openUsernameLogin);
+  bind('#usernameForm','submit',e=>{e.preventDefault();const n=String($('#usernameInput')?.value||'').trim().replace(/[^a-zA-Z0-9._-]/g,'').slice(0,32);if(!n)return;localStorage.setItem('haxbro_username',n);if(gate){gate.hidden=true;gate.setAttribute('aria-hidden','true')}updateCustomerProfile(n);ensureChat()});
   bind('#chatForm','submit',e=>{e.preventDefault();sendChat(input?.value||'')});
   bind('#sendBtn','click',()=>sendChat(input?.value||''));
   bind('#promptInput','input',resize);
