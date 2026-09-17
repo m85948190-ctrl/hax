@@ -125,7 +125,7 @@ Repair broken HTML/CSS/JS, selectors, event handlers, responsive controls and st
 }
 
 async function buildAll(prompt,identity,existing,researchData,kai12){
-  const r=await fastComplete({maxTokens:6800,system:`You are the unified KAI 1.0 → KAI 3.0 → KAI 2.0 build engine inside HAxBRO App Maker. Execute the three roles in one pass for speed: KAI 1.0 determines the real product and complete behavior contract; KAI 3.0 designs and implements the product UI/UX; KAI 2.0 compiles, repairs and QA-tests the finished code before delivery. Do not return planning prose. Return ONLY JSON {name,summary,files:[{path,content}]}.
+  const r=await complete({username:'app-maker',modelChoice:'openrouter',maxTokens:5600,system:`You are the unified KAI 1.0 → KAI 3.0 → KAI 2.0 build engine inside HAxBRO App Maker. Execute the three roles in one pass for speed: KAI 1.0 determines the real product and complete behavior contract; KAI 3.0 designs and implements the product UI/UX; KAI 2.0 compiles, repairs and QA-tests the finished code before delivery. Do not return planning prose. Return ONLY JSON {name,summary,files:[{path,content}]}.
 
 YOUR JOB IS TO SHIP A REAL PRODUCT. The output is opened by a normal end user, not a developer. Never produce a static mockup, text-only demo, decorative card, fake result, or unexplained RUN button. Infer obvious missing mechanics yourself.
 
