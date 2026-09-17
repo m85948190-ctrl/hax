@@ -24,7 +24,8 @@ LOCAL RUNTIME RULE: this conversation state is designed to survive locally in th
     out.ready = true;
     out.questions = Array.isArray(out.questions) ? out.questions.slice(0,2) : [];
     out.toolPlan = Array.isArray(out.toolPlan) ? out.toolPlan.slice(0,8) : ['inspect_product','understand_intent','modify_requested_parts','test_interactions','preserve_existing_features'];
-    out.buildBrief = String(out.buildBrief || `${out.understanding || ''}\nLatest request: ${prompt}`);
+    out.buildBrief = String(out.buildBrief || `${typeof out.understanding==='string'?out.understanding:JSON.stringify(out.understanding||{})}\nLatest request: ${prompt}`);
+    if(typeof out.understanding!=='string') out.understanding=JSON.stringify(out.understanding||{});
     return res.json(out);
   }catch(e){
     console.error('KAI 12.0 failed',e);
