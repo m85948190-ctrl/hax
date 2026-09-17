@@ -1,6 +1,11 @@
 (()=>{
   const $=id=>document.getElementById(id);
-  let currentFiles=[],currentUrl='',verifyTimer=null;
+  let currentFiles=[],currentUrl='',verifyTimer=null,cinematicTimer=null;
+
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  function cinematic(el,state){const seq=el.querySelector('#kaiForgeSequence');if(!seq)return;seq.dataset.cinematic=state;const labels={idea:['IDEA','Your thought is the starting point'],materialize:['MATERIALIZE','Giving the idea shape'],forge:['FORGE','Forging the product into existence'],intelligence:['INTELLIGENCE','KAI is shaping behavior and structure'],assemble:['ASSEMBLE','Connecting every part'],experience:['EXPERIENCE','Your product is ready']};const x=labels[state]||labels.idea;const c=el.querySelector('#kaiForgeCaption'),s=el.querySelector('#kaiForgeSubcaption');if(c)c.textContent=x[0];if(s)s.textContent=x[1];}
+  function startCinematic(el){clearInterval(cinematicTimer);let i=0;const states=['idea','materialize','forge','intelligence','assemble'];cinematic(el,states[0]);cinematicTimer=setInterval(()=>{i=(i+1)%states.length;cinematic(el,states[i])},1450)}
+  function stopCinematic(el,final=true){clearInterval(cinematicTimer);cinematicTimer=null;if(final)cinematic(el,'experience');}
 
   function esc(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));}
   function ensure(){
@@ -22,13 +27,14 @@
         </aside>
         <main class="kai-studio-main">
           <div class="kai-studio-mainbar"><div><small id="kaiWorkPhase">UNDERSTANDING</small><h1 id="kaiEngineTitle">Building the product</h1><p id="kaiWorkMessage">KAI is turning your idea into a working application.</p></div><div class="kai-run-meter"><span id="kaiRunMeter">00%</span><div><i id="kaiRunMeterBar"></i></div></div></div>
-          <div id="kaiForgeSequence" class="kai-forge-sequence" aria-label="KAI build animation">
-            <div class="forge-stars"></div>
-            <div class="forge-scene scene-web" data-scene="web"><div class="forge-globe"><i></i><i></i><i></i><b>WWW</b></div><span>THE WORLD WIDE WEB</span></div>
-            <div class="forge-scene scene-forge" data-scene="forge"><div class="forge-anvil"></div><div class="forge-hammer"><i></i><b></b></div><div class="forge-sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span>FORGING YOUR PRODUCT</span></div>
-            <div class="forge-scene scene-ai" data-scene="ai"><div class="forge-ai-pair"><i>✦</i><i>✦</i></div><b>INTELLIGENCE LAYER</b><span>SHAPING THE IDEA</span></div>
-            <div class="forge-scene scene-gear" data-scene="gear"><div class="forge-gears"><i>⚙</i><i>⚙</i><i>⚙</i><i>⚙</i><i>⚙</i></div><span>ASSEMBLING EVERY PART</span></div>
-            <div class="forge-finish" data-scene="finish"><div class="finish-core">KAI</div><b>PRODUCT BUILT</b><span>YOUR EXPERIENCE IS READY</span></div>
+          <div id="kaiForgeSequence" class="kai-forge-sequence" aria-label="KAI is materializing your product">
+            <div class="forge-atmosphere"></div><div class="forge-stars"></div><div class="forge-horizon"></div>
+            <div class="forge-scene scene-web" data-scene="web"><div class="forge-globe"><i></i><i></i><i></i><b></b></div><div class="forge-copy"><strong>WORLD LAYER</strong><span>Connecting the idea to the living web</span></div></div>
+            <div class="forge-scene scene-forge" data-scene="forge"><div class="forge-workbench"><div class="forge-anvil"></div><div class="forge-hot-core"></div><div class="forge-hammer"><i></i><b></b></div><div class="forge-sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="forge-copy"><strong>FORGE</strong><span>Turning the idea into something real</span></div></div>
+            <div class="forge-scene scene-ai" data-scene="ai"><div class="forge-ai-pair"><i></i><i></i><span></span></div><div class="forge-copy"><strong>INTELLIGENCE</strong><span>Understanding structure, behavior and intent</span></div></div>
+            <div class="forge-scene scene-gear" data-scene="gear"><div class="forge-gears"><i></i><i></i><i></i><i></i><i></i></div><div class="forge-copy"><strong>ASSEMBLE</strong><span>Every interaction locking into one coherent system</span></div></div>
+            <div class="forge-finish" data-scene="finish"><div class="finish-core"><i></i><b></b><span></span></div><div class="forge-copy"><strong>EXPERIENCE</strong><span>Your idea has become a product</span></div></div>
+            <div class="forge-caption"><span id="kaiForgeCaption">IDEA</span><i></i><small id="kaiForgeSubcaption">Preparing the creation space</small></div>
           </div>
           <div class="kai-runtime-stage">
             <div class="stage-chrome"><span>LIVE PREVIEW</span><div><i></i><i></i><i></i><b id="kaiWorkPreviewLabel">BUILDING</b></div></div>
@@ -50,7 +56,7 @@
       </footer>
       <pre id="kaiWorkCodeBlock" class="kai-work-code"></pre>`;
     document.body.appendChild(el);
-    el.querySelector('#kaiWorkClose').onclick=()=>{el.classList.remove('active','ready');document.body.style.overflow='';clearTimeout(verifyTimer)};
+    el.querySelector('#kaiWorkClose').onclick=()=>{stopCinematic(el,false);el.classList.remove('active','ready');document.body.style.overflow='';clearTimeout(verifyTimer)};
     const identity=localStorage.getItem('haxbro_username')||'local-user';
     const identityEl=el.querySelector('#kaiWorkIdentity');
     if(identityEl) identityEl.textContent='USER · '+identity;
@@ -76,6 +82,7 @@
   function openPreview(el){const f=el.querySelector('#kaiWorkPreview');if(!f?.srcdoc)return;const blob=new Blob([f.srcdoc],{type:'text/html'}),url=URL.createObjectURL(blob);window.open(url,'_blank','noopener');setTimeout(()=>URL.revokeObjectURL(url),60000);}
   async function modify(el){const box=el.querySelector('#kaiWorkPrompt'),prompt=String(box.value||'').trim();if(!prompt)return;box.value='';activity('Change requested: '+prompt,'user');const previous=(()=>{try{return JSON.parse(localStorage.getItem('haxbro_active_app')||'null')}catch{return null}})();const context=Array.isArray(previous?.files)?JSON.stringify(previous.files.slice(0,16)):'';try{phase(3,'MODIFYING','KAI is applying the requested change.','KAI · MODIFYING');const r=await fetch('/api/app-builder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({appName:previous?.name||'',prompt:`USER'S EXACT MODIFICATION (highest priority):\n${prompt}\n\nCURRENT PRODUCT NAME: ${previous?.name||'unknown'}\n\nKAI LIVE WORKSPACE CONTRACT:\n- Continue the current product. Do not replace it with HAxBRO or a generic template.\n- Preserve current identity, name, colors and structure unless explicitly changed.\n- Return actual changed working files.\nEXISTING PRODUCT FILES:\n${context}`,username:localStorage.getItem('haxbro_username')||'local-user'})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||'Modification failed');const files=normalizeFiles(d.files);if(!files.length)throw Error('No build artifacts returned');currentFiles=files;localStorage.setItem('haxbro_active_app',JSON.stringify({name:d.name||previous?.name||'KAI App',summary:d.summary||'',files:files.slice(0,16)}));el.querySelector('#kaiWorkFiles').textContent=files.length;el.querySelector('#kaiWorkCodeBlock').textContent=files.map(f=>`// ${f.path}\n${f.content}`).join('\n\n');setTelemetry(el,files);activity(`${files.length} artifacts refreshed`,'ok');phase(5,'BUILDING','KAI is applying the change and bringing the updated app to life.','KAI · BUILDING');try{await runtimeVerify(el,files,prompt);}catch(e){activity('Preview check skipped — continuing to handoff','warn');}phase(6,'HANDOFF','Your updated app is being published live now.','KAI · HANDOFF');try{currentUrl=await publish(d.name||previous?.name||'KAI App',files);el.querySelector('#kaiWorkLive').hidden=!currentUrl;el.querySelector('#kaiWorkLive').href=currentUrl||'';activity('Updated app is live','ok');}catch(e){activity('Live handoff could not be confirmed: '+e.message,'warn');}el.classList.add('ready');phase(6,'READY','Your updated app is ready.','KAI · READY');el.querySelector('#kaiWorkPreviewLabel').textContent=currentUrl?'LIVE':'READY';}catch(e){activity(e.message,'warn');phase(6,'READY','The app is ready in preview.','KAI · READY');}}
   async function run(prompt,apiCall){const el=ensure();document.body.style.overflow='hidden';el.classList.add('active');el.querySelector('#kaiWorkActivity').innerHTML='';el.querySelector('#kaiWorkSteps').innerHTML='';el.querySelector('#kaiWorkLive').hidden=true;currentUrl='';
+    startCinematic(el);
     phase(1,'UNDERSTANDING','KAI is understanding the requested product.','KAI · UNDERSTANDING');activity('Request received');
     phase(2,'ARCHITECTING','KAI is planning structure, states and interactions.','KAI · ARCHITECTING');activity('Execution plan created');
     phase(3,'DESIGNING','KAI is shaping the actual interface and behavior.','KAI · DESIGNING');activity('Design system assembled');
@@ -87,7 +94,7 @@
     phase(4,'FORGING','KAI is assembling the working runtime.','KAI · FORGING');activity(`${files.length} artifacts generated`);
     phase(5,'BUILDING','KAI is bringing the app to life.','KAI · BUILDING');activity('Live preview is being assembled');let buildSignal=true;try{buildSignal=await runtimeVerify(el,files,prompt);}catch(e){buildSignal=false;activity('Preview check skipped — continuing to handoff','warn');}
     phase(6,'HANDOFF','Your app is being published live now.','KAI · HANDOFF');activity('Sending the finished app live');try{currentUrl=await publish(result?.name||'KAI App',files);const live=el.querySelector('#kaiWorkLive');if(live&&currentUrl){live.hidden=false;live.href=currentUrl;live.textContent='OPEN LIVE ↗'}activity('App is live','ok');}catch(e){activity('Live handoff could not be confirmed: '+e.message,'warn');}
-    el.classList.add('ready');const identityEl=el.querySelector('#kaiWorkIdentity');if(identityEl)identityEl.textContent='USER · '+(localStorage.getItem('haxbro_username')||'local-user');phase(6,'READY','Your app is ready. Open it or keep improving it.','KAI · READY');el.querySelector('#kaiWorkPreviewLabel').textContent=currentUrl?'LIVE':'READY';return {...result,publicUrl:currentUrl};
+    stopCinematic(el,true);el.classList.add('ready');const identityEl=el.querySelector('#kaiWorkIdentity');if(identityEl)identityEl.textContent='USER · '+(localStorage.getItem('haxbro_username')||'local-user');phase(6,'READY','Your app is ready. Open it or keep improving it.','KAI · READY');el.querySelector('#kaiWorkPreviewLabel').textContent=currentUrl?'LIVE':'READY';return {...result,publicUrl:currentUrl};
   }
   window.haxbroBuildExperience=run;window.haxbroWorkCanvas={ensure,phase,getFiles:()=>currentFiles,buildSrcdoc,getPublicUrl:()=>currentUrl};
 })();
