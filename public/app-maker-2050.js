@@ -1,1 +1,0 @@
-(()=>{ /* Legacy App Maker decorator intentionally disabled. The App Maker now lives exclusively in work-canvas.js. */ })();
