@@ -22,7 +22,7 @@ expose = true
 description = "Tertiary OpenRouter key for HAxBRO KAI failover"
 
 [auth]
-enabled = false
+enabled = true
 providers = ["email"]
 signup = "open"
 hosted_login = true
