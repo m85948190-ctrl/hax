@@ -122,7 +122,7 @@ export default async function(req,res){
  const prompt=safe(req.body?.prompt); const username=safe(req.body?.username||'local-user',64); const identity=requestedName(prompt)||cleanName(req.body?.appName); if(!prompt)return res.status(400).json({error:'Tell KAI what app to build.'});
  let ctx=null; if(weatherLike(prompt)){const m=prompt.match(/(?:in|for|at)\s+([A-Za-z .'-]{2,40})/i);ctx=await weatherContext(m?.[1]||'Kolkata');}
  const existing=Array.isArray(req.body?.existingProduct?.files)?req.body.existingProduct:null;
- const shouldResearch=!weatherLike(prompt)&&!calculatorLike(prompt);
+ const shouldResearch=!weatherLike(prompt)&&!calculatorLike(prompt)&&(/\b(research|look up|search|current|latest|real[- ]world|competitor|competitors|integration|api|library|framework|market|trend|reference|source)\b/i.test(prompt));
  const research=shouldResearch?await webResearch(prompt):null;
  const existingContext=existing?JSON.stringify({name:existing.name||'',summary:existing.summary||'',files:existing.files.slice(0,40).map(f=>({path:f.path,content:String(f.content||'').slice(0,50000)}))}):'';
  if(weatherLike(prompt)||calculatorLike(prompt)){
