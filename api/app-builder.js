@@ -17,12 +17,37 @@ function requestedName(prompt){
   for(const re of patterns){const m=s.match(re);if(m?.[1])return cleanName(m[1]);}
   return '';
 }
+function futureProductLayer(files,identity=''){
+  if(!Array.isArray(files))return files;
+  const name=cleanName(identity)||'';
+  const fxCss=`
+/* KAI FUTURE PRODUCT LAYER — injected by App Maker */
+:root{--kai-cyan:#62e8ff;--kai-blue:#4b7dff;--kai-violet:#9b7cff}
+html{background:#02040a}body.kai-future-product{isolation:isolate;background:radial-gradient(900px 520px at 12% 8%,rgba(76,126,255,.16),transparent 60%),radial-gradient(800px 480px at 88% 18%,rgba(98,232,255,.11),transparent 58%),#02040a!important}
+.kai-fx-grid,.kai-fx-noise,.kai-fx-vignette{position:fixed;inset:0;pointer-events:none}.kai-fx-grid{z-index:-3;opacity:.7;background:linear-gradient(rgba(98,232,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(98,232,255,.045) 1px,transparent 1px);background-size:48px 48px;transform:perspective(700px) rotateX(62deg) translateY(16vh) scale(1.35);transform-origin:center bottom;animation:kaiGridDrift 12s linear infinite}.kai-fx-grid:after{content:"";position:absolute;inset:-30%;background:linear-gradient(180deg,transparent 42%,rgba(98,232,255,.13) 50%,transparent 58%);animation:kaiGridSweep 5s ease-in-out infinite}.kai-fx-noise{z-index:9999;opacity:.035;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.08) 4px,transparent 5px);animation:kaiNoise 7s steps(2) infinite}.kai-fx-vignette{z-index:-1;background:radial-gradient(circle at center,transparent 48%,rgba(0,0,0,.62) 100%)}
+.kai-future-product button,.kai-future-product a,.kai-future-product input,.kai-future-product textarea,.kai-future-product select{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease,filter .22s ease}.kai-future-product button:hover,.kai-future-product a:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(75,125,255,.2),0 0 25px rgba(98,232,255,.08)}.kai-future-product button:active,.kai-future-product a:active{transform:scale(.985)}.kai-future-product button:focus-visible,.kai-future-product a:focus-visible,.kai-future-product input:focus-visible,.kai-future-product textarea:focus-visible,.kai-future-product select:focus-visible{outline:1px solid var(--kai-cyan);outline-offset:3px;box-shadow:0 0 0 4px rgba(98,232,255,.09),0 0 28px rgba(98,232,255,.15)}
+.kai-future-product [data-kai-reveal]{animation:kaiReveal .65s cubic-bezier(.2,.8,.2,1) both}.kai-fx-ripple{position:fixed;width:8px;height:8px;border:1px solid rgba(98,232,255,.75);border-radius:50%;pointer-events:none;z-index:10000;transform:translate(-50%,-50%);animation:kaiRipple .65s ease-out forwards}
+@keyframes kaiGridDrift{to{background-position:0 48px,48px 0}}@keyframes kaiGridSweep{0%,100%{transform:translateY(-55%);opacity:0}45%{opacity:1}65%{transform:translateY(55%);opacity:0}}@keyframes kaiNoise{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}@keyframes kaiReveal{from{opacity:0;transform:translateY(14px) scale(.985);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}@keyframes kaiRipple{to{width:70px;height:70px;opacity:0}}
+@media(prefers-reduced-motion:reduce){.kai-fx-grid,.kai-fx-noise,.kai-future-product [data-kai-reveal]{animation:none!important}.kai-future-product button,.kai-future-product a{transition:none!important}}
+`;
+  const fxJs=`(function(){try{document.body.classList.add('kai-future-product');document.addEventListener('pointermove',function(e){document.documentElement.style.setProperty('--kai-mx',((e.clientX/innerWidth-.5)*10).toFixed(2)+'px');document.documentElement.style.setProperty('--kai-my',((e.clientY/innerHeight-.5)*10).toFixed(2)+'px')},{passive:true});document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest('button,a'))return;var r=document.createElement('span');r.className='kai-fx-ripple';r.style.left=e.clientX+'px';r.style.top=e.clientY+'px';document.body.appendChild(r);setTimeout(function(){r.remove()},700)});document.querySelectorAll('main,section,header,article,.card,.panel,.shell').forEach(function(el,i){if(i<24)el.setAttribute('data-kai-reveal','')})}catch(e){}})();`;
+  return files.map(f=>{
+    if(f.path==='index.html' || /\\.html?$/i.test(f.path)){
+      let content=String(f.content||'');
+      if(content.indexOf('kai-fx-grid')<0){content=content.replace(/<body([^>]*)>/i,function(m,a){return '<body'+a+' class="kai-future-product"><div class="kai-fx-grid"></div><div class="kai-fx-noise"></div><div class="kai-fx-vignette"></div>'});}
+      if(content.indexOf('KAI FUTURE PRODUCT LAYER')<0){content=content.replace('</head>','<style>'+fxCss+'</style></head>').replace('</body>','<script>'+fxJs+'</script></body>');}
+      return {...f,content};
+    }
+    if(/\\.css$/i.test(f.path))return {...f,content:String(f.content||'')+'\\n'+fxCss};
+    return f;
+  });
+}
 function enforceIdentity(result,identity){
-  if(!identity||!result)return result;
-  const name=cleanName(identity)||identity;
+  if(!result)return result;
+  const name=cleanName(identity)||cleanName(result.name)||'KAI App';
   const replacements=[/Hacks Bro AI/gi,/HAxBRO AI/gi,/HAxBRO App/gi,/HAxBRO Workspace/gi,/HAxBRO Starter App/gi,/HAxBRO Game/gi,/HAxBRO Calculator/gi,/HAxBRO Weather/gi];
   const files=Array.isArray(result.files)?result.files.map(f=>{let content=String(f.content||'');for(const re of replacements)content=content.replace(re,name);return {...f,content};}):result.files;
-  return {...result,name,files};
+  return {...result,name,files:futureProductLayer(files,name)};
 }
 const weatherLike=(s)=>/\b(weather|forecast|temperature|rain|humidity|climate)\b/i.test(s);
 const calculatorLike=(s)=>/\b(calculator|calculate|calc)\b/i.test(s);
@@ -98,7 +123,11 @@ NEVER reduce an app request to a text explanation, a list of numbers, ASCII UI, 
 QUALITY BAR:
 - polished, modern, cohesive visual system
 - responsive desktop + mobile layout
-- intentional motion: subtle entrance transitions, hover/press feedback, loading/progress states and meaningful micro-interactions when they improve the product
+- intentional motion is mandatory: cinematic entrance choreography, layered depth, animated surfaces, responsive hover/press feedback, live progress, loading transitions, micro-interactions and state changes
+- the visual language must feel like a 2026 cyber-tech product: depth, glass/material layering, animated grid or light fields, controlled glow, dynamic focus, motion hierarchy and premium typography — never a flat 2012-style web page
+- avoid generic cards-on-a-gradient, default system-font dashboards, static headers, plain buttons, or old bootstrap-like layouts
+- the first viewport must immediately communicate that this is a high-end interactive product; animation should be visible without waiting for a click
+- visual motion must support the product rather than become decorative noise; preserve usability and accessibility
 - visual hierarchy that feels like a finished premium product rather than a code sample
 - strong empty/loading/error/success states when relevant
 - real controls and working interactions, not decorative buttons
