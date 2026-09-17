@@ -23,9 +23,9 @@ description = "Tertiary OpenRouter key for HAxBRO KAI failover"
 
 [auth]
 enabled = true
-providers = ["email"]
+providers = ["email", "google"]
 signup = "open"
-hosted_login = true
+hosted_login = false
 login_path = "/login"
 
 [[secret]]
