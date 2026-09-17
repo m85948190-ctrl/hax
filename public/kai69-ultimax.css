@@ -39,7 +39,7 @@
 @media(max-width:700px){.kai-live-button{right:14px;bottom:78px;min-width:126px;padding:9px 10px}.kai-live-skull{width:32px;height:32px}.kai-live-transcript{right:14px;bottom:136px}}
 .kai789-capability-item code{font-size:8px;color:#69d7e8}
 
-/* HAxBRO request thinking indicator — compact moving orbit, no giant loader. */
+/* HAxBRO request thinking indicator — restored compact professional pill with moving orbit. */
 .haxbro-thinking{display:flex;align-items:center;gap:9px;width:max-content;margin:10px 0 14px 48px;padding:7px 10px;border:1px solid rgba(0,217,255,.14);border-radius:999px;background:rgba(5,8,11,.78);color:#7f949b;font:800 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;backdrop-filter:blur(8px)}
 .haxbro-thinking[hidden]{display:none!important}
 .haxbro-thinking-orbit{position:relative;width:18px;height:18px;display:block}
