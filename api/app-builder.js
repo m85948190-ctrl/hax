@@ -10,7 +10,7 @@ const cleanName=(s)=>String(s||'').replace(/[<>]/g,'').replace(/[\"'`]/g,'').rep
 function requestedName(prompt){
   const s=String(prompt||'');
   const patterns=[
-    /\b(?:called|named|name(?:d)?\s+it|call\s+it|name\s+it)\s+[\"']?([^\"'\n,.!?]{1,60}?)(?=\s+(?:that|which|who|for|to)\b|[,.!?]|$)/i,
+    /\b(?:called|named|name(?:d)?\s+it|call\s+it|name\s+it)\s+[\"']?([^\"'\n,.!?]{1,60}?)(?=\s+(?:that|which|who|for|to|and\s+)?(?:publish|deploy|ship)\b|[,.!?]|$)/i,
     /\b(?:make|build|create|develop|design)\s+(?:me\s+)?(?:an?\s+)?(?:ai|app|application|website|site|game|assistant|agent|bot)\s+(?:called|named)\s+[\"']?([^\"'\n,.!?]{1,60})[\"']?/i,
     /\b(?:make|build|create)\s+[\"']([^\"']{1,60})[\"']\s+(?:ai|app|application|website|game|assistant|agent|bot)\b/i,
     /\b(?:make|build|create)\s+(?:me\s+)?(?:an?\s+)?([A-Za-z][A-Za-z0-9 _-]{1,40}?)\s+(?:AI|app|application|website|game|assistant|agent|bot)\b/i
