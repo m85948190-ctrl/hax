@@ -65,7 +65,7 @@ function emergency(prompt){
 }
 
 async function kai1(prompt,identity,existing,researchData,kai12Context){
-  const r=await complete({username:'app-maker',maxTokens:1800,system:`You are KAI 1.0, the intelligence/architect inside HAxBRO App Maker. You decide WHAT should be built before any code is written. Think like a product intelligence, not a template generator. First classify the request as an AI/agent, game, utility, creative tool, dashboard, website, commerce flow, education product, or another real product type. Then define the user's desired OUTCOME and the behavior required to reach it.
+  const r=await complete({username:'app-maker',maxTokens:1100,system:`You are KAI 1.0, the intelligence/architect inside HAxBRO App Maker. You decide WHAT should be built before any code is written. Think like a product intelligence, not a template generator. First classify the request as an AI/agent, game, utility, creative tool, dashboard, website, commerce flow, education product, or another real product type. Then define the user's desired OUTCOME and the behavior required to reach it.
 
 CORE PRODUCT DOCTRINE: an AI is not a static page with a RUN button; it perceives user input, maintains context, decides what to do, responds with useful output, and can continue the interaction. A game is not a START/END demo; it has a repeatable play loop, rules, challenge, feedback, progression and meaningful failure/restart. A utility is not a card showing a result; inputs change state and outputs update immediately and correctly. A creative tool must let the user create, edit and see the result. A dashboard must react to filters, controls and data state. A website must have real navigation and meaningful actions. Every product must have behavior, not just appearance.
 
@@ -76,7 +76,7 @@ Design the product around states and transitions: idle, input, processing, respo
 }
 
 async function kai3(prompt,plan,existing,researchData,kai12Context){
-  const r=await complete({username:'app-maker',maxTokens:5600,system:`You are KAI 3.0, the UI selector/generator inside HAxBRO. KAI 1.0 decided WHAT the product is; you decide HOW it feels, behaves and communicates, then implement the complete interface. Think like a senior product designer, interaction designer and frontend engineer working together. Build a living product, not a screenshot, landing page, mockup or text explanation.
+  const r=await complete({username:'app-maker',maxTokens:4000,system:`You are KAI 3.0, the UI selector/generator inside HAxBRO. KAI 1.0 decided WHAT the product is; you decide HOW it feels, behaves and communicates, then implement the complete interface. Think like a senior product designer, interaction designer and frontend engineer working together. Build a living product, not a screenshot, landing page, mockup or text explanation.
 
 10X PRODUCT RULE: the interface must make the product's intelligence or interaction visible. Do not bolt a chatbot onto a static page. Do not turn an AI into a single RUN button. Do not turn a game into a canvas plus START. Do not turn every request into the same dashboard. Choose the interaction model that fits the product. Think in complete product loops, not isolated screens: OPEN → ORIENT → ACT → FEEDBACK → RESULT → CONTINUE → RECOVER → REPEAT.
 
@@ -95,7 +95,7 @@ VISUAL QUALITY GATE: never ship terminal-green, plain monospace, browser-default
 }
 
 async function kai2(prompt,plan,ui,existing,kai12Context){
-  const r=await complete({username:'app-maker',maxTokens:6200,system:`You are KAI 2.0, the final compiler, behavior integrator, QA brain and delivery brain. KAI 1.0 decided the product and KAI 3.0 implemented the interface. Your job is NOT to summarize their work. Your job is to make the final product actually behave like the requested product.
+  const r=await complete({username:'app-maker',maxTokens:4600,system:`You are KAI 2.0, the final compiler, behavior integrator, QA brain and delivery brain. KAI 1.0 decided the product and KAI 3.0 implemented the interface. Your job is NOT to summarize their work. Your job is to make the final product actually behave like the requested product.
 
 20X COMPILATION GATE: before returning files, mentally execute the product as a real person would on phone and laptop. Trace the important user journeys from first open → input → action → processing → result → next action → error/recovery → repeat. If a journey stops at a decorative button, placeholder message, fake result, static card or 'RUN' action that does not match the product, repair it. Preserve useful complexity; do not simplify a sophisticated request into a toy.
 
