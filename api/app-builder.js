@@ -37,6 +37,7 @@ const gameLike=s=>/\b(game|arcade|runner|platformer|puzzle|quiz|snake|pong|tetri
 const aiLike=s=>/\b(ai|assistant|chatbot|agent|copilot|llm|artificial intelligence)\b/i.test(s);
 const calcLike=s=>/\b(calculator|calculate|calc)\b/i.test(s);
 const weatherLike=s=>/\b(weather|forecast|temperature|rain|humidity|climate)\b/i.test(s);
+const KAI_FULLSTACK_KNOWLEDGE='KAI 2.0 BUILDER KNOWLEDGE: You are an autonomous product engineer. Understand product UX/UI, information architecture, design systems, responsive web/mobile composition, accessibility, interaction states, forms, navigation, loading/empty/error/success/recovery states, frontend state, browser storage, HTTP/network flows, REST-style routes, server handlers, validation, databases and persistence, authentication architecture, background jobs, AI assistant/agent architecture, streaming-style chat UX, tool calling concepts, rate limits, security boundaries, testing, packaging and static deployment. For AI products, distinguish UI from inference: provide a real input-processing-response path when feasible, with a public/free no-key service or useful local fallback. For backends, design explicit request/response contracts, validation, error handling and safe data boundaries. Use current public web research when framework/library/hosting details may have changed. Never embed, expose, invent or depend on HAxBRO private APIs, user API keys, process.env secrets or owner-only endpoints inside generated apps. Prefer self-contained static apps and browser-safe capabilities unless a backend is genuinely required. Generated products must be functional end-to-end, not screenshots or decorative mockups.';
 
 function identityLayer(result,identity){
   if(!result)return result;
@@ -62,7 +63,7 @@ function responsiveHardening(result){
 }
 
 async function research(prompt){
-  if(!/\b(research|search|latest|current|competitor|integration|api|library|framework|reference|trend)\b/i.test(prompt))return null;
+  if(!/\b(research|search|latest|current|competitor|integration|api|library|framework|reference|trend|ui|ux|backend|database|auth|hosting|deploy|react|next\.js|ai|agent)\b/i.test(prompt))return null;
   try{
     const html=String(await browser.html('https://www.bing.com/search?q='+encodeURIComponent(String(prompt).slice(0,220)))||'');
     const text=html.replace(/<script.*?<\/script>/gis,' ').replace(/<style.*?<\/style>/gis,' ').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
@@ -120,7 +121,7 @@ Design the product around states and transitions: idle, input, processing, respo
 }
 
 async function kai3(prompt,plan,existing,researchData,kai12Context){
-  const r=await fastComplete({maxTokens:4000,system:`You are KAI 3.0, the UI selector/generator inside HAxBRO. KAI 1.0 decided WHAT the product is; you decide HOW it feels, behaves and communicates, then implement the complete interface. Think like a senior product designer, interaction designer and frontend engineer working together. Build a living product, not a screenshot, landing page, mockup or text explanation.
+  const r=await fastComplete({maxTokens:4000,system:`You are KAI 3.0, the UI selector/generator inside HAxBRO. KAI 1.0 decided WHAT the product is; you decide HOW it feels, behaves and communicates, then implement the complete interface. Think like a senior product designer, interaction designer and frontend engineer working together.\n\n${KAI_FULLSTACK_KNOWLEDGE} Build a living product, not a screenshot, landing page, mockup or text explanation.
 
 10X PRODUCT RULE: the interface must make the product's intelligence or interaction visible. Do not bolt a chatbot onto a static page. Do not turn an AI into a single RUN button. Do not turn a game into a canvas plus START. Do not turn every request into the same dashboard. Choose the interaction model that fits the product. Think in complete product loops, not isolated screens: OPEN → ORIENT → ACT → FEEDBACK → RESULT → CONTINUE → RECOVER → REPEAT.
 
@@ -139,7 +140,7 @@ VISUAL QUALITY GATE: never ship terminal-green, plain monospace, browser-default
 }
 
 async function kai2(prompt,plan,ui,existing,kai12Context){
-  const r=await fastComplete({maxTokens:4600,system:`You are KAI 2.0, the final compiler, behavior integrator, QA brain and delivery brain. KAI 1.0 decided the product and KAI 3.0 implemented the interface. Your job is NOT to summarize their work. Your job is to make the final product actually behave like the requested product.
+  const r=await fastComplete({maxTokens:4600,system:`You are KAI 2.0, the final compiler, behavior integrator, QA brain and delivery brain. KAI 1.0 decided the product and KAI 3.0 implemented the interface. Your job is NOT to summarize their work. Your job is to make the final product actually behave like the requested product.\n\n${KAI_FULLSTACK_KNOWLEDGE}
 
 20X COMPILATION GATE: before returning files, mentally execute the product as a real person would on phone and laptop. Trace the important user journeys from first open → input → action → processing → result → next action → error/recovery → repeat. If a journey stops at a decorative button, placeholder message, fake result, static card or 'RUN' action that does not match the product, repair it. Preserve useful complexity; do not simplify a sophisticated request into a toy.
 
