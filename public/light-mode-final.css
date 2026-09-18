@@ -57,3 +57,64 @@ body.light-ui .top-username b{color:#176ea8!important;-webkit-text-fill-color:#1
 body.light-ui .status{color:#47718a!important;-webkit-text-fill-color:#47718a!important}
 body.light-ui .status i{background:#25bfe8!important;box-shadow:0 0 8px rgba(37,191,232,.38)!important}
 body.light-ui ::selection{background:#dff3ff!important;color:#173f59!important}
+
+/* FINAL HARD OVERRIDE: the identity + online controls themselves must be pure white,
+   not merely have light text. This intentionally overrides every earlier theme layer. */
+html[data-theme="light"] body.hax-modern .top-actions .top-username,
+html[data-theme="light"] body.hax-modern .top-actions .status,
+body.light-ui .top-actions .top-username,
+body.light-ui .top-actions .status{
+  background:#ffffff!important;
+  background-image:none!important;
+  color:#355d78!important;
+  -webkit-text-fill-color:#355d78!important;
+  border:1px solid #dfe8ef!important;
+  border-radius:999px!important;
+  box-shadow:0 1px 4px rgba(24,55,80,.06)!important;
+  text-shadow:none!important;
+  filter:none!important;
+  opacity:1!important;
+  padding:6px 10px!important;
+}
+
+html[data-theme="light"] body.hax-modern .top-actions .status,
+body.light-ui .top-actions .status{
+  border-radius:8px!important;
+}
+
+html[data-theme="light"] body.hax-modern .top-actions .top-username *,
+html[data-theme="light"] body.hax-modern .top-actions .status *,
+body.light-ui .top-actions .top-username *,
+body.light-ui .top-actions .status *{
+  background:transparent!important;
+  background-image:none!important;
+}
+
+html[data-theme="light"] body.hax-modern .top-actions .theme-switch,
+body.light-ui .top-actions .theme-switch{
+  background:#ffffff!important;
+  background-image:none!important;
+  border:1px solid #dfe8ef!important;
+  border-radius:10px!important;
+  box-shadow:0 1px 4px rgba(24,55,80,.06)!important;
+}
+
+html[data-theme="light"] body.hax-modern .top-actions .top-toggle,
+html[data-theme="light"] body.hax-modern .top-actions .theme-choice,
+body.light-ui .top-actions .top-toggle,
+body.light-ui .top-actions .theme-choice{
+  background:#ffffff!important;
+  background-image:none!important;
+  color:#355d78!important;
+  -webkit-text-fill-color:#355d78!important;
+  border-color:#dfe8ef!important;
+  box-shadow:none!important;
+}
+
+html[data-theme="light"] body.hax-modern .top-actions .top-toggle:hover,
+html[data-theme="light"] body.hax-modern .top-actions .theme-choice:hover,
+body.light-ui .top-actions .top-toggle:hover,
+body.light-ui .top-actions .theme-choice:hover{
+  background:#ffffff!important;
+  background-image:none!important;
+}
