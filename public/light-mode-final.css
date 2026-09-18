@@ -1,0 +1,50 @@
+/* HAxBRO FINAL LIGHT MODE HEADER CONTRAST
+   Keep the top-right identity/status controls light, readable and professional.
+*/
+html[data-theme="light"] body.hax-modern .top-actions .top-toggle,
+html[data-theme="light"] body.hax-modern .top-actions .theme-choice{
+  background:#f8fbfe!important;
+  color:#36566f!important;
+  border:1px solid #cbdbe8!important;
+  box-shadow:0 1px 3px rgba(35,75,105,.06)!important;
+}
+html[data-theme="light"] body.hax-modern .top-actions .top-toggle:hover,
+html[data-theme="light"] body.hax-modern .top-actions .theme-choice:hover{
+  background:#f1f8ff!important;
+  color:#1d679b!important;
+  border-color:#b9d8eb!important;
+}
+html[data-theme="light"] body.hax-modern .top-username{
+  color:#356784!important;
+  -webkit-text-fill-color:#356784!important;
+  font-weight:750!important;
+  white-space:nowrap!important;
+}
+html[data-theme="light"] body.hax-modern .top-username b{
+  color:#176ea8!important;
+  -webkit-text-fill-color:#176ea8!important;
+}
+html[data-theme="light"] body.hax-modern .status{
+  color:#47718a!important;
+  -webkit-text-fill-color:#47718a!important;
+  font-weight:750!important;
+}
+html[data-theme="light"] body.hax-modern .status i{
+  background:#25bfe8!important;
+  box-shadow:0 0 8px rgba(37,191,232,.38)!important;
+}
+html[data-theme="light"] body.hax-modern ::selection{
+  background:#dff3ff!important;
+  color:#173f59!important;
+}
+body.light-ui .top-actions .top-toggle,
+body.light-ui .top-actions .theme-choice{
+  background:#f8fbfe!important;
+  color:#36566f!important;
+  border-color:#cbdbe8!important;
+}
+body.light-ui .top-username{color:#356784!important;-webkit-text-fill-color:#356784!important}
+body.light-ui .top-username b{color:#176ea8!important;-webkit-text-fill-color:#176ea8!important}
+body.light-ui .status{color:#47718a!important;-webkit-text-fill-color:#47718a!important}
+body.light-ui .status i{background:#25bfe8!important;box-shadow:0 0 8px rgba(37,191,232,.38)!important}
+body.light-ui ::selection{background:#dff3ff!important;color:#173f59!important}
