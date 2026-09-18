@@ -82,3 +82,27 @@
 #haxNewAppMaker .ham-files textarea,#haxNewAppMaker .ham-evolve textarea{background:#070a0d!important;border-color:#28323a!important;color:#c9efff!important}
 #haxNewAppMaker .ham-evolve{padding:13px!important}
 @media(max-width:850px){#haxNewAppMaker:has(#hamBuilding:not([hidden])) .ham-main{inset:0}#haxNewAppMaker .ham-building{justify-content:center}.ham-reactor{margin-top:-30px}#haxNewAppMaker .ham-log{width:92vw!important}}
+/* KAI live modification composer — prominent, conversational, pre-publish */
+#haxNewAppMaker .ham-kai-edit{position:relative;display:grid;grid-template-columns:minmax(180px,260px) 1fr auto;gap:12px;align-items:center;margin:0 0 14px;padding:15px;border:1px solid #29404d;border-radius:12px;background:#0a1015;box-shadow:0 12px 35px rgba(0,0,0,.18)}
+#haxNewAppMaker .ham-kai-edit-label{padding-left:4px}
+#haxNewAppMaker .ham-kai-edit-label span{display:block;color:#7edfff;font-size:8px;letter-spacing:.16em;margin-bottom:6px}
+#haxNewAppMaker .ham-kai-edit-label b{display:block;color:#dce8ee;font-size:11px;line-height:1.45}
+#haxNewAppMaker .ham-kai-edit textarea{width:100%;min-height:76px;resize:vertical;border:1px solid #2d3b45;border-radius:9px;background:#070b0f;color:#edf7fb;outline:0;padding:23px 13px 10px;font:12px/1.5 system-ui}
+#haxNewAppMaker .ham-kai-edit textarea::placeholder{color:#687783;opacity:1}
+#haxNewAppMaker .ham-kai-edit textarea:focus{border-color:#62cfee;box-shadow:0 0 0 2px rgba(98,207,238,.08)}
+#haxNewAppMaker .ham-kai-edit:focus-within{border-color:#315769}
+#haxNewAppMaker .ham-kai-edit:after{content:"WHAT DO YOU WANT TO MODIFY?";position:absolute;left:calc(260px + 27px);top:22px;color:#72818c;font-size:8px;letter-spacing:.12em;pointer-events:none;transition:transform .16s ease,color .16s ease}
+#haxNewAppMaker .ham-kai-edit:focus-within:after{transform:translateY(-11px) scale(.9);transform-origin:left top;color:#7edfff}
+#haxNewAppMaker .ham-kai-edit>button{border:0;border-radius:8px;padding:13px 15px;background:#c9f4ff;color:#061016;font-weight:900;font-size:8px;letter-spacing:.05em;cursor:pointer;white-space:nowrap}
+#haxNewAppMaker .ham-kai-edit>button:hover{background:#e3faff}
+#haxNewAppMaker .ham-check b{color:#b8e7f5!important}
+@media(max-width:850px){
+#haxNewAppMaker .ham-kai-edit{grid-template-columns:1fr}
+#haxNewAppMaker .ham-kai-edit:after{left:18px;top:92px}
+#haxNewAppMaker .ham-kai-edit>button{width:100%;min-height:42px}
+}
+@media(max-width:560px){
+#haxNewAppMaker .ham-kai-edit{padding:11px}
+#haxNewAppMaker .ham-kai-edit textarea{min-height:105px}
+#haxNewAppMaker .ham-kai-edit:after{left:15px;top:91px}
+}
