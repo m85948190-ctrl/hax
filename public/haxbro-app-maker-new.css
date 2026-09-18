@@ -27,8 +27,9 @@
 #haxNewAppMaker .ham-main{background:#07090c!important}
 #haxNewAppMaker .ham-hero{width:min(900px,88%)!important}
 #haxNewAppMaker .ham-kicker{color:#7bdcff!important}
-#haxNewAppMaker .ham-hero h1{font-weight:800!important;letter-spacing:-.055em!important}
-#haxNewAppMaker .ham-hero h1 em{background:none!important;color:#8bdfff!important}
+#haxNewAppMaker .ham-hero h1{font-weight:800!important;letter-spacing:-.055em!important;color:#f4f7f9!important;-webkit-text-fill-color:#f4f7f9!important}
+#haxNewAppMaker .ham-hero h1 em{background:none!important;color:#8bdfff!important;-webkit-text-fill-color:#8bdfff!important}
+#haxNewAppMaker .ham-build-title h2,#haxNewAppMaker .ham-product-head h2{color:#f1f6f9!important;-webkit-text-fill-color:#f1f6f9!important}
 #haxNewAppMaker .ham-hero p{color:#87939e!important}
 #haxNewAppMaker .ham-input{background:#0b0e12!important;border:1px solid #29323a!important;border-radius:12px!important;box-shadow:0 18px 55px rgba(0,0,0,.28)!important;backdrop-filter:none!important}
 #haxNewAppMaker .ham-input textarea{color:#edf4f8!important}
