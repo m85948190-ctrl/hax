@@ -43,6 +43,12 @@ function wire(){
   bind('#studyBtn','click',()=>{study=!study;localStorage.setItem('haxbro_study',study?'true':'false');$('#studyBadge').hidden=!study});bind('#mobileStudyBtn','click',()=>{$('#studyBtn')?.click()});
   function applyTheme(theme){const t=theme==='dark'?'dark':'light';document.documentElement.dataset.theme=t;document.body.classList.toggle('dark',t==='dark');document.body.classList.toggle('light-ui',t==='light');document.querySelectorAll('.theme-choice').forEach(b=>{const active=(b.id.includes('Dark')?t==='dark':t==='light');b.classList.toggle('active-theme',active);b.setAttribute('aria-pressed',active?'true':'false')});localStorage.setItem('haxbro_theme',t)}const savedTheme=localStorage.getItem('haxbro_theme')||'light';applyTheme(savedTheme);bind('#themeLightBtn','click',()=>applyTheme('light'));bind('#themeDarkBtn','click',()=>applyTheme('dark'));bind('#mobileThemeLightBtn','click',()=>applyTheme('light'));bind('#mobileThemeDarkBtn','click',()=>applyTheme('dark'));
   bind('#attachBtn','click',()=>$('#imageInput')?.click());bind('#imageInput','change',e=>{const f=e.target.files?.[0],p=$('#imageAttachmentPreview');if(f&&p){p.hidden=false;p.textContent='📎 '+f.name}});
+  /* Main creation shortcuts live directly above the composer. */
+  bind('#shortcutAppMaker','click',()=>window.HAxBROFutureMaker?.open?.());
+  bind('#shortcutBuildAI','click',()=>window.HAxBROFutureMaker?.open?.());
+  bind('#shortcutBuildArt','click',()=>$('#artGenerationBtn')?.click());
+  bind('#shortcutUI','click',()=>$('#uiCommandCenterBtn')?.click());
+  bind('#shortcutCode','click',()=>$('#codeWriterBtn')?.click());
   const initial=chats.length?chats[0]:null;if(initial){current=initial.id;renderHistorySafe();renderMessages()}else{newChat()}
   setMode(mode);if(study&&$('#studyBadge'))$('#studyBadge').hidden=false;resize();
 }
