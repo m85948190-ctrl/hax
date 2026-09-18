@@ -3,10 +3,14 @@
 */
 html[data-theme="light"] body.hax-modern .top-actions .top-toggle,
 html[data-theme="light"] body.hax-modern .top-actions .theme-choice{
-  background:#f8fbfe!important;
-  color:#36566f!important;
-  border:1px solid #cbdbe8!important;
-  box-shadow:0 1px 3px rgba(35,75,105,.06)!important;
+  background:#ffffff!important;
+  color:#557086!important;
+  border:1px solid #e5edf3!important;
+  box-shadow:0 1px 3px rgba(35,75,105,.04)!important;
+}
+html[data-theme="light"] body.hax-modern .top-actions .top-toggle *,
+html[data-theme="light"] body.hax-modern .top-actions .theme-choice *{
+  background:transparent!important;
 }
 html[data-theme="light"] body.hax-modern .top-actions .top-toggle:hover,
 html[data-theme="light"] body.hax-modern .top-actions .theme-choice:hover{
@@ -39,9 +43,14 @@ html[data-theme="light"] body.hax-modern ::selection{
 }
 body.light-ui .top-actions .top-toggle,
 body.light-ui .top-actions .theme-choice{
-  background:#f8fbfe!important;
-  color:#36566f!important;
-  border-color:#cbdbe8!important;
+  background:#ffffff!important;
+  color:#557086!important;
+  border-color:#e5edf3!important;
+  box-shadow:0 1px 3px rgba(35,75,105,.04)!important;
+}
+body.light-ui .top-actions .top-toggle *,
+body.light-ui .top-actions .theme-choice *{
+  background:transparent!important;
 }
 body.light-ui .top-username{color:#356784!important;-webkit-text-fill-color:#356784!important}
 body.light-ui .top-username b{color:#176ea8!important;-webkit-text-fill-color:#176ea8!important}
