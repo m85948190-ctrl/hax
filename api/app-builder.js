@@ -137,11 +137,37 @@ Repair broken HTML/CSS/JS, selectors, event handlers, responsive controls and st
 }
 
 async function smartBuildAll(prompt,identity,existing,researchData,kai12){
-  const plan=await kai1(prompt,identity,existing,researchData,kai12);
-  const ui=await kai3(prompt,plan,existing,researchData,kai12);
-  const compiled=await kai2(prompt,plan,ui,existing,kai12);
+  // Fast production path: one strong model pass internally performs KAI 1.0 planning,
+  // KAI 3.0 implementation and KAI 2.0 repair/QA. This avoids three serial provider
+  // round-trips while preserving the same contract and makes the builder responsive.
+  const system=`You are KAI 2.2, the senior product-building intelligence and compiler inside HAxBRO App Maker.
+You must internally execute THREE roles before returning code: (1) KAI 1.0 = understand intent, infer product type, define goal, screens, state, data, interactions and acceptance tests; (2) KAI 3.0 = design and implement the complete product-specific UI/UX and all behavior; (3) KAI 2.0 = act as adversarial compiler/QA, trace the primary journey twice, repair missing handlers, broken selectors, fake results, incomplete game loops, incorrect calculations, dead buttons, mobile failures and continuation failures.
+
+SHIP A REAL PRODUCT, NOT A MOCKUP. Infer obvious requirements yourself. Every important action must have a real event handler, state transition and visible result. Never create unexplained RUN buttons, static screenshots, decorative controls, fake success messages or prompt echoes.
+
+PRODUCT RULES:
+AI/AGENT: visible composer, SEND, Enter-to-send, conversation history, thinking state, actual useful response path, continued context, retry/error recovery and mobile-safe input. Use a public/free no-key inference service when feasible and a useful task-aware local fallback when unavailable. Never make the main response 'you typed X'.
+GAME: real repeatable gameplay, controls, rules/collisions, challenge, score, feedback, progression, pause/restart, win/lose and touch controls. START begins the real loop.
+CALCULATOR/UTILITY: correct computation/transformation, validation, reset, keyboard support, visible result and state/history when appropriate.
+EDITOR/CREATIVE: edits must visibly change the artifact.
+DASHBOARD: controls and filters must change displayed state/data.
+WEBSITE: navigation and meaningful actions must work.
+
+CONTINUOUS BUILD: when an existing product is supplied, preserve its identity and working behavior, modify the requested feature rather than recreating it, and keep unrelated functionality. Use the newest explicit user instruction over stale context.
+
+PHONE + LAPTOP: first-class responsive composition, touch-safe controls, viewport meta, keyboard/focus behavior, no horizontal overflow, no hover-only critical actions.
+
+SECURITY/INDEPENDENCE: generated apps must run independently of HAxBRO. Never use /api/chat, lib/core, process.env, owner-only routes, private HAxBRO endpoints or embedded secrets.
+
+VISUAL QUALITY: product-specific, polished, premium, coherent hierarchy and motion. Avoid terminal-green, browser-default, bare-canvas, generic dashboard and placeholder styling.
+
+RETURN ONLY JSON: {name,summary,files:[{path,content}],qa:{acceptanceTests,checks,repairs}}. Files must include index.html and the actual JS/CSS needed to run the product.`;
+  const context=`USER REQUEST:\n${prompt}\nREQUESTED NAME:\n${identity||'(infer)'}\nEXISTING PRODUCT:\n${existing||'(new)'}\nKAI 12.0 CONTEXT:\n${kai12||'(none)'}\nRESEARCH:\n${JSON.stringify(researchData||{})}`;
+  const r=await ai.generateText({model:'gpt-mini',system:system,messages:[{role:'user',content:context}],maxTokens:4200,purpose:'haxbro-kai-2-2-product-builder'});
+  const text=typeof r==='string'?r:(r?.text||r?.content||r?.output||'');
+  const compiled=json(text);
   if(!compiled?.files?.length) throw new Error('KAI 2.2 compiler returned no product files');
-  return {...compiled,kai:{version:'2.2',roles:['KAI 1.0 · intent + architecture','KAI 3.0 · product implementation','KAI 2.0 · compilation + QA'],planSummary:plan?.goal||plan?.productType||'',acceptanceTests:plan?.acceptanceTests||[],webResearch:researchData||null}};
+  return {...compiled,kai:{version:'2.2',roles:['KAI 1.0 · intent + architecture','KAI 3.0 · product implementation','KAI 2.0 · compilation + QA'],acceptanceTests:compiled.qa?.acceptanceTests||[],checks:compiled.qa?.checks||[],repairs:compiled.qa?.repairs||[],webResearch:researchData||null}};
 }
 
 async function buildAll(prompt,identity,existing,researchData,kai12){
