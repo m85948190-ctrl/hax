@@ -167,20 +167,50 @@
   visibility:visible!important;
   opacity:1!important;
 }
+/* FINAL ACTION BAR: independent of product layout, clipping, or inherited flex rules. */
+#haxNewAppMaker #hamProduct:not([hidden]) .ham-product-actions{
+  position:fixed!important;
+  top:82px!important;
+  right:24px!important;
+  display:flex!important;
+  width:auto!important;
+  margin:0!important;
+  padding:6px!important;
+  gap:8px!important;
+  background:#090d12!important;
+  border:1px solid #293740!important;
+  border-radius:10px!important;
+  box-shadow:0 12px 35px rgba(0,0,0,.45)!important;
+  z-index:2147483646!important;
+}
+#haxNewAppMaker #hamProduct:not([hidden]) .ham-product-actions .ham-see-preview,
+#haxNewAppMaker #hamProduct:not([hidden]) .ham-product-actions .ham-publish{
+  position:relative!important;
+  display:inline-flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  width:auto!important;
+  min-width:145px!important;
+  min-height:46px!important;
+  z-index:2147483647!important;
+}
 @media(max-width:850px){
   #haxNewAppMaker #hamProduct .ham-product-head{
     display:flex!important;
     flex-direction:column!important;
     align-items:stretch!important;
   }
-  #haxNewAppMaker .ham-product-actions{
-    width:100%!important;
-    margin-left:0!important;
+  #haxNewAppMaker #hamProduct:not([hidden]) .ham-product-actions{
+    top:auto!important;
+    right:12px!important;
+    left:12px!important;
+    bottom:12px!important;
+    width:auto!important;
     display:grid!important;
     grid-template-columns:1fr 1fr!important;
   }
-  #haxNewAppMaker .ham-product-actions .ham-see-preview,
-  #haxNewAppMaker .ham-product-actions .ham-publish{
+  #haxNewAppMaker #hamProduct:not([hidden]) .ham-product-actions .ham-see-preview,
+  #haxNewAppMaker #hamProduct:not([hidden]) .ham-product-actions .ham-publish{
     width:100%!important;
   }
 }
