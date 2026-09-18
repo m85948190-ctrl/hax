@@ -160,6 +160,9 @@ Repair broken HTML/CSS/JS, selectors, event handlers, responsive controls and st
 }
 
 async function smartBuildAll(prompt,identity,existing,researchData,kai12){
+  // Deterministic real-product compilers take precedence for core product types so provider outages never turn a calculator/game/tool into a fake mockup.
+  const deterministic=localProduct(prompt);
+  if(deterministic) return {...deterministic,kai:{version:'2.2',roles:['KAI 1.0 · intent','KAI 3.0 · implementation','KAI 2.0 · deterministic QA'],fallback:'local-product-compiler'}};
   // Fast production path: one strong model pass internally performs KAI 1.0 planning,
   // KAI 3.0 implementation and KAI 2.0 repair/QA. This avoids three serial provider
   // round-trips while preserving the same contract and makes the builder responsive.
