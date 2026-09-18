@@ -1,0 +1,87 @@
+/* HAxBRO APP MAKER — PREMIUM STUDIO OVERRIDE
+   Intent: replace layered cyber/neon styling with a restrained professional product studio.
+*/
+.kai-work-canvas{
+  position:fixed!important;inset:0!important;z-index:1200!important;
+  display:flex!important;flex-direction:column!important;overflow:hidden!important;
+  background:#07090d!important;color:#e8edf3!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;
+  isolation:isolate;
+}
+.kai-work-canvas:before,.kai-work-canvas:after,.kai-studio-noise,
+.kai-studio-head:after,.kai-studio-main:after,.kai-studio-inspector:after,
+.kai-runtime-stage:after,.kai-work-chat:before{display:none!important;animation:none!important;background:none!important}
+.kai-studio-head{
+  flex:0 0 64px!important;display:flex!important;align-items:center!important;
+  background:#0b0e13!important;border-bottom:1px solid #202630!important;
+  box-shadow:none!important;backdrop-filter:none!important;
+}
+.kai-studio-body{background:#07090d!important;display:flex!important;min-height:0!important;flex:1!important}
+.kai-studio-mainbar{
+  background:#0b0e13!important;border-bottom:1px solid #202630!important;
+  box-shadow:none!important;padding:12px 18px!important;
+}
+.kai-studio-step{
+  background:transparent!important;border:0!important;border-radius:8px!important;
+  box-shadow:none!important;transform:none!important;animation:none!important;
+}
+.kai-studio-step.active{
+  background:#121821!important;box-shadow:inset 2px 0 #5ed8ff!important;
+  transform:none!important;
+}
+.kai-studio-step i{animation:none!important;box-shadow:none!important}
+.kai-studio-rail,.kai-studio-inspector{
+  background:#0b0e13!important;border-color:#202630!important;
+  box-shadow:none!important;backdrop-filter:none!important;
+}
+.kai-studio-rail{width:240px!important}
+.kai-studio-inspector{width:280px!important}
+.kai-runtime-stage{
+  background:#0a0d12!important;border:1px solid #252c36!important;
+  border-radius:12px!important;box-shadow:0 18px 50px rgba(0,0,0,.28)!important;
+  animation:none!important;transform:none!important;
+}
+.kai-work-preview-frame{
+  background:#fff!important;border:1px solid #303844!important;
+  border-radius:10px!important;box-shadow:0 20px 60px rgba(0,0,0,.32)!important;
+  filter:none!important;animation:none!important;
+}
+.kai-work-chat{
+  background:#0b0e13!important;border:1px solid #202630!important;
+  border-radius:12px!important;box-shadow:none!important;backdrop-filter:none!important;
+}
+.kai-work-chat button{
+  background:#dff7ff!important;color:#071016!important;
+  border:1px solid #8edff5!important;box-shadow:none!important;
+}
+.kai-studio-mark{animation:none!important;filter:none!important}
+.kai-actions{animation:none!important}
+.kai-verification-panel{
+  background:#0b0e13!important;border:1px solid #252c36!important;
+  box-shadow:none!important;animation:none!important;
+}
+.verify-row{animation:none!important;background:transparent!important}
+.verify-row.pass span{animation:none!important}
+.kai-studio-main,.kai-studio-foot{background:#07090d!important}
+.kai-studio-foot{border-top:1px solid #202630!important}
+.kai-work-canvas h1,.kai-work-canvas h2,.kai-work-canvas h3{
+  letter-spacing:-.025em!important;text-shadow:none!important;
+}
+.kai-work-canvas button{transition:background .16s,border-color .16s,transform .16s!important}
+.kai-work-canvas button:hover{transform:translateY(-1px)!important}
+.kai-work-canvas input,.kai-work-canvas textarea{
+  background:#0d1117!important;color:#edf2f7!important;border:1px solid #2a323d!important;
+  border-radius:8px!important;box-shadow:none!important;
+}
+.kai-work-canvas input:focus,.kai-work-canvas textarea:focus{
+  outline:2px solid rgba(94,216,255,.22)!important;border-color:#5ed8ff!important;
+}
+@media(max-width:900px){
+ .kai-studio-rail{width:210px!important}.kai-studio-inspector{width:240px!important}
+}
+@media(max-width:700px){
+ .kai-studio-head{flex-basis:58px!important}
+ .kai-studio-rail,.kai-studio-inspector{width:100%!important;max-width:none!important}
+ .kai-studio-body{overflow:auto!important;flex-direction:column!important}
+ .kai-runtime-stage{min-height:52vh!important}
+}
