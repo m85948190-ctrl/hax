@@ -108,6 +108,7 @@
 }
 
 /* KAI 2.0 PRODUCT CONTROLS — HARD VISIBILITY LOCK */
+#haxNewAppMaker [hidden]{display:none!important}
 #haxNewAppMaker #hamProduct:not([hidden]){
   display:block!important;
   visibility:visible!important;
