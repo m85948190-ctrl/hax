@@ -1,0 +1,181 @@
+/* HAxBRO FINAL PRODUCT SHELL — 2026-09-18
+   One restrained visual system. Loaded last so older experimental layers cannot fight it.
+*/
+:root{
+  --hx-charcoal:#17191c;
+  --hx-charcoal-2:#1d2024;
+  --hx-charcoal-3:#24282d;
+  --hx-line:#30353b;
+  --hx-blue:#69b9ee;
+  --hx-blue-strong:#4d9bd2;
+  --hx-text:#e4e7ea;
+  --hx-muted:#8f979f;
+  --hx-dim:#737b84;
+  --hx-light-bg:#e9ecef;
+  --hx-light-panel:#eef1f3;
+  --hx-light-surface:#f3f5f6;
+  --hx-light-line:#cbd1d6;
+  --hx-light-text:#30363c;
+  --hx-light-muted:#737b83;
+}
+html[data-theme="dark"] body.hax-modern,
+html[data-theme="dark"] body.hax-modern .app-shell,
+html[data-theme="dark"] body.hax-modern .chat-panel,
+html[data-theme="dark"] body.hax-modern .messages{
+  background:var(--hx-charcoal)!important;color:var(--hx-text)!important;
+}
+html[data-theme="dark"] body.hax-modern .topbar,
+html[data-theme="dark"] body.hax-modern .sidebar{
+  background:#1b1d20!important;border-color:#2d3237!important;
+}
+html[data-theme="dark"] body.hax-modern .chat-head{background:#191b1e!important;border-color:#2d3237!important}
+html[data-theme="dark"] body.hax-modern .composer .input-wrap{background:#202328!important;border-color:#3a4046!important;box-shadow:0 8px 28px rgba(0,0,0,.2)!important}
+html[data-theme="dark"] body.hax-modern .composer textarea{color:#e4e7ea!important;-webkit-text-fill-color:#e4e7ea!important}
+html[data-theme="dark"] body.hax-modern .composer textarea::placeholder{color:#7d858d!important;-webkit-text-fill-color:#7d858d!important}
+html[data-theme="dark"] body.hax-modern .composer .mic{background:#24282d!important;border-color:#3a4046!important;color:#d9dde1!important}
+html[data-theme="dark"] body.hax-modern .composer .send{background:#dfe3e6!important;border-color:#dfe3e6!important;color:#1b1e22!important}
+html[data-theme="dark"] body.hax-modern .hero-welcome h1{color:#e7eaed!important}
+html[data-theme="dark"] body.hax-modern .hero-welcome h1 span{color:#8ac5ed!important}
+html[data-theme="dark"] body.hax-modern .hero-welcome p{color:#90989f!important}
+html[data-theme="dark"] body.hax-modern .hero-chips span,
+html[data-theme="dark"] body.hax-modern .hero-capabilities>div{background:#1d2024!important;border-color:#30353b!important}
+html[data-theme="dark"] body.hax-modern .maker-link:hover,
+html[data-theme="dark"] body.hax-modern .mode-btn:hover,
+html[data-theme="dark"] body.hax-modern .top-toggle:hover{background:#24282d!important;border-color:#3a4046!important}
+html[data-theme="dark"] body.hax-modern .mode-btn.active{background:#26343f!important;border-color:#46677e!important;color:#b8dbef!important}
+
+/* Light mode is matte, never paper-white. */
+html[data-theme="light"] body.hax-modern,
+html[data-theme="light"] body.hax-modern .app-shell,
+html[data-theme="light"] body.hax-modern .chat-panel,
+html[data-theme="light"] body.hax-modern .messages{background:var(--hx-light-bg)!important;color:var(--hx-light-text)!important}
+html[data-theme="light"] body.hax-modern .topbar,
+html[data-theme="light"] body.hax-modern .sidebar{background:var(--hx-light-panel)!important;border-color:var(--hx-light-line)!important}
+html[data-theme="light"] body.hax-modern .chat-head{background:#e7eaed!important;border-color:var(--hx-light-line)!important}
+html[data-theme="light"] body.hax-modern .hero-welcome h1{color:#30363c!important}
+html[data-theme="light"] body.hax-modern .hero-welcome h1 span{color:#397cab!important}
+html[data-theme="light"] body.hax-modern .hero-welcome p{color:#6f777f!important}
+html[data-theme="light"] body.hax-modern .hero-chips span,
+html[data-theme="light"] body.hax-modern .hero-capabilities>div{background:#f0f2f3!important;border-color:#d0d5d9!important}
+html[data-theme="light"] body.hax-modern .composer .input-wrap{background:#f1f3f4!important;border-color:#bfc6cc!important;box-shadow:0 5px 18px rgba(40,48,55,.08)!important}
+html[data-theme="light"] body.hax-modern .composer textarea{color:#30363c!important;-webkit-text-fill-color:#30363c!important}
+html[data-theme="light"] body.hax-modern .composer textarea::placeholder{color:#858d94!important;-webkit-text-fill-color:#858d94!important}
+html[data-theme="light"] body.hax-modern .composer .mic{background:#e5e8ea!important;border-color:#c1c7cc!important;color:#41484e!important}
+html[data-theme="light"] body.hax-modern .composer .send{background:#30363c!important;border-color:#30363c!important;color:#eef1f3!important}
+
+/* Remove app-generation tools from the sidebar. Keep the DOM/API bindings alive. */
+body.hax-modern .sidebar .ai-tools:first-of-type,
+body.hax-modern .sidebar .ai-tools:first-of-type + .ai-tools{display:none!important}
+body.hax-modern .mobile-drawer #mobileAppMakerBtn,
+body.hax-modern .mobile-drawer #mobileXproWorkspaceBtn,
+body.hax-modern .mobile-drawer #mobileArtGenerationBtn,
+body.hax-modern .mobile-drawer #mobileUiCommandCenterBtn,
+body.hax-modern .mobile-drawer #mobileCodeWriterBtn{display:none!important}
+body.hax-modern .mobile-drawer .history,
+body.hax-modern .mobile-drawer .mobile-settings{display:block!important}
+
+/* Capability rail: the main HAxBRO surface replaces the old tool wall. */
+.hax-capability-rail{
+  width:min(980px,calc(100% - 36px));
+  margin:0 auto 10px;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  pointer-events:auto;
+}
+.hax-capability-brand{
+  font:800 11px/1 Inter,ui-sans-serif,system-ui,sans-serif;
+  letter-spacing:.12em;color:#aeb5bb;text-transform:none;
+}
+.hax-capability-pills{
+  display:flex;justify-content:center;gap:7px;flex-wrap:wrap;
+  width:100%;
+}
+.hax-capability-pill{
+  appearance:none;border:1px solid #343a40!important;border-radius:999px!important;
+  background:#1e2125!important;color:#aeb6bd!important;
+  min-height:31px;padding:0 12px!important;
+  font:650 10px/1 Inter,ui-sans-serif,system-ui,sans-serif!important;
+  letter-spacing:.01em;cursor:pointer;box-shadow:none!important;
+  transition:background .16s,border-color .16s,color .16s,transform .16s!important;
+}
+.hax-capability-pill:hover{background:#272b30!important;border-color:#4a535b!important;color:#e3e7ea!important;transform:translateY(-1px)!important}
+.hax-capability-pill.primary{border-color:#476d88!important;color:#b9dbed!important}
+.hax-capability-pill:active{transform:translateY(0)!important}
+html[data-theme="light"] .hax-capability-brand{color:#6e767d}
+html[data-theme="light"] .hax-capability-pill{background:#e0e4e7!important;border-color:#c1c7cc!important;color:#5e676e!important}
+html[data-theme="light"] .hax-capability-pill:hover{background:#d7dce0!important;border-color:#aeb6bd!important;color:#30363c!important}
+html[data-theme="light"] .hax-capability-pill.primary{border-color:#91b5cd!important;color:#376783!important}
+
+/* Make the capability rail live directly above the composer without collision. */
+body.hax-modern #haxCapabilityMount{
+  position:fixed;left:50%;bottom:calc(var(--kai69-safe-bottom,120px) + 76px);
+  transform:translateX(-50%);z-index:2147481900;
+}
+body.hax-modern #chatForm.kai69-badge-safe{z-index:2147482001!important}
+
+/* App Maker: single clean grid, no overlapping experimental layers. */
+#kaiWorkCanvas.kai2050-space{
+  position:fixed!important;inset:0!important;z-index:2147483000!important;
+  overflow:hidden!important;background:#17191c!important;color:#e4e7ea!important;
+}
+#kaiWorkCanvas.kai2050-space .k2050-top{
+  height:66px!important;display:flex!important;align-items:center!important;
+  padding:0 20px!important;background:#1b1d20!important;border-bottom:1px solid #30353b!important;
+  box-sizing:border-box!important;
+}
+#kaiWorkCanvas.kai2050-space .k2050-main{height:calc(100vh - 108px)!important;overflow:auto!important;padding:24px!important;box-sizing:border-box!important}
+#kaiWorkCanvas.kai2050-space .k2050-command,
+#kaiWorkCanvas.kai2050-space .k2050-product-frame{
+  width:min(1320px,100%)!important;margin:0 auto!important;
+  background:#1d2024!important;border:1px solid #343a40!important;
+  border-radius:16px!important;box-shadow:0 18px 55px rgba(0,0,0,.24)!important;
+}
+#kaiWorkCanvas.kai2050-space .k2050-command{padding:28px!important;box-sizing:border-box!important}
+#kaiWorkCanvas.kai2050-space .k2050-command-field{display:grid!important;grid-template-columns:28px minmax(0,1fr) 150px!important;gap:10px!important;align-items:stretch!important}
+#kaiWorkCanvas.kai2050-space #futurePrompt,#kaiWorkCanvas.kai2050-space #futureModify,
+#kaiWorkCanvas.kai2050-space #k2050Code{
+  min-width:0!important;box-sizing:border-box!important;background:#15181b!important;color:#e5e8eb!important;
+  border:1px solid #3a4046!important;border-radius:10px!important;outline:none!important;
+}
+#kaiWorkCanvas.kai2050-space #futurePrompt{min-height:76px!important;padding:14px!important}
+#kaiWorkCanvas.kai2050-space #futureCreate,
+#kaiWorkCanvas.kai2050-space #futureModifyBtn,
+#kaiWorkCanvas.kai2050-space #k2050Publish,
+#kaiWorkCanvas.kai2050-space #k2050SavePreview{
+  border-radius:10px!important;border:1px solid #5a626a!important;background:#dfe3e6!important;color:#202428!important;
+  box-shadow:none!important;font-weight:800!important;
+}
+#kaiWorkCanvas.kai2050-space .k2050-ideas{display:flex!important;gap:7px!important;flex-wrap:wrap!important;margin-top:12px!important}
+#kaiWorkCanvas.kai2050-space .k2050-ideas button{border:1px solid #3a4046!important;background:#202328!important;color:#aeb6bd!important;border-radius:999px!important;padding:8px 11px!important}
+#kaiWorkCanvas.kai2050-space .k2050-build{min-height:420px!important;display:grid!important;place-items:center!important}
+#kaiWorkCanvas.kai2050-space .k2050-product-frame{overflow:hidden!important}
+#kaiWorkCanvas.kai2050-space .k2050-product-body{display:grid!important;grid-template-columns:minmax(0,1fr) 290px!important;gap:16px!important;padding:16px!important;box-sizing:border-box!important}
+#kaiWorkCanvas.kai2050-space .k2050-preview-wrap{min-width:0!important;min-height:520px!important;background:#121518!important;border:1px solid #343a40!important;border-radius:12px!important;overflow:hidden!important}
+#kaiWorkCanvas.kai2050-space #kaiWorkPreview{display:block!important;width:100%!important;height:520px!important;border:0!important;background:#fff!important}
+#kaiWorkCanvas.kai2050-space .k2050-inspector{min-width:0!important;background:#191c20!important;border:1px solid #343a40!important;border-radius:12px!important;padding:14px!important;box-sizing:border-box!important}
+#kaiWorkCanvas.kai2050-space .k2050-evolve{display:grid!important;grid-template-columns:minmax(0,1fr) 150px!important;gap:10px!important;padding:16px!important;border-top:1px solid #30353b!important}
+#kaiWorkCanvas.kai2050-space .k2050-editor{padding:16px!important;border-top:1px solid #30353b!important}
+#kaiWorkCanvas.kai2050-space #k2050Code{width:100%!important;min-height:220px!important;padding:14px!important;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace!important;resize:vertical!important}
+#kaiWorkCanvas.kai2050-space .k2050-bottom{height:42px!important;background:#1b1d20!important;border-top:1px solid #30353b!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 20px!important;box-sizing:border-box!important;color:#7f888f!important;font-size:9px!important;letter-spacing:.08em!important}
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space{background:#e9ecef!important;color:#30363c!important}
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-top,
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-bottom{background:#eef1f3!important;border-color:#cbd1d6!important}
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-command,
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-product-frame{background:#f0f2f3!important;border-color:#cbd1d6!important}
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space #futurePrompt,
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space #futureModify,
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space #k2050Code{background:#f5f6f7!important;color:#30363c!important;border-color:#bfc6cc!important}
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-ideas button{background:#e4e7e9!important;color:#5e676e!important;border-color:#c1c7cc!important}
+@media(max-width:760px){
+  body.hax-modern #haxCapabilityMount{bottom:calc(var(--kai69-safe-bottom,108px) + 70px);width:calc(100% - 18px)}
+  .hax-capability-pills{justify-content:flex-start;overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px}
+  .hax-capability-pill{flex:0 0 auto}
+  #kaiWorkCanvas.kai2050-space .k2050-top{padding:0 12px!important}
+  #kaiWorkCanvas.kai2050-space .k2050-main{padding:12px!important}
+  #kaiWorkCanvas.kai2050-space .k2050-command{padding:16px!important}
+  #kaiWorkCanvas.kai2050-space .k2050-command-field{grid-template-columns:1fr!important}
+  #kaiWorkCanvas.kai2050-space .k2050-product-body{grid-template-columns:1fr!important}
+  #kaiWorkCanvas.kai2050-space .k2050-preview-wrap,#kaiWorkCanvas.kai2050-space #kaiWorkPreview{height:58vh!important;min-height:360px!important}
+  #kaiWorkCanvas.kai2050-space .k2050-evolve{grid-template-columns:1fr!important}
+  #kaiWorkCanvas.kai2050-space .k2050-bottom{padding:0 10px!important}
+  #kaiWorkCanvas.kai2050-space .k2050-bottom span:nth-child(3){display:none!important}
+}
