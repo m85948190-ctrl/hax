@@ -31,9 +31,14 @@ const safe=(s,n=12000)=>String(s??'').replace(/\u0000/g,'').slice(0,n);
 const cleanName=s=>String(s||'').replace(/[<>"'`]/g,'').replace(/\s+/g,' ').trim().slice(0,70);
 const json=text=>{try{let raw=String(text||'').trim();const fenced=raw.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);if(fenced)raw=fenced[1].trim();try{return JSON.parse(raw)}catch{}const a=raw.indexOf('{'),b=raw.lastIndexOf('}');if(a>=0&&b>a)return JSON.parse(raw.slice(a,b+1));return null}catch{return null}};
 function requestedName(s){
-  const q=String(s||'');
-  const rs=[/\b(?:called|named|name it|call it)\s+["']?([^"'\n,.!?]{1,60})["']?/i,/\b(?:make|build|create)\s+(?:me\s+)?(?:an?\s+)?(?:ai|app|application|website|site|game|assistant|agent|bot)\s+(?:called|named)\s+["']?([^"'\n,.!?]{1,60})/i];
-  for(const r of rs){const m=q.match(r);if(m?.[1])return cleanName(m[1])}return '';
+  const q=String(s||'').replace(/\s+/g,' ').trim();
+  const rs=[
+    /\b(?:called|named|name it|call it)\s+["']?([^"'\n,.!?]{1,60}?)(?=\s+(?:that|with|which|who|and|so|for)\b|$)/i,
+    /\b(?:make|build|create)\s+(?:me\s+)?(?:an?\s+)?(?:ai|app|application|website|site|game|assistant|agent|bot)\s+(?:called|named)\s+["']?([^"'\n,.!?]{1,60}?)(?=\s+(?:that|with|which|who|and|so|for)\b|$)/i,
+    /\b(?:change|rename|set)\s+(?:the\s+)?(?:ai\s+)?(?:agent\s+)?name\s+(?:to|as)\s+["']?([^"'\n,.!?]{1,60}?)(?=\s+(?:that|with|which|who|and|so|for)\b|$)/i
+  ];
+  for(const r of rs){const m=q.match(r);if(m?.[1])return cleanName(m[1])}
+  return '';
 }
 const gameLike=s=>/\b(game|arcade|runner|platformer|puzzle|quiz|snake|pong|tetris|shooter)\b/i.test(s);
 const aiLike=s=>/\b(ai|assistant|chatbot|agent|copilot|llm|artificial intelligence)\b/i.test(s);
@@ -188,7 +193,7 @@ You must internally execute THREE roles before returning code: (1) KAI 1.0 = und
 SHIP A REAL PRODUCT, NOT A MOCKUP. Infer obvious requirements yourself. Every important action must have a real event handler, state transition and visible result. Never create unexplained RUN buttons, static screenshots, decorative controls, fake success messages or prompt echoes.
 
 PRODUCT RULES:
-AI/AGENT: visible composer, SEND, Enter-to-send, conversation history, thinking state, actual useful response path, continued context, retry/error recovery and mobile-safe input. Use a public/free no-key inference service when feasible and a useful task-aware local fallback when unavailable. Never make the main response 'you typed X'.
+AI/AGENT: visible composer, SEND, Enter-to-send, conversation history, thinking state, actual useful response path, continued context, retry/error recovery and mobile-safe input. For generated public AI agents, prefer the verified free Pollinations text endpoint (https://text.pollinations.ai/) with no API key, using a concise system prompt and recent conversation context. Do not substitute a random/unknown chatbot endpoint. If Pollinations is unavailable, provide a useful task-aware local fallback. Never make the main response 'you typed X'.
 GAME: real repeatable gameplay, controls, rules/collisions, challenge, score, feedback, progression, pause/restart, win/lose and touch controls. START begins the real loop.
 CALCULATOR/UTILITY: correct computation/transformation, validation, reset, keyboard support, visible result and state/history when appropriate.
 EDITOR/CREATIVE: edits must visibly change the artifact.
