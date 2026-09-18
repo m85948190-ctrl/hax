@@ -26,7 +26,7 @@ function classify(text){
   if(IMPERATIVE_BUILD.test(t)&&APP_NOUN.test(t)) score+=.35;
   if(AI_BUILD.test(t)) score+=.95;
   if(BUILD_VERB.test(t)&&APP_NOUN.test(t)) score+=.55;
-  if(BUILD_VERB.test(t)&&PRODUCT_OBJECT.test(t)) score+=.68;
+  if(BUILD_VERB.test(t)&&PRODUCT_OBJECT.test(t)) score+=.78;
   if(/\bmy\s+(?:app|website|project|software|tool)\b/i.test(t)&&BUILD_VERB.test(t)) score+=.35;
   if(META.test(t)&&!DIRECT_REQUEST.test(t)&&!FIRST_PERSON_INTENT.test(t)&&!EXPLICIT.test(t)) score-=.75;
   if(/\b(?:about|regarding|discussing|talking\s+about|explain|what\s+is)\b[\s\S]{0,80}\b(?:app|website|ai|software)\b/i.test(t)) score-=.45;
