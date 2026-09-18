@@ -164,9 +164,13 @@ Repair broken HTML/CSS/JS, selectors, event handlers, responsive controls and st
 
 async function smartBuildAll(prompt,identity,existing,researchData,kai12){
   // Deterministic real-product compilers take precedence for core product types so provider outages never turn a calculator/game/tool into a fake mockup.
-  const deterministic=localProduct(prompt);
-  if(deterministic) return {...deterministic,kai:{version:'2.2',roles:['KAI 1.0 · intent','KAI 3.0 · implementation','KAI 2.0 · deterministic QA'],fallback:'local-product-compiler'}};
-  // Fast production path: one strong model pass internally performs KAI 1.0 planning,
+  // Deterministic compilers are a safety net, not the default for continuous builds.
+  // Existing products must always go through the full provider chain so modifications preserve their files.
+  if(!existing){
+    const deterministic=localProduct(prompt);
+    if(deterministic) return {...deterministic,kai:{version:'2.2',roles:['KAI 1.0 · intent','KAI 3.0 · implementation','KAI 2.0 · deterministic QA'],fallback:'local-product-compiler'}};
+  }
+  // Fast production path: KAI 1.0 + KAI 3.0 + KAI 2.0 execute in one pass through KAI 51's real provider chain.
   // KAI 3.0 implementation and KAI 2.0 repair/QA. This avoids three serial provider
   // round-trips while preserving the same contract and makes the builder responsive.
   const system=`You are KAI 2.2, the senior product-building intelligence and compiler inside HAxBRO App Maker.
@@ -192,7 +196,9 @@ VISUAL QUALITY: product-specific, polished, premium, coherent hierarchy and moti
 
 RETURN ONLY JSON: {name,summary,files:[{path,content}],qa:{acceptanceTests,checks,repairs}}. Files must include index.html and the actual JS/CSS needed to run the product.`;
   const context=`USER REQUEST:\n${prompt}\nREQUESTED NAME:\n${identity||'(infer)'}\nEXISTING PRODUCT:\n${existing||'(new)'}\nKAI 12.0 CONTEXT:\n${kai12||'(none)'}\nRESEARCH:\n${JSON.stringify(researchData||{})}`;
-  const r=await ai.generateText({model:'gpt-mini',system:system,messages:[{role:'user',content:context}],maxTokens:4200,purpose:'haxbro-kai-2-2-product-builder'});
+  // Use the same multi-provider KAI 51 chain as HAxBRO chat: OpenRouter keys → Groq → Google → OpenAI → Mistral → managed KAI → final KAI 51 fallback.
+  // This prevents one dead vendor key from taking App Maker down.
+  const r=await complete({username:'app-maker',maxTokens:4200,system,prompt:context,modelChoice:'auto'});
   const text=typeof r==='string'?r:(r?.text||r?.content||r?.output||'');
   const compiled=json(text);
   if(!compiled?.files?.length) throw new Error('KAI 2.2 compiler returned no product files');

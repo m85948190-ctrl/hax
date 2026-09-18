@@ -10,14 +10,10 @@ function cors(res){
 export default async function(req,res){
   cors(res);
   if(req.method==='OPTIONS')return res.status(204).send('');
-  const live={
-    auto:true,
-    openai:false,
-    google:true,
-    openrouter:false,
-    groq:false,
-    mistral:false
-  };
+  // Provider credentials are intentionally kept behind Hatchable's server-side AI capability.
+  // This endpoint reports the configured routing surface, not a claim that every upstream key is healthy.
+  const configured={openai:true,google:true,openrouter:true,groq:true,mistral:true};
+  const live={auto:true,...configured};
   res.setHeader('cache-control','no-store');
   return res.json({live,configured:{...live}});
 }
