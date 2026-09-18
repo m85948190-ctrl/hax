@@ -2,6 +2,7 @@ export const access = "public";
 export const methods = ["POST"];
 
 const APP_NOUN = /\b(app|application|website|web\s*app|web\s*application|dashboard|portal|platform|saas|pwa|mobile\s+app|desktop\s+app|software|tool|game|ai\s+(?:app|assistant|agent|bot|tool|system))\b/i;
+const PRODUCT_OBJECT = /\b(calculator|calculator\s+app|tracker|habit\s+tracker|timer|countdown|notes?|todo|to-do|planner|editor|generator|converter|monitor|viewer|reader|form|booking|store|shop|portfolio|landing\s+page|chat|chatbot|assistant|agent|copilot|bot|ai)\b/i;
 const BUILD_VERB = /\b(make|build|create|develop|design|generate|code|program|turn|convert|launch|deploy|publish|ship|forge)\b/i;
 const DIRECT_REQUEST = /\b(can|could|would|will|please|help)\s+(?:you|u|me)?\s*(?:make|build|create|develop|design|generate|code|program|turn|launch|deploy|publish|ship)\b/i;
 const FIRST_PERSON_INTENT = /\b(i|we)\s+(?:want|need|would\s+like|am\s+trying)\s+to\s+(?:make|build|create|develop|design|generate|launch|deploy)\b/i;
@@ -25,6 +26,7 @@ function classify(text){
   if(IMPERATIVE_BUILD.test(t)&&APP_NOUN.test(t)) score+=.35;
   if(AI_BUILD.test(t)) score+=.95;
   if(BUILD_VERB.test(t)&&APP_NOUN.test(t)) score+=.55;
+  if(BUILD_VERB.test(t)&&PRODUCT_OBJECT.test(t)) score+=.68;
   if(/\bmy\s+(?:app|website|project|software|tool)\b/i.test(t)&&BUILD_VERB.test(t)) score+=.35;
   if(META.test(t)&&!DIRECT_REQUEST.test(t)&&!FIRST_PERSON_INTENT.test(t)&&!EXPLICIT.test(t)) score-=.75;
   if(/\b(?:about|regarding|discussing|talking\s+about|explain|what\s+is)\b[\s\S]{0,80}\b(?:app|website|ai|software)\b/i.test(t)) score-=.45;
