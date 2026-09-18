@@ -60,6 +60,18 @@
 #haxNewAppMaker .ham-product-head p{color:#8996a1!important}
 #haxNewAppMaker .ham-product-actions button{background:#0d1217!important;border:1px solid #2a333b!important;color:#c3ced6!important;border-radius:7px!important}
 #haxNewAppMaker .ham-product-actions button:hover{background:#151b21!important;border-color:#46525d!important}
+#haxNewAppMaker .ham-product-actions .ham-see-preview{background:#1677ff!important;border-color:#1677ff!important;color:#fff!important;font-weight:900!important;padding:10px 14px!important;border-radius:7px!important;box-shadow:0 8px 24px rgba(22,119,255,.20)!important}
+#haxNewAppMaker .ham-product-actions .ham-see-preview:hover{background:#2f8aff!important;border-color:#2f8aff!important;color:#fff!important}
+#haxNewAppMaker .ham-product-actions .ham-publish{background:#9b63ff!important;border-color:#9b63ff!important;color:#05040a!important;font-weight:900!important;padding:10px 14px!important;border-radius:7px!important;box-shadow:0 8px 24px rgba(155,99,255,.18)!important}
+#haxNewAppMaker .ham-product-actions .ham-publish:hover{background:#b17cff!important;border-color:#b17cff!important;color:#05040a!important}
+#haxNewAppMaker .ham-publish-result{margin-top:12px;padding:16px 18px;border:1px solid #29343d;border-radius:10px;background:#0b0f13!important}
+#haxNewAppMaker .ham-congrats{color:#dce8ef;font-size:12px;margin-bottom:12px}
+#haxNewAppMaker .ham-congrats b{font-weight:800}
+#haxNewAppMaker .ham-published-row{display:flex;gap:8px}
+#haxNewAppMaker .ham-published-row input{flex:1;min-width:0;height:40px;padding:0 12px;border:1px solid #2d3942;border-radius:7px;background:#070a0d;color:#9fe7ff;font:11px ui-monospace,monospace;outline:0}
+#haxNewAppMaker .ham-published-row button{height:40px;padding:0 16px;border:0;border-radius:7px;background:#e9f7ff;color:#061016;font-size:9px;font-weight:900;cursor:pointer}
+#haxNewAppMaker .ham-open-link{display:inline-block;margin-top:10px;color:#8cddff;font-size:9px;letter-spacing:.08em;text-decoration:none}
+#haxNewAppMaker .ham-open-link:hover{text-decoration:underline}
 #haxNewAppMaker .ham-canvas,#haxNewAppMaker .ham-files,#haxNewAppMaker .ham-evolve{background:#0a0e12!important;border:1px solid #252e36!important;border-radius:10px!important}
 #haxNewAppMaker .ham-canvas-head,#haxNewAppMaker .ham-tabs,#haxNewAppMaker .ham-code-head{border-color:#20282f!important}
 #haxNewAppMaker .ham-canvas-head button{background:#0e1318!important;border:1px solid #29333b!important;color:#9ca8b1!important;border-radius:6px!important}
