@@ -1,8 +1,8 @@
-// KAI RED ROAST CORE — direct normal-chat output
+// KAI RED ROAST CORE — Jazib trigger for normal HAxBRO chat
 (function(){
-  const NAME=/\b(?:moinak|moinac|moinakh|moynak|moinak+|monak|moinack|mainack|mainak)\b/i;
-  const SELF=/\bI\s+am\s+(?:Moinak|Mainak)\b/i;
-  const ROAST=/\b(?:roast|cook|flame|clown)\b/i;
+  const JAZIB=/\bjazib\b/i;
+  const NAME=/\b(?:moinak|moinac|moinakh|moynak|monak|moinack|mainack|mainak)\b/i;
+  const ROAST=/\b(?:roast|cook|flame|clown|roasting|roasted|roasts)\b/i;
 
   async function roastDirect(value){
     const v=String(value||'').trim(); if(!v)return false;
@@ -25,9 +25,19 @@
   const previous=window.sendChat;
   window.sendChat=async function(value){
     const v=String(value||'').trim(); if(!v)return false;
-    // Roast stays in the normal composer/chat stream. No separate roast workspace.
-    if(SELF.test(v)&&ROAST.test(v)){if(typeof window.addMessage==='function')window.addMessage(v,'user');const field=document.querySelector('#promptInput');if(field)field.value='';return roastDirect(v)}
-    if(NAME.test(v)&&ROAST.test(v)){if(typeof window.addMessage==='function')window.addMessage(v,'user');const field=document.querySelector('#promptInput');if(field)field.value='';return roastDirect(v)}
+    // Any user message containing the exact name Jazib is a direct trigger.
+    // This intentionally catches pasted ChatGPT roast text too, without opening a separate workspace.
+    if(JAZIB.test(v)){
+      if(typeof window.addMessage==='function')window.addMessage(v,'user');
+      const field=document.querySelector('#promptInput');if(field)field.value='';
+      return roastDirect(v);
+    }
+    // Preserve the Mainak + roast trigger for variants that do not name Jazib.
+    if(NAME.test(v)&&ROAST.test(v)){
+      if(typeof window.addMessage==='function')window.addMessage(v,'user');
+      const field=document.querySelector('#promptInput');if(field)field.value='';
+      return roastDirect(v);
+    }
     return previous(v);
   };
 })();
