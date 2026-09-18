@@ -136,6 +136,14 @@ Repair broken HTML/CSS/JS, selectors, event handlers, responsive controls and st
   return json(r.text);
 }
 
+async function smartBuildAll(prompt,identity,existing,researchData,kai12){
+  const plan=await kai1(prompt,identity,existing,researchData,kai12);
+  const ui=await kai3(prompt,plan,existing,researchData,kai12);
+  const compiled=await kai2(prompt,plan,ui,existing,kai12);
+  if(!compiled?.files?.length) throw new Error('KAI 2.2 compiler returned no product files');
+  return {...compiled,kai:{version:'2.2',roles:['KAI 1.0 · intent + architecture','KAI 3.0 · product implementation','KAI 2.0 · compilation + QA'],planSummary:plan?.goal||plan?.productType||'',acceptanceTests:plan?.acceptanceTests||[],webResearch:researchData||null}};
+}
+
 async function buildAll(prompt,identity,existing,researchData,kai12){
   const r=await publicComplete({maxTokens:5200,system:`You are the unified KAI 1.0 → KAI 3.0 → KAI 2.0 build engine inside HAxBRO App Maker. Execute the three roles in one pass for speed: KAI 1.0 determines the real product and complete behavior contract; KAI 3.0 designs and implements the product UI/UX; KAI 2.0 compiles, repairs and QA-tests the finished code before delivery. Do not return planning prose. Return ONLY JSON {name,summary,files:[{path,content}]}.
 
@@ -168,7 +176,7 @@ export default async function(req,res){
   const kai12=req.body?.kai12Context?safe(JSON.stringify(req.body.kai12Context),60000):'';
   const researchData=await research(prompt);
   try{
-    const compiled=await buildAll(prompt,identity,existing,researchData,kai12);
+    const compiled=await smartBuildAll(prompt,identity,existing,researchData,kai12);
     const result=responsiveHardening(identityLayer(compiled?.files?.length?compiled:emergency(prompt),identity));
     result.kai={version:'2.0',pipeline:['KAI 1.0 · intent + architecture','KAI 3.0 · UI selector + implementation','KAI 2.0 · compile + repair + acceptance test'],architecture:'Unified execution of the three KAI roles for faster real-product delivery.',researched:Boolean(researchData),ownerSecretsExcluded:true};
     return res.json(result);
