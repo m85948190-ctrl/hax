@@ -45,3 +45,60 @@ html[data-theme="light"] .kai-studio-head,html[data-theme="light"] .kai-studio-f
 @media(max-width:980px){.kai-studio-body{grid-template-columns:170px minmax(0,1fr)}.kai-studio-inspector{display:none}.kai-work-chat{min-width:220px}.kai-studio-brand{min-width:170px}}
 @media(max-width:700px){.kai-studio-head{padding:10px 12px}.kai-studio-brand{min-width:auto}.kai-studio-brand small{display:none}.kai-studio-command{display:none}.kai-studio-body{grid-template-columns:1fr}.kai-studio-rail{display:none}.kai-studio-main{padding:10px;gap:9px}.kai-studio-mainbar h1{font-size:20px}.kai-studio-mainbar p{font-size:10px}.kai-run-meter{width:90px}.kai-runtime-stage{min-height:42vh}.kai-verification-panel{display:none}.kai-studio-foot{display:block;padding:8px}.kai-actions{margin-bottom:8px}.kai-work-chat{min-width:0;max-width:none}.kai-work-chat textarea{min-width:0}.studio-btn{font-size:8px;padding:0 9px}.kai-work-code{inset:60px 8px 120px}}
 @media(prefers-reduced-motion:reduce){.kai-studio-noise,.runtime-scan,.kai-studio-command i{animation:none!important}.kai-run-meter i,.telemetry b{transition:none!important}}
+
+/* HAxBRO PROFESSIONAL DESIGN SYSTEM — final theme layer */
+html[data-theme="dark"] body.hax-modern{background:#08090b!important;color:#eef2f6!important}
+html[data-theme="dark"] body.hax-modern .topbar,
+html[data-theme="dark"] body.hax-modern .sidebar,
+html[data-theme="dark"] body.hax-modern .chat-panel,
+html[data-theme="dark"] body.hax-modern .messages{background:#08090b!important}
+html[data-theme="dark"] body.hax-modern .chat-head{background:#0b0c0f!important;border-color:#1b1e23!important}
+html[data-theme="dark"] body.hax-modern .sidebar{border-right-color:#1b1e23!important}
+html[data-theme="dark"] body.hax-modern .top-toggle,
+html[data-theme="dark"] body.hax-modern .maker-link,
+html[data-theme="dark"] body.hax-modern .mode-btn,
+html[data-theme="dark"] body.hax-modern .float-tool{background:#101216!important;color:#d9dee5!important;border-color:#24282e!important}
+html[data-theme="dark"] body.hax-modern .top-toggle:hover,
+html[data-theme="dark"] body.hax-modern .maker-link:hover,
+html[data-theme="dark"] body.hax-modern .mode-btn:hover{background:#15181d!important;border-color:#343941!important}
+html[data-theme="dark"] body.hax-modern .top-toggle.active,
+html[data-theme="dark"] body.hax-modern .theme-choice[aria-pressed="true"]{background:#16191e!important;color:#a9d9ff!important;border-color:#3d7196!important}
+html[data-theme="dark"] body.hax-modern .mode-btn.active{background:#15191f!important;color:#b7dfff!important;border-color:#3d7196!important}
+html[data-theme="dark"] body.hax-modern .composer{background:#0b0d10!important;border-color:#252a31!important}
+html[data-theme="dark"] body.hax-modern .composer .input-wrap{background:#111318!important;border-color:#292e35!important}
+html[data-theme="dark"] body.hax-modern .input-wrap textarea{color:#edf2f7!important}
+html[data-theme="dark"] body.hax-modern .input-wrap textarea::selection{background:#1d4058!important;color:#eaf8ff!important}
+html[data-theme="dark"] body.hax-modern .maker-link,.light-ui .maker-link{white-space:nowrap;overflow:visible}
+html[data-theme="dark"] body.hax-modern .sidebar{overflow-x:visible}
+html[data-theme="dark"] body.hax-modern .maker-link small{white-space:nowrap}
+
+/* Light mode: white controls, soft ice-blue active states, never black-on-white buttons. */
+html[data-theme="light"] body.hax-modern .top-toggle,
+html[data-theme="light"] body.hax-modern .maker-link,
+html[data-theme="light"] body.hax-modern .mode-btn,
+html[data-theme="light"] body.hax-modern .float-tool{background:#ffffff!important;color:#34485d!important;border-color:#d7e1eb!important;box-shadow:0 1px 2px rgba(20,45,70,.03)!important}
+html[data-theme="light"] body.hax-modern .top-toggle:hover,
+html[data-theme="light"] body.hax-modern .maker-link:hover,
+html[data-theme="light"] body.hax-modern .mode-btn:hover{background:#f3f9ff!important;color:#17689d!important;border-color:#c4dced!important}
+html[data-theme="light"] body.hax-modern .top-toggle.active,
+html[data-theme="light"] body.hax-modern .theme-choice[aria-pressed="true"],
+html[data-theme="light"] body.hax-modern .mode-btn.active{background:#edf7ff!important;color:#176da8!important;border-color:#b8dcf2!important;box-shadow:inset 0 0 0 1px rgba(105,190,239,.08),0 3px 10px rgba(52,132,180,.08)!important}
+html[data-theme="light"] body.hax-modern .composer{background:#ffffff!important;border-color:#d6e2ec!important;box-shadow:0 16px 45px rgba(30,75,110,.10)!important}
+html[data-theme="light"] body.hax-modern .composer .input-wrap{background:#fbfdff!important;border-color:#d6e1eb!important}
+html[data-theme="light"] body.hax-modern .input-wrap textarea{color:#23415d!important}
+html[data-theme="light"] body.hax-modern .input-wrap textarea::selection{background:#dff3ff!important;color:#174e70!important}
+html[data-theme="light"] body.hax-modern .sidebar{width:auto;overflow-x:visible!important}
+html[data-theme="light"] body.hax-modern .maker-link{min-width:0;padding-right:8px!important}
+html[data-theme="light"] body.hax-modern .maker-link small{white-space:nowrap}
+
+/* The user's typed selection/highlight uses an extremely light blue, like a polished native UI. */
+html[data-theme="light"] body.hax-modern ::selection{background:#dff3ff!important;color:#174e70!important}
+html[data-theme="dark"] body.hax-modern ::selection{background:#23303a!important;color:#f2f7fb!important}
+
+/* Sidebar typography: no clipped letters, no forced ellipsis on tool labels. */
+body.hax-modern .sidebar{min-width:0}
+body.hax-modern .maker-link span,body.hax-modern .maker-link{min-width:0}
+body.hax-modern .maker-link{line-height:1.25}
+body.hax-modern .maker-link small{flex:0 0 auto}
+@media(min-width:901px){body.hax-modern .app-shell{grid-template-columns:275px minmax(0,1fr)}body.hax-modern .sidebar{padding-left:11px;padding-right:11px}}
+@media(max-width:900px){body.hax-modern .maker-link{white-space:normal}}
