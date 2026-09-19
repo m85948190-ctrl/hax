@@ -3,34 +3,31 @@ export const access = "public";
 export default async function(req,res){
   if(req.method!=="POST") return res.status(405).json({error:"POST required"});
   try{
-    const body=req.body||{};
-    const html=String(body.html||"");
+    const html=String(req.body?.html||"");
     if(html.length<20) return res.status(400).json({error:"No app HTML supplied."});
 
-    // PageDrop's documented API is the pagedrop.dev REST endpoint. It is
-    // intended for programmatic/CI use; keep the upstream request server-side
-    // so browser Origin/Sec-Fetch restrictions never reach the provider.
-    const upstream=await fetch("https://pagedrop.dev/api/v1/sites",{
+    // Anonymous public static deployment. Keep this server-side so the
+    // browser never has to call the hosting provider directly.
+    const upstream=await fetch("https://ship.page/deploy",{
       method:"POST",
-      headers:{"content-type":"application/json","accept":"application/json"},
-      body:JSON.stringify({html})
+      headers:{"content-type":"text/html","accept":"application/json"},
+      body:html
     });
 
     const raw=await upstream.text();
-    let data=null;
-    try{ data=JSON.parse(raw); }catch{}
+    let data={};
+    try{data=JSON.parse(raw)}catch{}
 
-    const url=data?.data?.url||data?.url;
+    const url=data?.url||data?.data?.url;
     if(!upstream.ok || !url){
-      const message=data?.message||data?.error?.message||data?.error||raw||"External host rejected the deployment.";
+      const message=data?.error?.message||data?.error||data?.message||raw||"External host rejected the deployment.";
       return res.status(upstream.status||502).json({error:String(message),provider_status:upstream.status});
     }
 
     return res.status(200).json({
       url:String(url),
-      site_id:data?.data?.siteId||data?.siteId||null,
-      delete_token:data?.data?.deleteToken||data?.deleteToken||null,
-      expires_at:data?.data?.expiresAt||data?.expiresAt||null
+      expires_at:data?.expires_at||data?.data?.expires_at||null,
+      claim_token:data?.claim_token||data?.data?.claim_token||null
     });
   }catch(e){
     console.error("external publish proxy failed",e);
