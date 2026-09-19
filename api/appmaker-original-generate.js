@@ -1,4 +1,5 @@
 import { ai } from "hatchable";
+import { complete } from "lib/core";
 export const access = "public";
 function esc(s){return String(s).replace(/[&<>\\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;',"'":'&#39;'}[c]));}
 function cleanJson(text){const raw=String(text||"").trim();const fenced=raw.match(/\`\`\`(?:json)?\\s*([\\s\\S]*?)\\s*\`\`\`/i);const c=fenced?fenced[1]:raw;const a=c.indexOf("{"),b=c.lastIndexOf("}");if(a<0||b<a)throw new Error("KAI returned an invalid build plan.");return JSON.parse(c.slice(a,b+1));}
@@ -82,17 +83,33 @@ async function imageResearch(prompt){
   }catch(e){ console.warn('KAI image research failed',e?.message); return []; }
 }
 async function askKai(prompt){
-  const system=`You are KAI 2.0, the production app-building engine inside HAxBRO. I51 is the orchestration signal layer and KAI is the builder. You have a research phase before building. Use supplied web and image research as evidence about real-world features, interaction patterns and visual conventions. Do not copy any site or image; synthesize useful patterns into an original implementation. Never merely describe an app. Build a genuinely functional self-contained web app. Return ONLY JSON: {"name":string,"summary":string,"html":string,"testChecklist":string[]}. HTML must be complete with inline CSS and JavaScript. Implement the requested core behavior, not a mockup. For calculators, build a real calculator with clickable/touch keys, keyboard support, correct operator precedence, decimals, clear/delete, percentage, visible calculation state and working results. Similar concrete requests must receive their actual domain behavior. Responsive layout, no text overlap.`;
+  const system=`You are KAI 2.0, the production app-building engine inside HAxBRO. I51 is the orchestration signal layer and KAI is the builder. You have a research phase before building. Use supplied web and image research as evidence about real-world features, interaction patterns and visual conventions. Do not copy any site or image; synthesize useful patterns into an original implementation. Never merely describe an app. First infer the product's actual purpose and core workflow, then build a genuinely functional self-contained web app. Do not reuse one generic template across unrelated requests. Every important control must perform the behavior its label promises. Return ONLY JSON: {"name":string,"summary":string,"html":string,"testChecklist":string[]}. HTML must be complete with inline CSS and JavaScript. Implement the requested core behavior, not a mockup. For calculators, build a real calculator with clickable/touch keys, keyboard support, correct operator precedence, decimals, clear/delete, percentage, visible calculation state and working results. Similar concrete requests must receive their actual domain behavior. Responsive layout, no text overlap.`;
   try{
     const research=await webResearch(prompt);
     const images=await imageResearch(prompt);
     const researchText=JSON.stringify({web:research,images});
-    const rr=await ai.generateText({model:"sonnet",system,prompt:`Research findings:\n${researchText}\n\nBuild the requested app now. Infer concrete requirements from the request and research, implement them, then self-check the result. User request:\n${prompt}`,maxSteps:4,purpose:"HAxBRO App Maker production build with web and image research"});
-    const plan=cleanJson(rr.text||rr);
+    const briefResult=await complete({
+      system:system+"\n\nFor this pass return a compact JSON implementation brief with fields: intent, users, coreFeatures, screens, stateModel, interactions, edgeCases, visualDirection, testPlan. Do not write HTML yet.",
+      prompt:"USER REQUEST:\n"+prompt+"\n\nRESEARCH:\n"+researchText,
+      maxTokens:5000,
+      modelChoice:"auto",
+      username:"app-maker"
+    });
+    let brief;
+    try{brief=cleanJson(String(briefResult?.text||""))}catch{brief={intent:prompt,coreFeatures:["Implement the requested product faithfully"],screens:["Primary workflow"],stateModel:"Local UI state",interactions:["All primary controls work"],edgeCases:["Empty and error states"],testPlan:["Primary workflow completes"]};}
+
+    const buildResult=await complete({
+      system,
+      prompt:"USER REQUEST:\n"+prompt+"\n\nKAI 2.0 IMPLEMENTATION BRIEF:\n"+JSON.stringify(brief)+"\n\nWEB/IMAGE RESEARCH:\n"+researchText+"\n\nNow implement the finished standalone web app. Return ONLY the required JSON object. Do not return markdown fences or commentary.",
+      maxTokens:12000,
+      modelChoice:"auto",
+      username:"app-maker"
+    });
+    const plan=cleanJson(String(buildResult?.text||""));
     if(!plan || typeof plan !== "object" || typeof plan.html !== "string" || plan.html.length < 400) return fallbackApp(prompt);
     if(/calculator|calc|arithmetic/i.test(prompt) && !/data-k=|operator precedence|calculator/i.test(String(plan.html||""))) return calculatorApp();
     if(/calculator|calc|arithmetic/i.test(prompt) && /Built application|Test interaction/i.test(String(plan.html||""))) return calculatorApp();
-    return plan;
+    return {...plan,testChecklist:Array.isArray(plan.testChecklist)&&plan.testChecklist.length?plan.testChecklist:(brief.testPlan||[])};
   }catch(e){console.warn("KAI provider unavailable; functional fallback used",e?.message);return fallbackApp(prompt)}
 }
 export default async function(req,res){if(req.method!=="POST")return res.status(405).json({error:"POST required"});const {prompt}=req.body||{};if(!prompt)return res.status(400).json({error:"Describe the app you want to build."});try{const plan=await askKai(String(prompt).slice(0,12000));const html=String(plan.html||"");if(!/^<!doctype html>/i.test(html)||html.length<400){const safe=fallbackApp(String(prompt).slice(0,12000));plan.html=safe.html;plan.name=safe.name;plan.summary=safe.summary;plan.testChecklist=safe.testChecklist;}const{name="KAI App",summary="Functional app",testChecklist=[]}=plan;res.json({name:String(name).slice(0,100),summary,files:[{path:"public/index.html",content:String(plan.html)}],published:false,publicUrl:"",testChecklist,generatedAt:new Date().toISOString(),hosting:"External static hosting selected in the App Maker; Hatchable does not host generated apps."})}catch(e){console.error(e);res.status(500).json({error:e?.message||"KAI build failed"})}}
