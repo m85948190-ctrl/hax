@@ -9,6 +9,7 @@ const FIRST_PERSON_INTENT = /\b(i|we)\s+(?:want|need|would\s+like|am\s+trying)\s
 const OUTCOME_BUILD = /\b(?:i|we)\s+(?:need|want|would\s+like)\s+(?:a|an|my)\s+(?:working|functional|real|usable|production)\s+(?:app|website|tool|dashboard|game|assistant|agent|ai)\b/i;
 const IMPERATIVE_BUILD = /^(?:please\s+)?(?:build|make|create|develop|generate|design|ship|launch)\b/i;
 const AI_BUILD = /(?:make|build|create|develop|design|generate|code|program) +(an? +)?(ai|chatbot|copilot|llm)( |$)/i;
+const IMPERATIVE_AI = /^(?:please\s+)?(?:make|build|create|develop|design|generate)\b[\s\S]{0,220}\bai\b/i;
 const EXPLICIT = /^(?:please\s+)?(?:make|build|create|develop|design|generate)\b[\s\S]{0,500}\b(?:app|application|website|web\s*app|dashboard|portal|platform|tool|game|assistant|agent|bot|system)\b/i;
 const META = /^(?:what|why|how|when|where|tell|explain|do you|did you|is this|are you|can you explain|chatgpt told|deepseek told|hexuro|roast|joke|review|compare|discuss)\b/i;
 
@@ -25,6 +26,7 @@ function classify(text){
   if(OUTCOME_BUILD.test(t)) score+=.72;
   if(IMPERATIVE_BUILD.test(t)&&APP_NOUN.test(t)) score+=.35;
   if(AI_BUILD.test(t)) score+=.95;
+  if(IMPERATIVE_AI.test(t)) score+=.95;
   if(BUILD_VERB.test(t)&&APP_NOUN.test(t)) score+=.55;
   if(BUILD_VERB.test(t)&&PRODUCT_OBJECT.test(t)) score+=.78;
   if(/\bmy\s+(?:app|website|project|software|tool)\b/i.test(t)&&BUILD_VERB.test(t)) score+=.35;

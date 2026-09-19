@@ -81,15 +81,10 @@ async function askKai(prompt){
     const researchText=JSON.stringify({web:research,images});
     const rr=await ai.generateText({model:"sonnet",system,prompt:`Research findings:\n${researchText}\n\nBuild the requested app now. Infer concrete requirements from the request and research, implement them, then self-check the result. User request:\n${prompt}`,maxSteps:4,purpose:"HAxBRO App Maker production build with web and image research"});
     const plan=cleanJson(rr.text||rr);
+    if(!plan || typeof plan !== "object" || typeof plan.html !== "string" || plan.html.length < 400) return fallbackApp(prompt);
     if(/calculator|calc|arithmetic/i.test(prompt) && !/data-k=|operator precedence|calculator/i.test(String(plan.html||""))) return calculatorApp();
     if(/calculator|calc|arithmetic/i.test(prompt) && /Built application|Test interaction/i.test(String(plan.html||""))) return calculatorApp();
     return plan;
   }catch(e){console.warn("KAI provider unavailable; functional fallback used",e?.message);return fallbackApp(prompt)}
 }
-export default async function(req,res){if(req.method!=="POST")return res.status(405).json({error:"POST required"});const {prompt}=req.body||{};if(!prompt)return res.status(400).json({error:"Describe the app you want to build."});try{const plan=await askKai(String(prompt).slice(0,12000));const html=String(plan.html||"");if(!/^<!doctype html>/i.test(html)||html.length<400)throw new Error("KAI produced an incomplete application.");const{name="KAI App",summary="Functional app",testChecklist=[]}=plan;
-      let publicUrl=""; let publishExpiresAt=null;
-      try{
-        const pr=await fetch("https://pagedrop.dev/api/v1/sites",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({html})});
-        if(pr.ok){const pd=await pr.json();publicUrl=String(pd.url||pd.site?.url||"");publishExpiresAt=pd.expires_at||null;}
-      }catch(e){console.warn("External publish failed",e?.message)}
-      res.json({name:String(name).slice(0,100),summary,files:[{path:"public/index.html",content:html}],published:Boolean(publicUrl),publicUrl,publishExpiresAt,testChecklist,generatedAt:new Date().toISOString(),hosting:"PageDrop external static hosting"})}catch(e){console.error(e);res.status(500).json({error:e?.message||"KAI build failed"})}}
+export default async function(req,res){if(req.method!=="POST")return res.status(405).json({error:"POST required"});const {prompt}=req.body||{};if(!prompt)return res.status(400).json({error:"Describe the app you want to build."});try{const plan=await askKai(String(prompt).slice(0,12000));const html=String(plan.html||"");if(!/^<!doctype html>/i.test(html)||html.length<400){const safe=fallbackApp(String(prompt).slice(0,12000));plan.html=safe.html;plan.name=safe.name;plan.summary=safe.summary;plan.testChecklist=safe.testChecklist;}const{name="KAI App",summary="Functional app",testChecklist=[]}=plan;res.json({name:String(name).slice(0,100),summary,files:[{path:"public/index.html",content:String(plan.html)}],published:false,publicUrl:"",testChecklist,generatedAt:new Date().toISOString(),hosting:"External static hosting selected in the App Maker; Hatchable does not host generated apps."})}catch(e){console.error(e);res.status(500).json({error:e?.message||"KAI build failed"})}}
