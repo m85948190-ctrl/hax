@@ -108,6 +108,13 @@
 
   <footer class="board-footer"><span>HAXBRO AI</span><i></i><span>BUILD</span><i></i><span>SECURE</span><i></i><span>CREATE</span><i></i><span>LEARN</span><a href="https://github.com/haxbro-ai/haxbro-ai" target="_blank" rel="noopener noreferrer">GitHub</a><span class="footer-made">Made by Mainak</span></footer>
 </div>
+<script>
+(()=>{
+  const strip=()=>document.querySelectorAll('#hb-badge,[data-hatchable-badge],.hatchable-badge,[class*="hatchable-badge"],[id*="hatchable-badge"]').forEach(el=>el.remove());
+  strip();
+  new MutationObserver(strip).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 <script src="/vendor/three.min.js"></script>
 <script src="/landing-3d.js?v=1"></script>
 <script src="/install.js?v=219"></script>
