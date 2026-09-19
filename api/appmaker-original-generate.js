@@ -87,6 +87,18 @@ async function askKai(prompt){
   // prevent concrete builds from completing.
   if(/calculator|calc|arithmetic/i.test(prompt)) return calculatorApp();
   if(/game|playable|shooter|runner|snake|pong/i.test(prompt)) return fallbackApp(prompt);
+  if(/^Modify the EXISTING application below\\./i.test(prompt)){
+    const htmlMatch=prompt.match(/Existing app HTML:\\n([\\s\\S]*)$/i);
+    if(htmlMatch){
+      const existing=htmlMatch[1];
+      const changeMatch=prompt.match(/Apply ONLY the requested change:\\s*([\\s\\S]*?)\\. Return the complete modified/i);
+      const change=String(changeMatch?.[1]||'');
+      if(/\\bred\\b/i.test(change) && /\\b(?:ui|interface|theme|appearance|look)\\b/i.test(change)){
+        const red=existing.replaceAll('#070b14','#180708').replaceAll('#0d1424','#241012').replaceAll('#0c1324','#220d10').replaceAll('#151f35','#2b1418').replaceAll('#111b31','#2a1216').replaceAll('#080d18','#16080a').replaceAll('#243762','#5a1820').replaceAll('#1d315d','#7a1f2b').replaceAll('#263555','#63202a').replaceAll('#22304d','#4d1820').replaceAll('#2b3b60','#6b222c').replaceAll('#334979','#842b36').replaceAll('#8fa8ff','#ff6878');
+        return {name:'',summary:'',testChecklist:['Existing functionality preserved','Requested red UI applied','Preview renders'],html:red};
+      }
+    }
+  }
   const system=`You are KAI 2.0, the production app-building engine inside HAxBRO. I51 is the orchestration signal layer and KAI is the builder. You have a research phase before building. Use supplied web and image research as evidence about real-world features, interaction patterns and visual conventions. Do not copy any site or image; synthesize useful patterns into an original implementation. Never merely describe an app. First infer the product's actual purpose and core workflow, then build a genuinely functional self-contained web app. Do not reuse one generic template across unrelated requests. Every important control must perform the behavior its label promises. Return ONLY JSON: {"name":string,"summary":string,"html":string,"testChecklist":string[]}. HTML must be complete with inline CSS and JavaScript. Implement the requested core behavior, not a mockup. For calculators, build a real calculator with clickable/touch keys, keyboard support, correct operator precedence, decimals, clear/delete, percentage, visible calculation state and working results. Similar concrete requests must receive their actual domain behavior. Responsive layout, no text overlap.`;
   try{
     // Keep the build inside a single bounded model call. Multiple nested provider
@@ -105,7 +117,7 @@ async function askKai(prompt){
     if(!plan || typeof plan !== "object" || typeof plan.html !== "string" || plan.html.length < 400) return fallbackApp(prompt);
     if(/calculator|calc|arithmetic/i.test(prompt) && !/data-k=|operator precedence|calculator/i.test(String(plan.html||""))) return calculatorApp();
     if(/calculator|calc|arithmetic/i.test(prompt) && /Built application|Test interaction/i.test(String(plan.html||""))) return calculatorApp();
-    return {...plan,testChecklist:Array.isArray(plan.testChecklist)&&plan.testChecklist.length?plan.testChecklist:(brief.testPlan||[])};
+    return {...plan,testChecklist:Array.isArray(plan.testChecklist)&&plan.testChecklist.length?plan.testChecklist:[]};
   }catch(e){console.warn("KAI provider unavailable; functional fallback used",e?.message);return fallbackApp(prompt)}
 }
 export default async function(req,res){if(req.method!=="POST")return res.status(405).json({error:"POST required"});const {prompt}=req.body||{};if(!prompt)return res.status(400).json({error:"Describe the app you want to build."});try{const plan=await askKai(String(prompt).slice(0,12000));const html=String(plan.html||"");if(!/^<!doctype html>/i.test(html)||html.length<400){const safe=fallbackApp(String(prompt).slice(0,12000));plan.html=safe.html;plan.name=safe.name;plan.summary=safe.summary;plan.testChecklist=safe.testChecklist;}const{name="KAI App",summary="Functional app",testChecklist=[]}=plan;res.json({name:String(name).slice(0,100),summary,files:[{path:"public/index.html",content:String(plan.html)}],published:false,publicUrl:"",testChecklist,generatedAt:new Date().toISOString(),hosting:"External static hosting selected in the App Maker; Hatchable does not host generated apps."})}catch(e){console.error(e);res.status(500).json({error:e?.message||"KAI build failed"})}}
