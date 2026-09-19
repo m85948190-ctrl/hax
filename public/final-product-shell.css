@@ -105,6 +105,12 @@ html[data-theme="light"] .hax-capability-pill{background:#e0e4e7!important;borde
 html[data-theme="light"] .hax-capability-pill:hover{background:#d7dce0!important;border-color:#aeb6bd!important;color:#30363c!important}
 html[data-theme="light"] .hax-capability-pill.primary{border-color:#91b5cd!important;color:#376783!important}
 
+/* Keep the main composer comfortably lower now that the old KAI 69 clearance layer is gone. */
+body.hax-modern #chatForm{
+  bottom:60px!important;
+}
+@media(max-width:700px){body.hax-modern #chatForm{bottom:16px!important}}
+
 /* Make the capability rail live directly above the composer without collision. */
 body.hax-modern #haxCapabilityMount{
   position:fixed;left:50%;bottom:calc(var(--kai69-safe-bottom,120px) + 76px);
