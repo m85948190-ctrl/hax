@@ -1,5 +1,6 @@
 import { complete } from 'lib/core';
 import { db } from 'hatchable';
+import { decodeInput, testSuite } from 'lib/kai-decoder';
 
 export const access = 'public';
 export const methods = ['POST','OPTIONS'];
@@ -63,6 +64,12 @@ export default async function(req,res){
   const imageData=typeof body.imageData==='string'&&/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(body.imageData)?body.imageData.slice(0,4200000):'';
   if(!prompt&&!imageData)return res.status(400).json({error:'prompt or image required.'});
   if(prompt.length>12000)return res.status(400).json({error:'prompt required (max 12000 characters).'});
+  const decoderIntent=/\b(?:decode|decrypt|decipher|encoded|encoding|cipher|ciphertext|base64|rot13|hex|morse|binary|obfuscated)\b/i.test(prompt);
+  if(prompt && decoderIntent){
+    const decoderInput=prompt.replace(/^\s*(?:decode|decipher|decrypt)\s*(?:this|the following)?\s*[:\-]?\s*/i,'').trim() || prompt;
+    const decoderReport=decodeInput(decoderInput);
+    return res.json({response:withChatEmoji('KAI 51 DECODER REPORT\n\n'+decoderReport.summary+'\n\nPrimary candidate: '+(decoderReport.primary?decoderReport.primary.method+' — '+decoderReport.primary.result:'No convincing result')+'\n\nMethods tested: 25\nValidation: structured decoder analysis completed.\n\nNote: a decoding result is not proof that content is safe or malicious.'),mode:requestedMode,provider:'KAI 51 decoder',model:'KAI 51',responseMs:0,status:'decoder-complete',kaiAgent:'KAI 51',kaiIdentity:'local-first-orchestrator',decoderReport:{...decoderReport,tests:testSuite()}});
+  }
   const mainakPattern=/\b(who\s+is\s+mainak(?:\s+kuila)?|how\s+is\s+mainak(?:\s+kuila)?|tell\s+me\s+about\s+mainak(?:\s+kuila)?)\b/i;
   if(mainakPattern.test(prompt)) return res.json({response:withChatEmoji('Mainak Kuila is a very good person, a cybersecurity-focused developer and hacker, and the developer who built me, HAxBRO.'),mode:requestedMode,finishReason:'rule'});
   if(/who\s+(made|created|built|developed|designed)\s+(you|haxbro)|your\s+(creator|maker)/i.test(prompt)) return res.json({response:withChatEmoji('I was made by Mainak Kuila.'),mode:requestedMode,finishReason:'rule'});
