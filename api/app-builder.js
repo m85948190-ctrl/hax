@@ -250,15 +250,19 @@ export default async function(req,res){
   const prompt=safe(req.body?.prompt);if(!prompt)return res.status(400).json({error:'Tell KAI what app to build.'});
   const identity=requestedName(prompt)||cleanName(req.body?.appName);
   const existing=req.body?.existingProduct?.files?JSON.stringify(req.body.existingProduct).slice(0,60000):'';
-  const kai12=req.body?.kai12Context?safe(JSON.stringify(req.body.kai12Context),60000):'';
+  const kai51Plan=createKai51Plan({prompt,username:req.body?.username||'local-user',history:''});
+  const suppliedKai51=req.body?.kai51Context?safe(JSON.stringify(req.body.kai51Context),60000):'';
+  const kai12=(suppliedKai51||JSON.stringify(kai51Plan)).slice(0,60000);
   const researchData=await research(prompt);
   try{
     const compiled=await smartBuildAll(prompt,identity,existing,researchData,kai12);
     const result=responsiveHardening(identityLayer(compiled?.files?.length?compiled:emergency(prompt),identity));
-    result.kai={version:'2.0',pipeline:['KAI 1.0 · intent + architecture','KAI 3.0 · UI selector + implementation','KAI 2.0 · compile + repair + acceptance test'],architecture:'Unified execution of the three KAI roles for faster real-product delivery.',researched:Boolean(researchData),ownerSecretsExcluded:true};
+    result.kai={version:'2.0',architecture:'KAI 51 local-first orchestration → KAI 1.0 intent → KAI 3.0 implementation → KAI 2.0 compile/repair/QA',identity:'KAI 51',pipeline:['KAI 51 · identity/context/planner/reasoner/tools/app-maker/verifier/recovery','KAI 1.0 · intent + architecture','KAI 3.0 · product implementation','KAI 2.0 · compilation + repair + acceptance test'],kai51Plan,researched:Boolean(researchData),ownerSecretsExcluded:true};
     return res.json(result);
   }catch(e){
     console.error('KAI unified pipeline failed',e);
-    const result=responsiveHardening(identityLayer(emergency(prompt),identity));result.kai={version:'2.0',pipeline:['KAI 1.0','KAI 3.0','KAI 2.0'],fallback:true,ownerSecretsExcluded:true};return res.json(result);
+    const deterministic=localProduct(prompt);
+    const fallback=deterministic||emergency(prompt);
+    const result=responsiveHardening(identityLayer(fallback,identity));result.kai={version:'2.0',architecture:'KAI 51 local-first orchestration with deterministic recovery',identity:'KAI 51',pipeline:['KAI 51 · verifier/recovery','KAI 1.0','KAI 3.0','KAI 2.0'],fallback:true,kai51Plan,ownerSecretsExcluded:true};return res.json(result);
   }
 }
