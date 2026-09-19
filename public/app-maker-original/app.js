@@ -14,7 +14,7 @@ async function publishExternal(){
   const btn=$('#publishExternal');
   btn.disabled=true; btn.textContent='Publishing…';
   try{
-    const r=await fetch('https://pagedrop.dev/api/v1/sites',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({html:f.content})});
+    const r=await fetch('/api/appmaker-original-publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({html:f.content})});
     const d=await r.json();
     if(!r.ok||!d.url)throw new Error(d.error||'External host rejected the deployment');
     project.publicUrl=String(d.url); project.published=true; project.publishExpiresAt=d.expires_at||null;

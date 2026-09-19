@@ -95,7 +95,7 @@ function wire(){
   /* Main creation shortcuts live directly above the composer. */
   bind('#shortcutAppMaker','click',()=>window.HAxBROFutureMaker?.open?.());
   bind('#shortcutBuildAI','click',()=>window.HAxBROFutureMaker?.open?.());
-  bind('#shortcutBuildArt','click',()=>$('#artGenerationBtn')?.click());
+  bind('#shortcutBuildArt','click',()=>window.HAxBROArt?.open?.());bind('#artGenerationBtn','click',e=>{e?.preventDefault?.();window.HAxBROArt?.open?.()});bind('#mobileArtGenerationBtn','click',e=>{e?.preventDefault?.();window.HAxBROArt?.open?.()});
   bind('#shortcutUI','click',()=>$('#uiCommandCenterBtn')?.click());
   bind('#shortcutCode','click',()=>$('#codeWriterBtn')?.click());
   const initial=chats.length?chats[0]:null;if(initial){current=initial.id;renderHistorySafe();renderMessages()}else{newChat()}
