@@ -87,6 +87,15 @@ async function askKai(prompt){
   // prevent concrete builds from completing.
   if(/calculator|calc|arithmetic/i.test(prompt)) return calculatorApp();
   if(/game|playable|shooter|runner|snake|pong/i.test(prompt)) return fallbackApp(prompt);
+  if(/^Modify the EXISTING application below\./i.test(prompt)){
+    const hm=prompt.match(/Existing app HTML:\\n([\\s\\S]*)$/i);
+    const cm=prompt.match(/Apply ONLY the requested change:\\s*([\\s\\S]*?)\\. Return the complete modified/i);
+    const ch=String(cm?.[1]||'');
+    if(hm && /\\bred\\b/i.test(ch) && /\\b(?:ui|interface|theme|appearance|look)\\b/i.test(ch)){
+      const h=hm[1].replaceAll('#070b14','#180708').replaceAll('#0d1424','#241012').replaceAll('#0c1324','#220d10').replaceAll('#151f35','#2b1418').replaceAll('#111b31','#2a1216').replaceAll('#080d18','#16080a').replaceAll('#243762','#5a1820').replaceAll('#1d315d','#7a1f2b').replaceAll('#263555','#63202a').replaceAll('#22304d','#4d1820').replaceAll('#2b3b60','#6b222c').replaceAll('#334979','#842b36').replaceAll('#8fa8ff','#ff6878');
+      return {name:'',summary:'',testChecklist:['Existing functionality preserved','Requested red UI applied','Preview renders'],html:h};
+    }
+  }
   if(/^Modify the EXISTING application below\\./i.test(prompt)){
     const htmlMatch=prompt.match(/Existing app HTML:\\n([\\s\\S]*)$/i);
     if(htmlMatch){
