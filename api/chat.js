@@ -93,7 +93,7 @@ export default async function(req,res){
     const responseText=godEngineRoute ? `GODENGINE RECOMMENDATION — ${godEngineRoute.category}: ${godEngineRoute.label}\n${godEngineRoute.url}\n\n${result.text}` : result.text;
     return res.json({response:withChatEmoji(responseText),mode:requestedMode,provider:result.provider,model:result.model,responseMs:result.elapsedMs,status:result.status,failoverAttempts:result.attempts||[],knowledgeSource:result.status==='final-fallback'?'KAI-51 web research':'provider-api',kaiAgent:'KAI 51',kaiIdentity:'local-first-orchestrator',kaiTruth:'KAI 51 is HAxBRO\'s local-first intelligence/orchestration layer; external providers are optional compute and are not KAI 51\'s identity.',kaiPlan:result.plan||null,kaiId:kaiId||null,webSteps:result.steps||[],godEngineResource:godEngineRoute?.label||null});
   }catch(err){
-    console.error('KAI-61 primary error',err);
+    console.error('KAI 51 primary error',err);
     try {
       const retry=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:6000,username,history,imageData,modelChoice});
       return res.json({response:withChatEmoji(retry.text),mode:requestedMode,provider:retry.provider,model:retry.model,responseMs:retry.elapsedMs,status:retry.status,failoverAttempts:retry.attempts||[],knowledgeSource:retry.status==='final-fallback'?'KAI-51 web research':'provider-api',kaiAgent:retry.agent,kaiId:kaiId||null,webSteps:retry.steps||[],godEngineResource:godEngineRoute?.label||null});
