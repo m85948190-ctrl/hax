@@ -195,6 +195,32 @@
   min-height:46px!important;
   z-index:2147483647!important;
 }
+/* Migrated HAxBRO App Maker visual system from the proven standalone build. The existing nucleus/proton remains untouched. */
+#haxNewAppMaker .ham-hero{width:min(1240px,92%)!important;min-height:calc(100% - 1px)!important;padding:42px 0!important}
+#haxNewAppMaker .ham-hero-grid{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(320px,44%)!important;gap:34px!important;align-items:center!important;min-height:620px!important}
+#haxNewAppMaker .hero-copy{max-width:700px!important}
+#haxNewAppMaker .ham-hero h1{font-size:clamp(40px,5.4vw,72px)!important;line-height:.98!important;letter-spacing:-.06em!important;margin:14px 0 18px!important}
+#haxNewAppMaker .ham-hero p{max-width:610px!important;font-size:14px!important;line-height:1.8!important}
+#haxNewAppMaker .ham-input{margin-top:28px!important;border-radius:14px!important;background:#0a0e12!important;border:1px solid #29343d!important;box-shadow:0 24px 70px rgba(0,0,0,.28)!important}
+#haxNewAppMaker .ham-input textarea{min-height:132px!important;padding:18px!important;font-size:14px!important}
+#haxNewAppMaker .ham-scene{height:360px!important;position:relative!important;border:1px solid #202a32!important;border-radius:18px!important;overflow:hidden!important;background:#080b0f!important;box-shadow:inset 0 0 90px rgba(0,0,0,.45),0 24px 80px rgba(0,0,0,.22)!important}
+#haxNewAppMaker .ham-scene:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px);background-size:42px 42px;opacity:.45}
+#haxNewAppMaker .ham-scene:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(80,170,220,.08),transparent 55%);pointer-events:none}
+#haxNewAppMaker .ham-scene-copy{position:absolute;left:18px;bottom:16px;z-index:2}
+#haxNewAppMaker .ham-scene-copy span{display:block;color:#9fb1bd;font-size:9px;letter-spacing:.18em;font-weight:800}
+#haxNewAppMaker .ham-scene-copy small{display:block;margin-top:5px;color:#53626d;font-size:8px;letter-spacing:.14em}
+#haxNewAppMaker .ham-chips button{border-radius:7px!important;padding:8px 10px!important}
+#haxNewAppMaker .ham-build{border-radius:8px!important;background:#c9f4ff!important;color:#061016!important;box-shadow:none!important}
+#haxNewAppMaker .ham-build:hover{background:#e3faff!important}
+#haxNewAppMaker .ham-product{max-width:1500px!important;margin:auto!important}
+#haxNewAppMaker .ham-product-head{align-items:flex-end!important}
+#haxNewAppMaker .ham-product-actions{gap:8px!important}
+#haxNewAppMaker .ham-product-actions .ham-see-preview{background:#1677ff!important;border-color:#1677ff!important;color:#fff!important;font-weight:900!important}
+#haxNewAppMaker .ham-product-actions .ham-publish{background:#9b63ff!important;border-color:#9b63ff!important;color:#05040a!important;font-weight:900!important}
+#haxNewAppMaker .ham-kai-edit{background:#0a1015!important;border-color:#29404d!important}
+#haxNewAppMaker .ham-kai-edit textarea{background:#070b0f!important;border-color:#2d3b45!important}
+@media(max-width:900px){#haxNewAppMaker .ham-hero-grid{grid-template-columns:1fr!important;min-height:0!important}.ham-scene{height:280px!important}.ham-hero{width:94%!important}}
+@media(max-width:560px){#haxNewAppMaker .ham-scene{height:240px!important}#haxNewAppMaker .ham-hero h1{font-size:43px!important}}
 @media(max-width:850px){
   #haxNewAppMaker #hamProduct .ham-product-head{
     display:flex!important;
