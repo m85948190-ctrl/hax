@@ -6,14 +6,33 @@ document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click'
 $('#newProject').addEventListener('click',()=>{project={name:'Untitled project',summary:'',files:[],publicUrl:''};prompt.value='';result.classList.add('hidden');status.className='status';status.innerHTML='<span class="status-dot"></span>Ready when you are.';$('#projectInfo').innerHTML='Untitled project<br><span>Describe an app to begin.</span>';setScene('READY')});
 function setFlow(n){document.querySelectorAll('#flow li').forEach((x,i)=>x.classList.toggle('active',i===n))}
 function setScene(label){$('#sceneState').textContent=label}
-function render(){result.classList.remove('hidden');$('#resultName').textContent=project.name;$('#resultSummary').textContent=project.summary;$('#projectInfo').innerHTML=`${project.name}<br><span>Published · ${project.files.length} artifact</span>`;const link=$('#publicUrl');link.href=project.publicUrl;link.textContent=project.publicUrl;filesEl.innerHTML='';project.files.forEach((f,i)=>{const el=document.createElement('div');el.className='file'+(i===0?' active':'');el.textContent=f.path;el.addEventListener('click',()=>{document.querySelectorAll('.file').forEach(x=>x.classList.remove('active'));el.classList.add('active');showPreview(f)});filesEl.appendChild(el)});showPreview(project.files[0])}
+function render(){result.classList.remove('hidden');$('#resultName').textContent=project.name;$('#resultSummary').textContent=project.summary;$('#publishBadge').textContent=project.published?'● PUBLISHED':'● READY';$('#publishExternal').disabled=Boolean(project.published);$('#publishExternal').textContent=project.published?'Published ✓':'Publish externally';$('#projectInfo').innerHTML=`${project.name}<br><span>${project.published?'Published':'Ready'} · ${project.files.length} artifact</span>`;const link=$('#publicUrl');link.href=project.publicUrl;link.textContent=project.publicUrl;filesEl.innerHTML='';project.files.forEach((f,i)=>{const el=document.createElement('div');el.className='file'+(i===0?' active':'');el.textContent=f.path;el.addEventListener('click',()=>{document.querySelectorAll('.file').forEach(x=>x.classList.remove('active'));el.classList.add('active');showPreview(f)});filesEl.appendChild(el)});showPreview(project.files[0])}
 function showPreview(f){if(!f)return;frame.srcdoc=f.content}
+async function publishExternal(){
+  const f=project.files&&project.files[0];
+  if(!f)return;
+  const btn=$('#publishExternal');
+  btn.disabled=true; btn.textContent='Publishing…';
+  try{
+    const r=await fetch('https://pagedrop.dev/api/v1/sites',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({html:f.content})});
+    const d=await r.json();
+    if(!r.ok||!d.url)throw new Error(d.error||'External host rejected the deployment');
+    project.publicUrl=String(d.url); project.published=true; project.publishExpiresAt=d.expires_at||null;
+    $('#publishBadge').textContent='● PUBLISHED'; $('#publicUrl').href=project.publicUrl; $('#publicUrl').textContent=project.publicUrl;
+    btn.textContent='Published ✓';
+    $('#openPreview').disabled=false;
+    status.className='status'; status.innerHTML='<span class="status-dot"></span>Published on external static hosting. Hatchable is not hosting this app.';
+  }catch(e){
+    btn.disabled=false; btn.textContent='Publish externally';
+    status.className='status'; status.innerHTML='<span class="status-dot"></span>External publish failed: '+e.message;
+  }
+}
 async function copyText(text,button){try{await navigator.clipboard.writeText(text);const old=button.textContent;button.textContent='Copied ✓';setTimeout(()=>button.textContent=old,1200)}catch{button.textContent='Copy failed'}}
-$('#copyUrl').addEventListener('click',()=>copyText(project.publicUrl,$('#copyUrl')));
+$('#publishExternal').addEventListener('click',publishExternal);$('#copyUrl').addEventListener('click',()=>copyText(project.publicUrl,$('#copyUrl')));
 $('#copyAll').addEventListener('click',()=>copyText(project.files.map(f=>`===== ${f.path} =====\\n${f.content}`).join('\\n\\n'),$('#copyAll')));
 $('#openPreview').addEventListener('click',()=>{if(project.publicUrl)window.open(project.publicUrl,'_blank','noopener')});
 $('#modifyBuild').addEventListener('click',()=>{const change=$('#modifyPrompt').value.trim();if(!change||!project.name)return;prompt.value=`Modify the existing app "${project.name}": ${change}`;build()});
-async function build(){const q=prompt.value.trim();if(!q)return;$('#build').disabled=true;status.className='status busy';setFlow(0);setScene('I51 SIGNAL');status.innerHTML='<span class="status-dot"></span>I51 is sending the build intent to KAI 2.0…';try{await new Promise(r=>setTimeout(r,450));setFlow(1);setScene('ARCHITECT');status.innerHTML='<span class="status-dot"></span>KAI 2.0 is architecting the application…';await new Promise(r=>setTimeout(r,350));setFlow(2);setScene('BUILDING');const r=await fetch('/api/appmaker-original-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:q})});const data=await r.json();if(!r.ok)throw new Error(data.error||'Build failed');setFlow(3);setScene('TESTING');status.innerHTML='<span class="status-dot"></span>Build passed basic checks. Publishing the verified application…';await new Promise(r=>setTimeout(r,350));setFlow(4);setScene('PUBLISHED');project=data;render();status.className='status';status.innerHTML='<span class="status-dot"></span>Published successfully. Your live application is ready.'}catch(e){setScene('ERROR');status.className='status';status.innerHTML='<span class="status-dot"></span>Build stopped: '+e.message}finally{$('#build').disabled=false}}
+async function build(){const q=prompt.value.trim();if(!q)return;$('#build').disabled=true;status.className='status busy';setFlow(0);setScene('I51 SIGNAL');status.innerHTML='<span class="status-dot"></span>I51 is sending the build intent to KAI 2.0…';try{await new Promise(r=>setTimeout(r,450));setFlow(1);setScene('ARCHITECT');status.innerHTML='<span class="status-dot"></span>KAI 2.0 is architecting the application…';await new Promise(r=>setTimeout(r,350));setFlow(2);setScene('BUILDING');const r=await fetch('/api/appmaker-original-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:q})});const data=await r.json();if(!r.ok)throw new Error(data.error||'Build failed');setFlow(3);setScene('TESTING');status.innerHTML='<span class="status-dot"></span>Build passed basic checks. Preview is ready. Review it, then publish externally.';await new Promise(r=>setTimeout(r,350));setFlow(4);setScene('PUBLISHED');project=data;project.published=false;project.publicUrl='';render();status.className='status';status.innerHTML='<span class="status-dot"></span>Build complete. Your real app is ready in the live preview. Publish it externally when ready.'}catch(e){setScene('ERROR');status.className='status';status.innerHTML='<span class="status-dot"></span>Build stopped: '+e.message}finally{$('#build').disabled=false}}
 $('#build').addEventListener('click',build);prompt.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();build()}});
 
 // Native 3D-style WebGL-free spatial renderer: reliable on constrained browsers, with real depth motion.
