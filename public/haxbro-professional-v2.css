@@ -20,12 +20,12 @@ html[data-theme="light"] body.hax-modern .composer .input-wrap{background:#fff!i
 html[data-theme="dark"] body.hax-modern .composer .input-wrap{background:#15191f!important;border:1px solid #303742!important;box-shadow:0 12px 32px rgba(0,0,0,.32)!important}
 html[data-theme] body.hax-modern .messages{padding-bottom:clamp(180px,22vh,250px)!important;scroll-padding-bottom:220px!important}
 html[data-theme] body.hax-modern .haxbro-thinking{position:relative!important;z-index:50!important;visibility:visible!important;opacity:1!important;margin:14px 0 28px 48px!important;transform:none!important;pointer-events:none!important}
-html[data-theme="light"] body.hax-modern .haxbro-thinking{background:#fff!important;color:#626c78!important;border-color:#dbe1e7!important;box-shadow:0 8px 24px rgba(16,24,40,.09)!important}
-html[data-theme="dark"] body.hax-modern .haxbro-thinking{background:#171b21!important;color:#aeb8c5!important;border-color:#303742!important;box-shadow:0 10px 28px rgba(0,0,0,.3)!important}
+html[data-theme="light"] body.hax-modern .haxbro-thinking:not(.kai-activity){background:#fff!important;color:#626c78!important;border-color:#dbe1e7!important;box-shadow:0 8px 24px rgba(16,24,40,.09)!important}
+html[data-theme="dark"] body.hax-modern .haxbro-thinking:not(.kai-activity){background:#171b21!important;color:#aeb8c5!important;border-color:#303742!important;box-shadow:0 10px 28px rgba(0,0,0,.3)!important}
 .kai-activity{display:block!important;width:min(430px,calc(100% - 64px));margin:10px 0 18px 48px!important;padding:9px 13px!important;border:0!important;border-radius:14px!important;background:transparent!important;color:#9aa3ad!important;box-shadow:none!important;backdrop-filter:none!important;opacity:.72;transition:opacity .42s ease,transform .42s ease,max-height .42s ease,margin .42s ease,padding .42s ease;overflow:hidden}
 .kai-activity-head{display:flex;align-items:center;gap:8px;min-height:22px}
 .kai-activity-time{margin-left:auto;font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#7f8995;letter-spacing:.04em}
-.kai-activity-list{margin:4px 0 0 26px;display:flex;flex-direction:column;gap:2px;max-height:128px;overflow:hidden}
+.kai-activity-list{margin:4px 0 0 26px;display:flex;flex-direction:column;gap:3px;overflow:visible}
 .kai-activity-row{display:flex;align-items:center;gap:7px;min-height:19px;font:500 10px/1.25 Inter,system-ui,sans-serif;color:#8c96a1;animation:kaiActivityIn .28s ease both}
 .kai-activity-icon{width:16px;height:16px;display:grid;place-items:center;flex:none;opacity:.72}
 .kai-activity-icon img{width:14px;height:14px;border-radius:4px;opacity:.82}

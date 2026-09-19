@@ -24,13 +24,10 @@ function kaiActivityStart(){
  thinkingBubble.innerHTML='<div class="kai-activity-head"><span class="haxbro-thinking-orbit" aria-hidden="true"><i></i><i></i><i></i></span><span class="haxbro-thinking-text">KAI 51 · WORKING</span><span class="kai-activity-time">0s</span></div><div class="kai-activity-list"></div>';
  messages.appendChild(thinkingBubble);
  const list=thinkingBubble.querySelector('.kai-activity-list');
- KAI_ACTIVITY_STAGES.slice(0,3).forEach((s,i)=>list.appendChild(kaiActivityRow(s,i===0?'Reading intent and context':'')));
- let n=3;
+ KAI_ACTIVITY_STAGES.slice(0,2).forEach((s,i)=>list.appendChild(kaiActivityRow(s,i===0?'Reading intent and context':'Selecting the response path')));
  thinkingTimer=setInterval(()=>{
    const elapsed=Math.floor((Date.now()-thinkingStartedAt)/1000);
    const clock=thinkingBubble?.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
-   if(n<KAI_ACTIVITY_STAGES.length){list.appendChild(kaiActivityRow(KAI_ACTIVITY_STAGES[n++]));}
-   if(list)list.scrollTop=list.scrollHeight;
  },900);
  messages.scrollTop=messages.scrollHeight;
 }
@@ -43,7 +40,7 @@ function kaiActivityResearch(steps){
    const label=typeof step==='string'?'Source checked':(step?.label||step?.title||step?.status||'Source checked');
    const key=url||label;if(seen.has(key))return;seen.add(key);
    const host=url?kaiHostFromUrl(url):'';
-   list.appendChild(kaiActivityRow(host?'Checked '+host:label,url||'verified research step',url?kaiFavicon(url):''));
+   list.appendChild(kaiActivityRow(host?'Checked '+host:label,url?'source returned by research':'research step completed',url?kaiFavicon(url):''));
  });
 }
 function kaiActivityFinish(data){

@@ -29,7 +29,9 @@ const GODENGINE_ROUTES = [
   {keywords:['qr code','generate qr','scan qr','qr scanner'], label:'QR Tools', url:'https://godenginemk.netlify.app/', category:'QR Tools'},
   {keywords:['firewall','threat detection','ip blacklist','website security','security bots'], label:'Security Paradise', url:'https://majestic-moonbeam-7e45dd.netlify.app/', category:'Security Paradise'}
 ];
-function findGodEngineRoute(text){const t=String(text||'').toLowerCase();return GODENGINE_ROUTES.find(r=>r.keywords.some(k=>t.includes(k)))||null;}
+function isResearchOrExplanation(text){const t=String(text||'').toLowerCase();return /\\b(explain|research|compare|comparison|analy[sz]e|analysis|investigate|whether|evidence|sources?|recent|latest|history|why|how|what is|what are|pros and cons|advantages|disadvantages|costs?|timeline|safety|fuel|waste|deployment|progress)\\b/i.test(t)||/\\b(check|look up|find out|tell me what the evidence)\\b/i.test(t);}
+function isDirectGodEngineIntent(text,route){const t=String(text||'').trim();if(!route||isResearchOrExplanation(t))return false;const buildLike=/\\b(make|build|create|develop|design|generate|use|open|launch|show|give me|help me with|i need|i want)\\b/i.test(t);const routeTerms=route.keywords.filter(k=>k.length>4).some(k=>t.toLowerCase().includes(k.toLowerCase()));return buildLike&&routeTerms;}
+function findGodEngineRoute(text){const t=String(text||'').toLowerCase();const route=GODENGINE_ROUTES.find(r=>r.keywords.some(k=>t.includes(k)))||null;return isDirectGodEngineIntent(text,route)?route:null;}
 const ADMIN_COOKIE='haxbro_admin69';
 const ADMIN_MAX_AGE=60*60;
 const enc=new TextEncoder();
