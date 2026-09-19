@@ -6,20 +6,32 @@ export default async function(req,res){
     const body=req.body||{};
     const html=String(body.html||"");
     if(html.length<20) return res.status(400).json({error:"No app HTML supplied."});
-    const upstream=await fetch("https://pagedrop.io/api/upload",{
+
+    // PageDrop's documented API is the pagedrop.dev REST endpoint. It is
+    // intended for programmatic/CI use; keep the upstream request server-side
+    // so browser Origin/Sec-Fetch restrictions never reach the provider.
+    const upstream=await fetch("https://pagedrop.dev/api/v1/sites",{
       method:"POST",
-      headers:{"content-type":"application/json"},
-      body:JSON.stringify({html,ttl:"3d",fileName:"haxbro-app.html",visibility:"public"})
+      headers:{"content-type":"application/json","accept":"application/json"},
+      body:JSON.stringify({html})
     });
-    const text=await upstream.text();
-    let data={};
-    try{data=JSON.parse(text)}catch{data={error:text||"External host returned invalid JSON."}}
+
+    const raw=await upstream.text();
+    let data=null;
+    try{ data=JSON.parse(raw); }catch{}
+
     const url=data?.data?.url||data?.url;
     if(!upstream.ok || !url){
-      const message=typeof data?.error==="string"?data.error:(data?.error?.message||"External host rejected the deployment.");
-      return res.status(upstream.status||502).json({error:message});
+      const message=data?.message||data?.error?.message||data?.error||raw||"External host rejected the deployment.";
+      return res.status(upstream.status||502).json({error:String(message),provider_status:upstream.status});
     }
-    return res.json({url:String(url),expires_at:data?.data?.expires_at||data?.expires_at||null});
+
+    return res.status(200).json({
+      url:String(url),
+      site_id:data?.data?.siteId||data?.siteId||null,
+      delete_token:data?.data?.deleteToken||data?.deleteToken||null,
+      expires_at:data?.data?.expiresAt||data?.expiresAt||null
+    });
   }catch(e){
     console.error("external publish proxy failed",e);
     return res.status(502).json({error:e?.message||"External publish connection failed."});
