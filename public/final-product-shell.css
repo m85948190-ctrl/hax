@@ -43,8 +43,6 @@ html[data-theme="dark"] body.hax-modern .maker-link:hover,
 html[data-theme="dark"] body.hax-modern .mode-btn:hover,
 html[data-theme="dark"] body.hax-modern .top-toggle:hover{background:#24282d!important;border-color:#3a4046!important}
 html[data-theme="dark"] body.hax-modern .mode-btn.active{background:#26343f!important;border-color:#46677e!important;color:#b8dbef!important}
-
-/* Light mode is matte, never paper-white. */
 html[data-theme="light"] body.hax-modern,
 html[data-theme="light"] body.hax-modern .app-shell,
 html[data-theme="light"] body.hax-modern .chat-panel,
@@ -62,8 +60,6 @@ html[data-theme="light"] body.hax-modern .composer textarea{color:#30363c!import
 html[data-theme="light"] body.hax-modern .composer textarea::placeholder{color:#858d94!important;-webkit-text-fill-color:#858d94!important}
 html[data-theme="light"] body.hax-modern .composer .mic{background:#e5e8ea!important;border-color:#c1c7cc!important;color:#41484e!important}
 html[data-theme="light"] body.hax-modern .composer .send{background:#30363c!important;border-color:#30363c!important;color:#eef1f3!important}
-
-/* Remove app-generation tools from the sidebar. Keep the DOM/API bindings alive. */
 body.hax-modern .sidebar .ai-tools:first-of-type,
 body.hax-modern .sidebar .ai-tools:first-of-type + .ai-tools{display:none!important}
 body.hax-modern .mobile-drawer #mobileAppMakerBtn,
@@ -73,30 +69,10 @@ body.hax-modern .mobile-drawer #mobileUiCommandCenterBtn,
 body.hax-modern .mobile-drawer #mobileCodeWriterBtn{display:none!important}
 body.hax-modern .mobile-drawer .history,
 body.hax-modern .mobile-drawer .mobile-settings{display:block!important}
-
-/* Capability rail: the main HAxBRO surface replaces the old tool wall. */
-.hax-capability-rail{
-  width:min(980px,calc(100% - 36px));
-  margin:0 auto 10px;
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-  pointer-events:auto;
-}
-.hax-capability-brand{
-  font:800 11px/1 Inter,ui-sans-serif,system-ui,sans-serif;
-  letter-spacing:.12em;color:#aeb5bb;text-transform:none;
-}
-.hax-capability-pills{
-  display:flex;justify-content:center;gap:7px;flex-wrap:wrap;
-  width:100%;
-}
-.hax-capability-pill{
-  appearance:none;border:1px solid #343a40!important;border-radius:999px!important;
-  background:#1e2125!important;color:#aeb6bd!important;
-  min-height:31px;padding:0 12px!important;
-  font:650 10px/1 Inter,ui-sans-serif,system-ui,sans-serif!important;
-  letter-spacing:.01em;cursor:pointer;box-shadow:none!important;
-  transition:background .16s,border-color .16s,color .16s,transform .16s!important;
-}
+.hax-capability-rail{width:min(980px,calc(100% - 36px));margin:0 auto 10px;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:auto}
+.hax-capability-brand{font:800 11px/1 Inter,ui-sans-serif,system-ui,sans-serif;letter-spacing:.12em;color:#aeb5bb;text-transform:none}
+.hax-capability-pills{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;width:100%}
+.hax-capability-pill{appearance:none;border:1px solid #343a40!important;border-radius:999px!important;background:#1e2125!important;color:#aeb6bd!important;min-height:31px;padding:0 12px!important;font:650 10px/1 Inter,ui-sans-serif,system-ui,sans-serif!important;letter-spacing:.01em;cursor:pointer;box-shadow:none!important;transition:background .16s,border-color .16s,color .16s,transform .16s!important}
 .hax-capability-pill:hover{background:#272b30!important;border-color:#4a535b!important;color:#e3e7ea!important;transform:translateY(-1px)!important}
 .hax-capability-pill.primary{border-color:#476d88!important;color:#b9dbed!important}
 .hax-capability-pill:active{transform:translateY(0)!important}
@@ -104,52 +80,19 @@ html[data-theme="light"] .hax-capability-brand{color:#6e767d}
 html[data-theme="light"] .hax-capability-pill{background:#e0e4e7!important;border-color:#c1c7cc!important;color:#5e676e!important}
 html[data-theme="light"] .hax-capability-pill:hover{background:#d7dce0!important;border-color:#aeb6bd!important;color:#30363c!important}
 html[data-theme="light"] .hax-capability-pill.primary{border-color:#91b5cd!important;color:#376783!important}
-
-/* Keep the main composer comfortably lower now that the old KAI 69 clearance layer is gone. */
-body.hax-modern #chatForm{
-  bottom:60px!important;
-}
+body.hax-modern #chatForm{bottom:60px!important}
 @media(max-width:700px){body.hax-modern #chatForm{bottom:16px!important}}
-
-/* Make the capability rail live directly above the composer without collision. */
-body.hax-modern #haxCapabilityMount{
-  position:fixed;left:50%;bottom:calc(var(--kai69-safe-bottom,120px) + 76px);
-  transform:translateX(-50%);z-index:2147481900;
-}
+body.hax-modern #haxCapabilityMount{position:fixed;left:50%;bottom:calc(var(--kai69-safe-bottom,120px) + 76px);transform:translateX(-50%);z-index:2147481900}
 body.hax-modern #chatForm.kai69-badge-safe{z-index:2147482001!important}
-
-/* App Maker: single clean grid, no overlapping experimental layers. */
-#kaiWorkCanvas.kai2050-space{
-  position:fixed!important;inset:0!important;z-index:2147483000!important;
-  overflow:hidden!important;background:#17191c!important;color:#e4e7ea!important;
-}
-#kaiWorkCanvas.kai2050-space .k2050-top{
-  height:66px!important;display:flex!important;align-items:center!important;
-  padding:0 20px!important;background:#1b1d20!important;border-bottom:1px solid #30353b!important;
-  box-sizing:border-box!important;
-}
+#kaiWorkCanvas.kai2050-space{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow:hidden!important;background:#17191c!important;color:#e4e7ea!important}
+#kaiWorkCanvas.kai2050-space .k2050-top{height:66px!important;display:flex!important;align-items:center!important;padding:0 20px!important;background:#1b1d20!important;border-bottom:1px solid #30353b!important;box-sizing:border-box!important}
 #kaiWorkCanvas.kai2050-space .k2050-main{height:calc(100vh - 108px)!important;overflow:auto!important;padding:24px!important;box-sizing:border-box!important}
-#kaiWorkCanvas.kai2050-space .k2050-command,
-#kaiWorkCanvas.kai2050-space .k2050-product-frame{
-  width:min(1320px,100%)!important;margin:0 auto!important;
-  background:#1d2024!important;border:1px solid #343a40!important;
-  border-radius:16px!important;box-shadow:0 18px 55px rgba(0,0,0,.24)!important;
-}
+#kaiWorkCanvas.kai2050-space .k2050-command,#kaiWorkCanvas.kai2050-space .k2050-product-frame{width:min(1320px,100%)!important;margin:0 auto!important;background:#1d2024!important;border:1px solid #343a40!important;border-radius:16px!important;box-shadow:0 18px 55px rgba(0,0,0,.24)!important}
 #kaiWorkCanvas.kai2050-space .k2050-command{padding:28px!important;box-sizing:border-box!important}
 #kaiWorkCanvas.kai2050-space .k2050-command-field{display:grid!important;grid-template-columns:28px minmax(0,1fr) 150px!important;gap:10px!important;align-items:stretch!important}
-#kaiWorkCanvas.kai2050-space #futurePrompt,#kaiWorkCanvas.kai2050-space #futureModify,
-#kaiWorkCanvas.kai2050-space #k2050Code{
-  min-width:0!important;box-sizing:border-box!important;background:#15181b!important;color:#e5e8eb!important;
-  border:1px solid #3a4046!important;border-radius:10px!important;outline:none!important;
-}
+#kaiWorkCanvas.kai2050-space #futurePrompt,#kaiWorkCanvas.kai2050-space #futureModify,#kaiWorkCanvas.kai2050-space #k2050Code{min-width:0!important;box-sizing:border-box!important;background:#15181b!important;color:#e5e8eb!important;border:1px solid #3a4046!important;border-radius:10px!important;outline:none!important}
 #kaiWorkCanvas.kai2050-space #futurePrompt{min-height:76px!important;padding:14px!important}
-#kaiWorkCanvas.kai2050-space #futureCreate,
-#kaiWorkCanvas.kai2050-space #futureModifyBtn,
-#kaiWorkCanvas.kai2050-space #k2050Publish,
-#kaiWorkCanvas.kai2050-space #k2050SavePreview{
-  border-radius:10px!important;border:1px solid #5a626a!important;background:#dfe3e6!important;color:#202428!important;
-  box-shadow:none!important;font-weight:800!important;
-}
+#kaiWorkCanvas.kai2050-space #futureCreate,#kaiWorkCanvas.kai2050-space #futureModifyBtn,#kaiWorkCanvas.kai2050-space #k2050Publish,#kaiWorkCanvas.kai2050-space #k2050SavePreview{border-radius:10px!important;border:1px solid #5a626a!important;background:#dfe3e6!important;color:#202428!important;box-shadow:none!important;font-weight:800!important}
 #kaiWorkCanvas.kai2050-space .k2050-ideas{display:flex!important;gap:7px!important;flex-wrap:wrap!important;margin-top:12px!important}
 #kaiWorkCanvas.kai2050-space .k2050-ideas button{border:1px solid #3a4046!important;background:#202328!important;color:#aeb6bd!important;border-radius:999px!important;padding:8px 11px!important}
 #kaiWorkCanvas.kai2050-space .k2050-build{min-height:420px!important;display:grid!important;place-items:center!important}
@@ -163,13 +106,9 @@ body.hax-modern #chatForm.kai69-badge-safe{z-index:2147482001!important}
 #kaiWorkCanvas.kai2050-space #k2050Code{width:100%!important;min-height:220px!important;padding:14px!important;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace!important;resize:vertical!important}
 #kaiWorkCanvas.kai2050-space .k2050-bottom{height:42px!important;background:#1b1d20!important;border-top:1px solid #30353b!important;display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 20px!important;box-sizing:border-box!important;color:#7f888f!important;font-size:9px!important;letter-spacing:.08em!important}
 html[data-theme="light"] #kaiWorkCanvas.kai2050-space{background:#e9ecef!important;color:#30363c!important}
-html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-top,
-html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-bottom{background:#eef1f3!important;border-color:#cbd1d6!important}
-html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-command,
-html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-product-frame{background:#f0f2f3!important;border-color:#cbd1d6!important}
-html[data-theme="light"] #kaiWorkCanvas.kai2050-space #futurePrompt,
-html[data-theme="light"] #kaiWorkCanvas.kai2050-space #futureModify,
-html[data-theme="light"] #kaiWorkCanvas.kai2050-space #k2050Code{background:#f5f6f7!important;color:#30363c!important;border-color:#bfc6cc!important}
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-top,html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-bottom{background:#eef1f3!important;border-color:#cbd1d6!important}
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-command,html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-product-frame{background:#f0f2f3!important;border-color:#cbd1d6!important}
+html[data-theme="light"] #kaiWorkCanvas.kai2050-space #futurePrompt,html[data-theme="light"] #kaiWorkCanvas.kai2050-space #futureModify,html[data-theme="light"] #kaiWorkCanvas.kai2050-space #k2050Code{background:#f5f6f7!important;color:#30363c!important;border-color:#bfc6cc!important}
 html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-ideas button{background:#e4e7e9!important;color:#5e676e!important;border-color:#c1c7cc!important}
 @media(max-width:760px){
   body.hax-modern #haxCapabilityMount{bottom:calc(var(--kai69-safe-bottom,108px) + 70px);width:calc(100% - 18px)}
@@ -185,3 +124,48 @@ html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-ideas button{backgr
   #kaiWorkCanvas.kai2050-space .k2050-bottom{padding:0 10px!important}
   #kaiWorkCanvas.kai2050-space .k2050-bottom span:nth-child(3){display:none!important}
 }
+
+/* MOBILE UI AUDIT — only active on compact layouts. */
+@media (max-width:760px){
+  :root{--hx-safe-bottom:env(safe-area-inset-bottom,0px);--hx-safe-top:env(safe-area-inset-top,0px);--hx-composer-gap:10px}
+  html,body{min-height:100%;overflow:hidden}
+  body.hax-modern{height:100dvh;min-height:100dvh}
+  body.hax-modern .topbar{padding-top:var(--hx-safe-top)!important;min-height:56px!important}
+  body.hax-modern .app-shell{height:calc(100dvh - 56px - var(--hx-safe-top))!important;min-height:0!important}
+  body.hax-modern .chat-panel{min-height:0!important;height:100%!important;display:flex!important;flex-direction:column!important}
+  body.hax-modern .chat-head{flex:0 0 auto!important}
+  body.hax-modern .messages{flex:1 1 auto!important;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding:12px 12px calc(150px + var(--hx-safe-bottom))!important;-webkit-overflow-scrolling:touch!important}
+  body.hax-modern #haxCommandShortcuts{flex:0 0 auto!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap!important;padding:6px 10px!important;scrollbar-width:none!important}
+  body.hax-modern #haxCommandShortcuts::-webkit-scrollbar{display:none}
+  body.hax-modern #chatForm{position:fixed!important;left:8px!important;right:8px!important;bottom:calc(12px + var(--hx-safe-bottom))!important;width:auto!important;max-width:none!important;margin:0!important;z-index:2147483646!important;display:grid!important;grid-template-columns:40px minmax(0,1fr) 40px 48px!important;gap:6px!important;align-items:end!important;padding:8px!important;border:1px solid rgba(127,139,149,.35)!important;border-radius:16px!important;background:color-mix(in srgb,#eef1f3 92%,transparent)!important;backdrop-filter:blur(18px)!important;box-shadow:0 12px 40px rgba(0,0,0,.18)!important}
+  html[data-theme="dark"] body.hax-modern #chatForm{background:color-mix(in srgb,#1d2024 92%,transparent)!important}
+  body.hax-modern #chatForm .input-wrap{min-width:0!important;width:auto!important;min-height:44px!important;display:flex!important;align-items:flex-end!important;gap:4px!important}
+  body.hax-modern #promptInput{width:100%!important;min-width:0!important;max-height:128px!important;min-height:42px!important;resize:none!important;overflow-y:auto!important;padding:11px 30px 10px 6px!important;font-size:16px!important;line-height:1.35!important}
+  body.hax-modern #modelPickerBtn{flex:0 0 auto!important;max-width:58px!important;min-height:36px!important;padding:0 6px!important}
+  body.hax-modern #selectedModelLabel{max-width:34px!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  body.hax-modern #attachBtn,body.hax-modern #micBtn,body.hax-modern #sendBtn{min-width:40px!important;min-height:44px!important;width:40px!important;height:44px!important;margin:0!important;touch-action:manipulation!important}
+  body.hax-modern #sendBtn{width:48px!important}
+  body.hax-modern #promptClearBtn{right:6px!important;bottom:8px!important;min-width:30px!important;min-height:30px!important}
+  body.hax-modern .hint{display:none!important}
+  body.hax-modern .mobile-menu,body.hax-modern .mobile-kai-log-btn{top:calc(8px + var(--hx-safe-top))!important;min-width:44px!important;min-height:44px!important;z-index:2147483600!important;touch-action:manipulation!important}
+  body.hax-modern .mobile-menu{left:8px!important}
+  body.hax-modern .mobile-kai-log-btn{right:8px!important}
+  body.hax-modern .mobile-drawer{height:100dvh!important;max-height:100dvh!important;overflow:hidden!important;padding-top:var(--hx-safe-top)!important}
+  body.hax-modern .mobile-drawer-content{height:calc(100dvh - 58px - var(--hx-safe-top))!important;overflow-y:auto!important;overscroll-behavior:contain!important;padding-bottom:calc(24px + var(--hx-safe-bottom))!important;-webkit-overflow-scrolling:touch!important}
+  body.hax-modern .mobile-drawer button,body.hax-modern .mobile-drawer a{min-height:44px!important;touch-action:manipulation!important}
+  body.hax-modern .model-picker-menu{position:fixed!important;left:10px!important;right:10px!important;bottom:calc(84px + var(--hx-safe-bottom))!important;max-height:min(58dvh,420px)!important;overflow-y:auto!important;z-index:2147483647!important}
+  body.hax-modern .install-experience,body.hax-modern #artGenerationPanel,body.hax-modern .username-gate{height:100dvh!important;max-height:100dvh!important;overflow:auto!important;padding:var(--hx-safe-top) 10px var(--hx-safe-bottom)!important;box-sizing:border-box!important}
+  body.hax-modern .install-card,body.hax-modern .art-generation-card,body.hax-modern .username-card{width:min(100%,520px)!important;max-height:calc(100dvh - 24px)!important;overflow-y:auto!important;margin:auto!important}
+  body.hax-modern .art-generation-close,body.hax-modern .install-close{min-width:44px!important;min-height:44px!important}
+  body.hax-modern .mode-buttons{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}
+  body.hax-modern .mode-btn{min-height:44px!important;min-width:0!important;padding:0 6px!important}
+  body.hax-modern .maker-link{min-height:46px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}
+  body.hax-modern .sidebar{display:none!important}
+}
+@media (max-width:380px){
+  body.hax-modern #chatForm{grid-template-columns:36px minmax(0,1fr) 36px 44px!important;left:4px!important;right:4px!important;padding:6px!important;gap:4px!important}
+  body.hax-modern #attachBtn,body.hax-modern #micBtn{min-width:36px!important;width:36px!important}
+  body.hax-modern #sendBtn{width:44px!important}
+  body.hax-modern #modelPickerBtn{display:none!important}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}}
