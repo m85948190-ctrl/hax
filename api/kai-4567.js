@@ -41,7 +41,7 @@ export default async function(req,res){
   let model=null;
   try{
     model=await ai.generateText({
-      model:'sonnet',
+      model:'gpt-5',
       purpose:'haxbro-kai-4567-semantic-art-interpreter',
       maxSteps:1,
       prompt:'You are Kai 4-5-6-7, the semantic director BEFORE Kai 9.0. Your only job is to understand what the user actually wants to create and issue a precise machine-readable order to Kai 9.0. Never default to a humanoid. A logo request is a logo request. A thumbnail request is a promotional composition. A named object or animal must remain that object. User request: '+prompt+' Lexical hints: '+JSON.stringify(lexicalResult)+' Web reference material: '+web.slice(0,9000)+' Return ONLY JSON with keys assetType, subject, purpose, composition, text, geometry, materials, environment, lighting, camera, action, motion, framing, color, referenceGuidance, negativeConstraints, buildOrder. Be literal. Preserve exact names and requested entities. If the request says logo, do not invent a character. If the request says thumbnail, optimize for thumbnail composition. If the request asks for an action, encode the action. Web material is reference/context only; do not copy protected assets.'
