@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS generated_apps (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), name text NOT NULL, prompt text NOT NULL, html text NOT NULL, created_at timestamptz NOT NULL DEFAULT now())
