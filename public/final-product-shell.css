@@ -81,7 +81,91 @@ html[data-theme="light"] .hax-capability-pill{background:#e0e4e7!important;borde
 html[data-theme="light"] .hax-capability-pill:hover{background:#d7dce0!important;border-color:#aeb6bd!important;color:#30363c!important}
 html[data-theme="light"] .hax-capability-pill.primary{border-color:#91b5cd!important;color:#376783!important}
 body.hax-modern #chatForm{bottom:60px!important}
-@media(max-width:700px){body.hax-modern #chatForm{bottom:16px!important}}
+
+/* Mobile composer: the message field is a real tall rectangular text box;
+   microphone and send stay as separate touch controls beside it. */
+@media(max-width:700px){
+  body.hax-modern #chatForm{
+    position:fixed!important;
+    left:8px!important;
+    right:8px!important;
+    bottom:max(10px,env(safe-area-inset-bottom))!important;
+    width:auto!important;
+    height:auto!important;
+    min-height:66px!important;
+    display:flex!important;
+    align-items:stretch!important;
+    gap:7px!important;
+    padding:6px!important;
+    margin:0!important;
+    z-index:7000!important;
+    box-sizing:border-box!important;
+  }
+  body.hax-modern #chatForm .input-wrap{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    min-height:56px!important;
+    height:56px!important;
+    padding:8px 34px 8px 9px!important;
+    display:flex!important;
+    align-items:center!important;
+    box-sizing:border-box!important;
+    border-radius:12px!important;
+    overflow:hidden!important;
+  }
+  body.hax-modern #chatForm #promptInput{
+    flex:1 1 auto!important;
+    width:100%!important;
+    min-width:0!important;
+    min-height:40px!important;
+    height:40px!important;
+    max-height:40px!important;
+    resize:none!important;
+    overflow-y:auto!important;
+    font-size:16px!important;
+    line-height:1.35!important;
+    padding:6px 0!important;
+    box-sizing:border-box!important;
+  }
+  body.hax-modern #chatForm #promptClearBtn{
+    position:absolute!important;
+    right:7px!important;
+    top:50%!important;
+    transform:translateY(-50%)!important;
+    width:24px!important;
+    height:24px!important;
+    z-index:2!important;
+  }
+  body.hax-modern #chatForm #micBtn,
+  body.hax-modern #chatForm #sendBtn{
+    flex:0 0 48px!important;
+    width:48px!important;
+    min-width:48px!important;
+    height:56px!important;
+    min-height:56px!important;
+    max-height:56px!important;
+    margin:0!important;
+    padding:0!important;
+    border-radius:12px!important;
+    display:grid!important;
+    place-items:center!important;
+    box-sizing:border-box!important;
+  }
+  body.hax-modern #chatForm #micBtn{order:2!important}
+  body.hax-modern #chatForm #sendBtn{order:3!important}
+  body.hax-modern #chatForm #attachBtn{display:none!important}
+  body.hax-modern #chatForm .image-attachment-preview{display:none!important}
+}
+
+@media(max-width:380px){
+  body.hax-modern #chatForm{left:6px!important;right:6px!important;gap:5px!important}
+  body.hax-modern #chatForm #micBtn,
+  body.hax-modern #chatForm #sendBtn{
+    flex-basis:44px!important;
+    width:44px!important;
+    min-width:44px!important;
+  }
+}
 body.hax-modern #haxCapabilityMount{position:fixed;left:50%;bottom:calc(var(--kai69-safe-bottom,120px) + 76px);transform:translateX(-50%);z-index:2147481900}
 body.hax-modern #chatForm.kai69-badge-safe{z-index:2147482001!important}
 #kaiWorkCanvas.kai2050-space{position:fixed!important;inset:0!important;z-index:2147483000!important;overflow:hidden!important;background:#17191c!important;color:#e4e7ea!important}
