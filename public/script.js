@@ -22,15 +22,34 @@ function kaiActivityStart(){
  thinkingBubble.className='haxbro-thinking kai-activity';
  thinkingBubble.setAttribute('role','status');
  thinkingBubble.setAttribute('aria-label','KAI 51 is working');
- thinkingBubble.innerHTML='<div class="kai-activity-head"><span class="haxbro-thinking-orbit" aria-hidden="true"><i></i><i></i><i></i></span><span class="haxbro-thinking-text">KAI 51 · WORKING</span><span class="kai-activity-time">0s</span></div><div class="kai-activity-list"></div>';
+ const phrases=[
+  ['Reading your request','KAI is parsing intent and context'],
+  ['Mapping the task','Choosing the right HAxBRO capability'],
+  ['Connecting the pieces','Checking context, tools and available data'],
+  ['Working through it','Building the response step by step'],
+  ['Validating the result','Cross-checking before showing it'],
+  ['Finalizing','Turning the work into a clean answer']
+ ];
+ thinkingBubble.innerHTML='<div class="kai-activity-head"><span class="kai-thinking-k-logo" aria-hidden="true">K</span><span class="haxbro-thinking-orbit" aria-hidden="true"><i></i><i></i><i></i></span><span class="haxbro-thinking-text">KAI 51 · WORKING</span><span class="kai-activity-time">0s</span></div><div class="kai-activity-current"><b></b><small></small></div><div class="kai-activity-list"></div>';
  messages.appendChild(thinkingBubble);
+ const currentLine=thinkingBubble.querySelector('.kai-activity-current');
+ const setPhrase=(i)=>{if(!currentLine)return;const p=phrases[i%phrases.length];currentLine.querySelector('b').textContent=p[0];currentLine.querySelector('small').textContent=p[1];};
+ setPhrase(0);
  const list=thinkingBubble.querySelector('.kai-activity-list');
- let stageIndex=0;list.appendChild(kaiActivityRow(KAI_ACTIVITY_STAGES[0],'Reading intent and context'));stageIndex=1;
+ let stageIndex=0;
  thinkingTimer=setInterval(()=>{
    const elapsed=Math.floor((Date.now()-thinkingStartedAt)/1000);
    const clock=thinkingBubble?.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
-   const current=thinkingBubble?.querySelector('.kai-activity-list');if(current&&stageIndex<KAI_ACTIVITY_STAGES.length&&elapsed>=stageIndex*0.9){current.appendChild(kaiActivityRow(KAI_ACTIVITY_STAGES[stageIndex],stageIndex===1?'Selecting the response path':'KAI execution step'));stageIndex++;}
- },300);
+   const i=Math.min(Math.floor(elapsed/0.8),phrases.length-1);
+   setPhrase(i);
+   const current=thinkingBubble?.querySelector('.kai-activity-list');
+   if(current&&stageIndex<phrases.length&&elapsed>=stageIndex*0.8){
+     const p=phrases[stageIndex];
+     current.appendChild(kaiActivityRow(p[0],p[1]));
+     stageIndex++;
+     current.scrollTop=current.scrollHeight;
+   }
+ },250);
  messages.scrollTop=messages.scrollHeight;
 }
 function kaiActivityResearch(steps){
