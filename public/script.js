@@ -30,7 +30,7 @@ function kaiActivityStart(){
   ['Validating the result','Cross-checking before showing it'],
   ['Finalizing','Turning the work into a clean answer']
  ];
- thinkingBubble.innerHTML='<div class="kai-activity-head"><span class="kai-old-thinking" aria-hidden="true"><i></i><i></i><i></i></span><span class="haxbro-thinking-text">KAI 51 · THINKING</span><span class="kai-activity-time">0s</span></div><div class="kai-activity-current"><b></b><small></small></div><div class="kai-activity-list"></div>';
+ thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">KAI 51 · THINKING</span><span class="kai-thinking-pill-time kai-activity-time">0s</span></span></div></div><div class="kai-activity-list"></div>';
  messages.appendChild(thinkingBubble);
  const currentLine=thinkingBubble.querySelector('.kai-activity-current');
  const setPhrase=(i)=>{if(!currentLine)return;const p=phrases[i%phrases.length];currentLine.querySelector('b').textContent=p[0];currentLine.querySelector('small').textContent=p[1];};
@@ -40,17 +40,15 @@ function kaiActivityStart(){
  thinkingTimer=setInterval(()=>{
    const elapsed=Math.floor((Date.now()-thinkingStartedAt)/1000);
    const clock=thinkingBubble?.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
-   const i=Math.min(Math.floor(elapsed/0.8),phrases.length-1);
-   setPhrase(i);
    const current=thinkingBubble?.querySelector('.kai-activity-list');
    if(current&&stageIndex<phrases.length&&elapsed>=stageIndex*0.8){
      const p=phrases[stageIndex];
      current.appendChild(kaiActivityRow(p[0],p[1]));
      stageIndex++;
-     current.scrollTo({top:current.scrollHeight,behavior:'smooth'});
+     requestAnimationFrame(()=>requestAnimationFrame(()=>current.scrollTo({top:current.scrollHeight,behavior:'smooth'})));
    }
  },250);
- messages.scrollTo({top:messages.scrollHeight,behavior:'smooth'});
+ /* Keep the main conversation anchored; only the log viewport moves. */
 }
 function kaiActivityResearch(steps){
  if(!thinkingBubble||!Array.isArray(steps)||!steps.length)return;
@@ -63,6 +61,7 @@ function kaiActivityResearch(steps){
    const host=url?kaiHostFromUrl(url):'';
    list.appendChild(kaiActivityRow(host?'Checked '+host:label,url?'source returned by research':'research step completed',url?kaiFavicon(url):''));
  });
+ requestAnimationFrame(()=>requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'})));
 }
 function kaiActivityFinish(data){
  if(!thinkingBubble)return;
@@ -71,7 +70,7 @@ function kaiActivityFinish(data){
  const elapsed=Math.floor((Date.now()-thinkingStartedAt)/1000);
  const clock=thinkingBubble.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
  const list=thinkingBubble.querySelector('.kai-activity-list');
- if(list){const final=kaiActivityRow('Answer ready','KAI 51 synthesized the result');final.classList.add('kai-activity-final');list.appendChild(final)}
+ if(list){const final=kaiActivityRow('Answer ready','KAI 51 synthesized the result');final.classList.add('kai-activity-final');list.appendChild(final);requestAnimationFrame(()=>requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'})))}
  thinkingBubble.classList.add('is-complete');
  setTimeout(()=>{if(thinkingBubble){thinkingBubble.classList.add('is-fading');setTimeout(()=>{thinkingBubble?.remove();thinkingBubble=null},420)}},520);
 }
