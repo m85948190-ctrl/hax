@@ -47,10 +47,10 @@ function kaiActivityStart(){
      const p=phrases[stageIndex];
      current.appendChild(kaiActivityRow(p[0],p[1]));
      stageIndex++;
-     current.scrollTop=current.scrollHeight;
+     current.scrollTo({top:current.scrollHeight,behavior:'smooth'});
    }
  },250);
- messages.scrollTop=messages.scrollHeight;
+ messages.scrollTo({top:messages.scrollHeight,behavior:'smooth'});
 }
 function kaiActivityResearch(steps){
  if(!thinkingBubble||!Array.isArray(steps)||!steps.length)return;
