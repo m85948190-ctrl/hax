@@ -252,4 +252,58 @@ html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-ideas button{backgr
   body.hax-modern #sendBtn{width:44px!important}
   body.hax-modern #modelPickerBtn{display:none!important}
 }
+/* FINAL MOBILE COMPOSER — single ChatGPT-style pill, not a rectangular box.
+   Voice/send/attach live INSIDE the same rounded bar. */
+@media (max-width:760px){
+  body.hax-modern #chatForm{
+    left:8px!important;right:8px!important;bottom:calc(10px + var(--hx-safe-bottom,0px))!important;
+    width:calc(100% - 16px)!important;min-height:50px!important;height:50px!important;
+    display:flex!important;align-items:center!important;gap:3px!important;
+    padding:5px 6px 5px 10px!important;
+    border:1px solid rgba(127,139,149,.35)!important;
+    border-radius:999px!important;
+    background:#eef1f3!important;
+    box-shadow:0 8px 28px rgba(0,0,0,.14)!important;
+    box-sizing:border-box!important;
+  }
+  html[data-theme="dark"] body.hax-modern #chatForm{
+    background:#202328!important;border-color:#3a4046!important;
+  }
+  body.hax-modern #chatForm .input-wrap{
+    order:2!important;flex:1 1 auto!important;min-width:0!important;
+    min-height:38px!important;height:38px!important;padding:0!important;
+    display:flex!important;align-items:center!important;
+    border:0!important;background:transparent!important;box-shadow:none!important;
+    border-radius:999px!important;
+  }
+  body.hax-modern #promptInput{
+    min-height:34px!important;height:34px!important;max-height:34px!important;
+    width:100%!important;padding:7px 4px!important;
+    border:0!important;outline:0!important;background:transparent!important;
+    resize:none!important;overflow:hidden!important;font-size:16px!important;
+    line-height:1.3!important;
+  }
+  body.hax-modern #attachBtn,
+  body.hax-modern #micBtn,
+  body.hax-modern #sendBtn{
+    flex:0 0 36px!important;width:36px!important;min-width:36px!important;
+    height:36px!important;min-height:36px!important;padding:0!important;margin:0!important;
+    border-radius:50%!important;display:grid!important;place-items:center!important;
+    border:0!important;box-sizing:border-box!important;
+  }
+  body.hax-modern #attachBtn{order:1!important}
+  body.hax-modern #micBtn{order:3!important}
+  body.hax-modern #sendBtn{order:4!important}
+  body.hax-modern #attachBtn{background:transparent!important}
+  body.hax-modern #micBtn{background:transparent!important}
+  body.hax-modern #sendBtn{background:#30363c!important;color:#fff!important}
+  html[data-theme="dark"] body.hax-modern #sendBtn{background:#dfe3e6!important;color:#1b1e22!important}
+  body.hax-modern #promptClearBtn{right:46px!important;top:50%!important;transform:translateY(-50%)!important}
+  body.hax-modern #modelPickerBtn{display:none!important}
+}
+@media(max-width:380px){
+  body.hax-modern #chatForm{left:5px!important;right:5px!important;width:calc(100% - 10px)!important}
+  body.hax-modern #attachBtn,body.hax-modern #micBtn{flex-basis:32px!important;width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important}
+  body.hax-modern #sendBtn{flex-basis:34px!important;width:34px!important;min-width:34px!important;height:34px!important;min-height:34px!important}
+}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}}
