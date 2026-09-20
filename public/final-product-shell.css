@@ -306,4 +306,13 @@ html[data-theme="light"] #kaiWorkCanvas.kai2050-space .k2050-ideas button{backgr
   body.hax-modern #attachBtn,body.hax-modern #micBtn{flex-basis:32px!important;width:32px!important;min-width:32px!important;height:32px!important;min-height:32px!important}
   body.hax-modern #sendBtn{flex-basis:34px!important;width:34px!important;min-width:34px!important;height:34px!important;min-height:34px!important}
 }
+/* Synchronized mobile workspace controls */
+@media(max-width:760px){
+  body.hax-modern .mobile-drawer #mobileAppMakerBtn,
+  body.hax-modern .mobile-drawer #mobileDecodingPartnerBtn,
+  body.hax-modern .mobile-drawer #mobileCodeWriterBtn{display:flex!important}
+  body.hax-modern #chatForm{bottom:calc(16px + var(--hx-safe-bottom,0px))!important}
+  body.hax-modern #chatForm .input-wrap{border:0!important;border-radius:999px!important}
+}
+@media(max-width:380px){body.hax-modern #chatForm{bottom:calc(14px + var(--hx-safe-bottom,0px))!important}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}}

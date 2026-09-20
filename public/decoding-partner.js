@@ -1,16 +1,16 @@
 (()=>{
   const open=()=>{
-    const text=prompt('DECODING PARTNER\\n\\nPaste the text/code you want KAI to decode:');
-    if(!text) return;
-    const out=document.createElement('div');
-    out.style.cssText='position:fixed;inset:12%;z-index:99999;background:#f7f9fb;color:#111;border:1px solid #cbd3da;border-radius:18px;padding:22px;box-shadow:0 20px 70px rgba(0,0,0,.25);overflow:auto;font:14px/1.5 system-ui';
-    const close=document.createElement('button'); close.textContent='×'; close.style.cssText='float:right;font-size:24px;border:0;background:none;cursor:pointer'; close.onclick=()=>out.remove();
-    const title=document.createElement('h2'); title.textContent='⌁ Decoding Partner';
-    const pre=document.createElement('pre'); pre.style.whiteSpace='pre-wrap';
-    const s=text.trim(); let decoded='';
-    try{ decoded=s.replace(/[A-Za-z]/g,c=>String.fromCharCode((c<='Z'?90:122)>=c.charCodeAt(0)+13?c.charCodeAt(0)+13:c.charCodeAt(0)-13)); }catch{}
-    pre.textContent='INPUT\\n'+s+'\\n\\nROT13 CANDIDATE\\n'+decoded+'\\n\\nKAI NOTE\\nUse the main HAxBRO chat for deeper multi-layer decoding, cipher identification, and context analysis.';
-    out.append(close,title,pre); document.body.append(out);
+    let root=document.getElementById('haxDecodingWorkspace');
+    if(!root){
+      root=document.createElement('section'); root.id='haxDecodingWorkspace';
+      root.innerHTML='<div class="dp-shell"><header><div><b>⌁ DECODING PARTNER</b><small>HAxBRO · UNIVERSAL DECODER</small></div><button id="dpClose" aria-label="Close">×</button></header><main><div class="dp-hero"><span>DECODING PARTNER ONLINE</span><h1>Paste it. Type it. Decode it.</h1><p>Give KAI encoded text, strange strings, code fragments, puzzles, ciphers, or an unknown format. Decoding Partner analyzes the problem, identifies likely methods, tests candidates, and explains the result.</p></div><textarea id="dpInput" placeholder="Paste or type anything you want the Decoding Partner to analyze…"></textarea><div class="dp-actions"><button id="dpDecode">DECODE WITH KAI</button><button id="dpClear">CLEAR</button></div><section id="dpResult">Ready for a decoding problem.</section></main></div>';
+      document.body.appendChild(root);
+      const s=document.createElement('style'); s.textContent='#haxDecodingWorkspace{position:fixed;inset:0;z-index:99998;background:#f5f7f8;color:#111}#haxDecodingWorkspace .dp-shell{height:100%;display:flex;flex-direction:column}#haxDecodingWorkspace header{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid #d9dee2;background:#fff}#haxDecodingWorkspace header small{display:block;color:#69737b;margin-top:3px}#haxDecodingWorkspace header button{border:0;background:transparent;font-size:28px;cursor:pointer}#haxDecodingWorkspace main{width:min(900px,92vw);margin:auto;display:flex;flex-direction:column;gap:16px;padding:28px 0 60px;overflow:auto}.dp-hero span{font:700 11px ui-monospace;color:#65717a}.dp-hero h1{margin:8px 0;font-size:clamp(28px,5vw,48px)}.dp-hero p{color:#59636b;line-height:1.6}.dp-hero+textarea,#dpInput{min-height:190px;padding:18px;border:1px solid #cbd2d7;border-radius:18px;background:#fff;resize:vertical;font:15px/1.5 system-ui;box-sizing:border-box}.dp-actions{display:flex;gap:10px}.dp-actions button{border:1px solid #c5ccd1;border-radius:999px;padding:11px 18px;background:#fff;cursor:pointer}.dp-actions #dpDecode{background:#20252a;color:#fff}#dpResult{min-height:100px;padding:18px;border:1px solid #d3d9dd;border-radius:18px;background:#fff;white-space:pre-wrap;overflow:auto}@media(max-width:760px){#haxDecodingWorkspace main{width:calc(100% - 24px);padding:16px 0 90px}.dp-hero h1{font-size:30px}#dpInput{min-height:160px}}'; document.head.appendChild(s);
+      root.querySelector('#dpClose').onclick=()=>root.remove(); root.querySelector('#dpClear').onclick=()=>{root.querySelector('#dpInput').value='';root.querySelector('#dpResult').textContent='Ready for a decoding problem.'};
+      root.querySelector('#dpDecode').onclick=async()=>{const v=root.querySelector('#dpInput').value.trim();if(!v)return;const out=root.querySelector('#dpResult');out.textContent='KAI is analyzing encoding layers, structure, and likely decoding paths…';try{const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'You are the HAxBRO Decoding Partner. Analyze this decoding/problem-solving input. Identify likely encoding, cipher, format, transformation, or structure; test appropriate safe decoding approaches; explain confirmed results and distinguish candidates. Input:\n'+v,mode:'normal',username:localStorage.getItem('haxbro_username')||''})});const d=await r.json();if(!r.ok)throw Error(d.error||'Decoder failed');out.textContent=d.response||d.text||'No decoding result returned.'}catch(e){out.textContent='Decoding error: '+(e.message||'Unknown error')}};
+    } else root.style.display='block';
+    return root;
   };
-  document.addEventListener('click',e=>{if(e.target.closest('#decodingPartnerBtn,#mobileDecodingPartnerBtn,#shortcutDecode'))open();});
+  document.addEventListener('click',e=>{if(e.target.closest('#decodingPartnerBtn,#mobileDecodingPartnerBtn,#shortcutDecode')){e.preventDefault();e.stopPropagation();open()}});
+  window.HAxBRODecodingPartner={open};
 })();
