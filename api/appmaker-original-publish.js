@@ -3,8 +3,14 @@ export const access = "public";
 export default async function(req,res){
   if(req.method!=="POST") return res.status(405).json({error:"POST required"});
   try{
-    const html=String(req.body?.html||"");
+    let html=String(req.body?.html||"");
     if(html.length<20) return res.status(400).json({error:"No app HTML supplied."});
+
+    // Published apps live on ship.page, so relative HAxBRO API calls such as
+    // /api/chat would otherwise hit the static host and return 405.
+    // Rewrite the HAxBRO chat endpoint to the real public API before publishing.
+    html=html.replace(/(["'\`])\/api\/chat(?=["'\`])/g,"$1https://haxbro.hatchable.site/api/chat");
+    html=html.replace(/fetch\(\s*(["'\`])\/api\/chat/g,"fetch($1https://haxbro.hatchable.site/api/chat");
 
     // Anonymous public static deployment. Keep this server-side so the
     // browser never has to call the hosting provider directly.

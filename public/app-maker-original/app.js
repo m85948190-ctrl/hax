@@ -6,13 +6,13 @@ document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click'
 $('#newProject').addEventListener('click',()=>{project={name:'Untitled project',summary:'',files:[],publicUrl:''};prompt.value='';result.classList.add('hidden');status.className='status';status.innerHTML='<span class="status-dot"></span>Ready when you are.';$('#projectInfo').innerHTML='Untitled project<br><span>Describe an app to begin.</span>';setScene('READY')});
 function setFlow(n){document.querySelectorAll('#flow li').forEach((x,i)=>x.classList.toggle('active',i===n))}
 function setScene(label){$('#sceneState').textContent=label}
-function render(){result.classList.remove('hidden');$('#resultName').textContent=project.name;$('#resultSummary').textContent=project.summary;$('#publishBadge').textContent=project.published?'● PUBLISHED':'● READY';$('#publishExternal').disabled=Boolean(project.published);$('#publishExternal').textContent=project.published?'Published ✓':'Publish externally';$('#projectInfo').innerHTML=`${project.name}<br><span>${project.published?'Published':'Ready'} · ${project.files.length} artifact</span>`;const link=$('#publicUrl');link.href=project.publicUrl;link.textContent=project.publicUrl;filesEl.innerHTML='';project.files.forEach((f,i)=>{const el=document.createElement('div');el.className='file'+(i===0?' active':'');el.textContent=f.path;el.addEventListener('click',()=>{document.querySelectorAll('.file').forEach(x=>x.classList.remove('active'));el.classList.add('active');showPreview(f)});filesEl.appendChild(el)});showPreview(project.files[0])}
+function render(){result.classList.remove('hidden');$('#resultName').textContent=project.name;$('#resultSummary').textContent=project.summary;$('#publishBadge').textContent=project.published?'● PUBLISHED':'● READY';$('#publishExternal').disabled=false;$('#publishExternal').textContent=project.published?'Republish externally':'Publish externally';$('#projectInfo').innerHTML=`${project.name}<br><span>${project.published?'Published':'Ready'} · ${project.files.length} artifact</span>`;const link=$('#publicUrl');link.href=project.publicUrl;link.textContent=project.publicUrl;filesEl.innerHTML='';project.files.forEach((f,i)=>{const el=document.createElement('div');el.className='file'+(i===0?' active':'');el.textContent=f.path;el.addEventListener('click',()=>{document.querySelectorAll('.file').forEach(x=>x.classList.remove('active'));el.classList.add('active');showPreview(f)});filesEl.appendChild(el)});showPreview(project.files[0])}
 function showPreview(f){if(!f)return;frame.srcdoc=f.content}
 async function publishExternal(){
   const f=project.files&&project.files[0];
   if(!f)return;
   const btn=$('#publishExternal');
-  btn.disabled=true; btn.textContent='Publishing…';
+  btn.disabled=true; btn.textContent=project.published?'Republishing…':'Publishing…';
   try{
     const r=await fetch('/api/appmaker-original-publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({html:f.content})});
     const d=await r.json();
