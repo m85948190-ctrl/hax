@@ -1,0 +1,4 @@
+import { db } from "hatchable";
+export const access = "public"; export const methods=["GET"];
+async function hash(v){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(String(v||"")));return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join("")}
+export default async function(req,res){const token=String(req.query?.token||""),me=await db.query("SELECT id FROM haxbro_users WHERE chat_token_hash=$1 LIMIT 1",[await hash(token)]);if(!me.rows[0])return res.status(401).json({error:"Chat identity required."});const rows=await db.query("SELECT t.id,CASE WHEN t.user_a=$1 THEN b.username ELSE a.username END AS username,t.updated_at FROM haxbro_chat_threads t JOIN haxbro_users a ON a.id=t.user_a JOIN haxbro_users b ON b.id=t.user_b WHERE t.user_a=$1 OR t.user_b=$1 ORDER BY t.updated_at DESC LIMIT 30",[me.rows[0].id]);res.json({threads:rows.rows})}

@@ -1,0 +1,4 @@
+import { db } from "hatchable";
+export const access = "public"; export const methods=["GET"];
+async function hash(v){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(String(v||"")));return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join("")}
+export default async function(req,res){const token=String(req.query?.token||""),q=String(req.query?.q||"").trim().toLowerCase().replace(/[^a-z0-9._-]/g,"").slice(0,32);if(!token)return res.status(401).json({error:"Chat identity required."});const me=await db.query("SELECT id FROM haxbro_users WHERE chat_token_hash=$1 LIMIT 1",[await hash(token)]);if(!me.rows[0])return res.status(401).json({error:"Chat identity expired."});if(q.length<2)return res.json({users:[]});const rows=await db.query("SELECT id,username FROM haxbro_users WHERE username_key LIKE $1 AND id<>$2 ORDER BY username_key LIMIT 20",[q+"%",me.rows[0].id]);res.json({users:rows.rows})}
