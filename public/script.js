@@ -30,7 +30,7 @@ function kaiActivityStart(){
   ['Validating the result','Cross-checking before showing it'],
   ['Finalizing','Turning the work into a clean answer']
  ];
- thinkingBubble.innerHTML='<div class="kai-activity-head"><span class="kai-thinking-k-logo" aria-hidden="true">K</span><span class="haxbro-thinking-orbit" aria-hidden="true"><i></i><i></i><i></i></span><span class="haxbro-thinking-text">KAI 51 · WORKING</span><span class="kai-activity-time">0s</span></div><div class="kai-activity-current"><b></b><small></small></div><div class="kai-activity-list"></div>';
+ thinkingBubble.innerHTML='<div class="kai-activity-head"><span class="kai-old-thinking" aria-hidden="true"><i></i><i></i><i></i></span><span class="haxbro-thinking-text">KAI 51 · THINKING</span><span class="kai-activity-time">0s</span></div><div class="kai-activity-current"><b></b><small></small></div><div class="kai-activity-list"></div>';
  messages.appendChild(thinkingBubble);
  const currentLine=thinkingBubble.querySelector('.kai-activity-current');
  const setPhrase=(i)=>{if(!currentLine)return;const p=phrases[i%phrases.length];currentLine.querySelector('b').textContent=p[0];currentLine.querySelector('small').textContent=p[1];};
