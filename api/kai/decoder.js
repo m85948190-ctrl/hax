@@ -1,52 +1,37 @@
-export const access = 'public';
-export const methods = ['POST'];
-
-const DECODERS = ['BASE64','BASE32','BASE58','BASE85','HEX','BINARY','OCTAL','DECIMAL_ASCII','URL_ENCODING','HTML_ENTITIES','UNICODE_ESCAPES','ASCII','ROT13','ROT47','CAESAR','ATBASH','VIGENERE','AFFINE','RAIL_FENCE','REVERSE','MORSE','BACON','A1Z26','XOR_SINGLE_BYTE','KEYBOARD_LAYOUT'];
-const TESTS = [
-  ['BASE64','SGVsbG8gS0FJIDUx','Hello KAI 51'],['HEX','48656c6c6f','Hello'],['ROT13','Uryyb','Hello'],
-  ['CAESAR','Khoor','Hello'],['BINARY','01001000 01101001','Hi'],['URL_ENCODING','Hello%20KAI%2051','Hello KAI 51'],
-  ['UNICODE_ESCAPES','\\u0048\\u0069','Hi'],['MORSE','.... ..','HI'],['A1Z26','8-5-12-12-15','HELLO'],['REVERSE','olleH','Hello']
-];
-function clean(s,n=20000){return String(s||'').slice(0,n);}
-function bytesToText(bytes){try{return new TextDecoder('utf-8',{fatal:false}).decode(bytes);}catch{return '';}}
-function printable(s){const t=String(s||'');if(!t)return 0;let good=0;for(const c of t){const n=c.charCodeAt(0);if(n===9||n===10||n===13||(n>=32&&n<127)||n>159)good++;}return good/t.length;}
-function confidence(s){const p=printable(s),w=(String(s).match(/[A-Za-z]{2,}/g)||[]).length;return p>.92&&w>=1?'HIGH':p>.72?'MEDIUM':'LOW';}
-function b64(s){const t=s.replace(/\s+/g,'');if(t.length<4||t.length%4===1||!/^[A-Za-z0-9+/]*={0,2}$/.test(t))return null;try{return bytesToText(Uint8Array.from(atob(t),c=>c.charCodeAt(0)));}catch{return null;}}
-function hex(s){const t=s.replace(/\s+/g,'');if(!/^(?:[0-9a-fA-F]{2})+$/.test(t))return null;const a=new Uint8Array(t.length/2);for(let i=0;i<a.length;i++)a[i]=parseInt(t.slice(i*2,i*2+2),16);return bytesToText(a);}
-function binary(s){if(!/^[01\s]+$/.test(s))return null;const t=s.replace(/\s/g,'');if(t.length<8||t.length%8)return null;let o='';for(let i=0;i<t.length;i+=8)o+=String.fromCharCode(parseInt(t.slice(i,i+8),2));return o;}
-function octal(s){const p=s.trim().split(/[\s,]+/);if(!p.length||!p.every(x=>/^[0-7]+$/.test(x)))return null;return p.map(x=>String.fromCharCode(parseInt(x,8))).join('');}
-function decimalAscii(s){const p=s.trim().split(/[\s,;-]+/);if(!p.length||!p.every(x=>/^\d+$/.test(x)&&+x<256))return null;return p.map(x=>String.fromCharCode(+x)).join('');}
-function rot13(s){return s.replace(/[A-Za-z]/g,c=>String.fromCharCode(c<='Z'?65+(c.charCodeAt(0)-65+13)%26:97+(c.charCodeAt(0)-97+13)%26));}
-function rot47(s){return s.replace(/[!-~]/g,c=>String.fromCharCode(33+(c.charCodeAt(0)-33+47)%94));}
-function caesar(s,k){return s.replace(/[A-Za-z]/g,c=>{const b=c<='Z'?65:97;return String.fromCharCode(b+(c.charCodeAt(0)-b+k+26)%26);});}
-function atbash(s){return s.replace(/[A-Za-z]/g,c=>{const b=c<='Z'?65:97;return String.fromCharCode(b+(25-(c.charCodeAt(0)-b)));});}
-function reverse(s){return [...s].reverse().join('');}
-function a1z26(s){const p=s.trim().split(/[\s,;.-]+/).filter(Boolean);if(!p.length||!p.every(x=>/^\d{1,2}$/.test(x)&&+x>=1&&+x<=26))return null;return p.map(x=>String.fromCharCode(64+ +x)).join('');}
-const MORSE={'.-':'A','-...':'B','-.-.':'C','-..':'D','.':'E','..-.':'F','--.':'G','....':'H','..':'I','.---':'J','-.-':'K','.-..':'L','--':'M','-.':'N','---':'O','.--.':'P','--.-':'Q','.-.':'R','...':'S','-':'T','..-':'U','...-':'V','.--':'W','-..-':'X','-.--':'Y','--..':'Z'};
-function morse(s){const w=s.trim().split(/\s{2,}|\//);if(!w.length)return null;return w.map(x=>x.trim().split(/\s+/).map(c=>MORSE[c]||'?').join('')).join(' ');}
-function bacon(s){const t=s.toLowerCase().replace(/[^ab]/g,'');if(t.length<5||t.length%5)return null;let o='';for(let i=0;i<t.length;i+=5){const n=parseInt(t.slice(i,i+5).replace(/a/g,'0').replace(/b/g,'1'),2);o+=n<26?String.fromCharCode(65+n):'?';}return o;}
-function htmlEntities(s){return s.replace(/&#(x[0-9a-f]+|\d+);?/gi,(_,v)=>String.fromCharCode(v[0].toLowerCase()==='x'?parseInt(v.slice(1),16):parseInt(v,10))).replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");}
-function unicodeEscapes(s){return s.replace(/\\u([0-9a-fA-F]{4})/g,(_,h)=>String.fromCharCode(parseInt(h,16))).replace(/\\x([0-9a-fA-F]{2})/g,(_,h)=>String.fromCharCode(parseInt(h,16)));}
-function urlDecode(s){try{return decodeURIComponent(s.replace(/\+/g,' '));}catch{return null;}}
-function xorSingle(s,k){const b=new TextEncoder().encode(s);return bytesToText(b.map(x=>x^k));}
-function score(m,r){if(r==null)return -1;const p=printable(r),w=(String(r).match(/[A-Za-z]{2,}/g)||[]).length;return p*70+Math.min(w,8)*3+(/^(BASE64|HEX|BINARY|URL_ENCODING|UNICODE_ESCAPES)$/.test(m)?5:0);}
-export function decodeInput(input){
-  const out=[];const add=(method,result,extra={})=>{if(result==null||result===input)return;out.push({method,status:'TESTED',confidence:confidence(result),score:score(method,result),result:clean(result,8000),...extra});};
-  add('BASE64',b64(input));add('HEX',hex(input));add('BINARY',binary(input));add('OCTAL',octal(input));add('DECIMAL_ASCII',decimalAscii(input));add('URL_ENCODING',urlDecode(input));add('HTML_ENTITIES',htmlEntities(input));add('UNICODE_ESCAPES',unicodeEscapes(input));add('ROT13',rot13(input));add('ROT47',rot47(input));
-  for(let k=1;k<26;k++)add('CAESAR',caesar(input,k),{shift:k});add('ATBASH',atbash(input));add('REVERSE',reverse(input));add('MORSE',morse(input));add('BACON',bacon(input));add('A1Z26',a1z26(input));
-  for(const k of [1,2,3,13,32,42,51,65,127,255])add('XOR_SINGLE_BYTE',xorSingle(input,k),{key:k});
-  const candidates=out.sort((a,b)=>b.score-a.score).slice(0,12);return {input:clean(input),decoderKeys:DECODERS,totalKeys:25,candidates,primary:candidates[0]||null};
-}
-export function testSuite(){
-  return TESTS.map(([method,input,expected])=>{let actual=null;
-    if(method==='BASE64')actual=b64(input);if(method==='HEX')actual=hex(input);if(method==='ROT13')actual=rot13(input);if(method==='CAESAR')actual=caesar(input,3);if(method==='BINARY')actual=binary(input);if(method==='URL_ENCODING')actual=urlDecode(input);if(method==='UNICODE_ESCAPES')actual=unicodeEscapes(input);if(method==='MORSE')actual=morse(input);if(method==='A1Z26')actual=a1z26(input);if(method==='REVERSE')actual=reverse(input);
-    return {test:method,input,expected,actual,pass:actual===expected};
-  });
-}
-export default async function(req,res){
-  try{const input=clean(req.body?.input||req.body?.prompt,20000);if(!input)return res.status(400).json({ok:false,error:'input is required'});
-    const report=decodeInput(input),tests=req.body?.testSuite===true?testSuite():null;
-    const summary=report.primary?'Most plausible result: '+report.primary.method+' ('+report.primary.confidence+' confidence).':'No convincing decoding result found.';
-    res.json({ok:true,report:{type:'KAI 51 DECODER REPORT',status:'completed',summary,methodCount:25,methodsTested:report.decoderKeys,primary:report.primary,alternatives:report.candidates.slice(1),tests,disclaimer:'Decoding evidence is not proof of safety or maliciousness. The report describes transformations actually tested.'}});
-  }catch(e){res.status(500).json({ok:false,error:'Decoder failed.'});}
-}
+export const access='public';export const methods=['POST'];
+const DECODERS=['BASE64','BASE32','BASE58','BASE85','HEX','BINARY','OCTAL','DECIMAL_ASCII','URL_ENCODING','HTML_ENTITIES','UNICODE_ESCAPES','ASCII','ROT13','ROT47','CAESAR','ATBASH','VIGENERE','AFFINE','RAIL_FENCE','REVERSE','MORSE','BACON','A1Z26','XOR_SINGLE_BYTE','KEYBOARD_LAYOUT'];
+const TESTS=[['BASE64','SGVsbG8gS0FJIDUx','Hello KAI 51'],['HEX','48656c6c6f','Hello'],['ROT13','Uryyb','Hello'],['CAESAR','Khoor','Hello'],['BINARY','01001000 01101001','Hi'],['URL_ENCODING','Hello%20KAI%2051','Hello KAI 51'],['UNICODE_ESCAPES','\\u0048\\u0069','Hi'],['MORSE','.... ..','HI'],['A1Z26','8-5-12-12-15','HELLO'],['REVERSE','olleH','Hello']];
+function clean(s,n=20000){return String(s??'').slice(0,n)}function printable(s){let t=String(s??'');if(!t)return 0;let n=[...t].filter(c=>{let x=c.charCodeAt(0);return x===9||x===10||x===13||(x>=32&&x<127)||x>159}).length;return n/t.length}
+function words(s){return (String(s).match(/[A-Za-z]{2,}/g)||[]).length}function english(s){let t=String(s).toLowerCase();return words(t)>0&&(/[etaoinshrdlu]/.test(t))&&(printable(t)>.9)}
+function conf(s,valid=false){if(!valid)return 'LOW';let p=printable(s),w=words(s);return p>.96&&w>=2?'HIGH':p>.9&&w>=1?'MEDIUM':'LOW'}
+function b64(s){let t=s.replace(/\s+/g,'');if(t.length<4||t.length%4===1||!/^[A-Za-z0-9+/]*={0,2}$/.test(t))return null;try{let r=atob(t);return bytes(r)}catch{return null}}
+function bytes(s){return new TextDecoder().decode(Uint8Array.from(s,c=>c.charCodeAt(0)))}
+function hex(s){let t=s.replace(/\s+/g,'');if(!/^(?:[0-9a-f]{2})+$/i.test(t)||t.length<2)return null;let a=[];for(let i=0;i<t.length;i+=2)a.push(parseInt(t.slice(i,i+2),16));return new TextDecoder().decode(new Uint8Array(a))}
+const B32='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';function base32(s){let t=s.replace(/\s+/g,'').replace(/=+$/,'').toUpperCase();if(t.length<2||!/^[A-Z2-7]+$/.test(t))return null;let bits='',out=[];for(let c of t){let v=B32.indexOf(c);if(v<0)return null;bits+=v.toString(2).padStart(5,'0');while(bits.length>=8){out.push(parseInt(bits.slice(0,8),2));bits=bits.slice(8)}}return new TextDecoder().decode(new Uint8Array(out))}
+const B58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';function base58(s){if(!/^[1-9A-HJ-NP-Za-km-z]+$/.test(s)||s.length<4)return null;let n=0n;for(let c of s){let i=B58.indexOf(c);if(i<0)return null;n=n*58n+BigInt(i)}let a=[];while(n){a.unshift(Number(n&255n));n>>=8n}for(let c of s){if(c==='1')a.unshift(0);else break}return new TextDecoder().decode(new Uint8Array(a))}
+function base85(s){let t=s.replace(/\s/g,'');if(t.length<5||!/^[!-u]+$/.test(t))return null;let out=[];for(let i=0;i<t.length;i+=5){let g=t.slice(i,i+5);if(g.length<5)break;let n=0;for(let c of g)n=n*85+(c.charCodeAt(0)-33);out.push((n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255)}return new TextDecoder().decode(new Uint8Array(out))}
+function binary(s){let t=s.replace(/\s/g,'');if(!/^[01]+$/.test(t)||t.length<8||t.length%8)return null;let o='';for(let i=0;i<t.length;i+=8)o+=String.fromCharCode(parseInt(t.slice(i,i+8),2));return o}
+function octal(s){let p=s.trim().split(/[\s,]+/);if(!p.length||!p.every(x=>/^[0-7]{1,3}$/.test(x)))return null;return p.map(x=>String.fromCharCode(parseInt(x,8))).join('')}
+function decimalAscii(s){let p=s.trim().split(/[\s,;-]+/);if(!p.length||!p.every(x=>/^\d{1,3}$/.test(x)&&+x<256))return null;return p.map(x=>String.fromCharCode(+x)).join('')}
+function rot13(s){return s.replace(/[A-Za-z]/g,c=>String.fromCharCode((c<='Z'?65:97)+(c.charCodeAt(0)-(c<='Z'?65:97)+13)%26))}
+function rot47(s){return s.replace(/[!-~]/g,c=>String.fromCharCode(33+(c.charCodeAt(0)-33+47)%94))}
+function caesar(s,k){return s.replace(/[A-Za-z]/g,c=>{let b=c<='Z'?65:97;return String.fromCharCode(b+(c.charCodeAt(0)-b+k+26)%26)})}
+function atbash(s){return s.replace(/[A-Za-z]/g,c=>{let b=c<='Z'?65:97;return String.fromCharCode(b+25-(c.charCodeAt(0)-b))})}
+function reverse(s){return [...s].reverse().join('')}
+function urlDecode(s){try{let r=decodeURIComponent(s.replace(/\+/g,' '));return r===s?null:r}catch{return null}}
+function htmlEntities(s){let r=s.replace(/&#x([0-9a-f]+);?/gi,(_,h)=>String.fromCharCode(parseInt(h,16))).replace(/&#(\d+);?/g,(_,n)=>String.fromCharCode(+n)).replace(/&(amp|lt|gt|quot|#39);/g,(_,x)=>({'amp':'&','lt':'<','gt':'>','quot':'"','#39':"'"}[x]));return r===s?null:r}
+function unicodeEscapes(s){let r=s.replace(/\\u([0-9a-f]{4})/gi,(_,h)=>String.fromCharCode(parseInt(h,16))).replace(/\\x([0-9a-f]{2})/gi,(_,h)=>String.fromCharCode(parseInt(h,16)));return r===s?null:r}
+const MORSE={'.-':'A','-...':'B','-.-.':'C','-..':'D','.':'E','..-.':'F','--.':'G','....':'H','..':'I','.---':'J','-.-':'K','.-..':'L','--':'M','-.':'N','---':'O','.--.':'P','--.-':'Q','.-.':'R','...':'S','-':'T','..-':'U','...-':'V','.--':'W','-..-':'X','-.--':'Y','--..':'Z'};function morse(s){if(!/^[.\-\s\/]+$/.test(s)||!/[.-]/.test(s))return null;let r=s.trim().split(/\s{2,}|\//).map(w=>w.trim().split(/\s+/).map(x=>MORSE[x]||'?').join('')).join(' ');return r.includes('?')?null:r}
+function bacon(s){let t=s.toLowerCase().replace(/[^ab]/g,'');if(t.length<5||t.length%5)return null;let o='';for(let i=0;i<t.length;i+=5){let n=parseInt(t.slice(i,i+5).replace(/a/g,'0').replace(/b/g,'1'),2);if(n>25)return null;o+=String.fromCharCode(65+n)}return o}
+function a1z26(s){let p=s.trim().split(/[\s,;.-]+/).filter(Boolean);if(!p.length||!p.every(x=>/^\d{1,2}$/.test(x)&&+x>=1&&+x<=26))return null;return p.map(x=>String.fromCharCode(64+ +x)).join('')}
+function vigenere(s,key='KEY'){let i=0;return s.replace(/[A-Za-z]/g,c=>{let b=c<='Z'?65:97,k=key.charCodeAt(i++%key.length)-65;return String.fromCharCode(b+(c.charCodeAt(0)-b-k+26)%26)})}
+function affine(s,a=5,b=8){let inv=21;return s.replace(/[A-Za-z]/g,c=>{let B=c<='Z'?65:97,x=c.charCodeAt(0)-B;return String.fromCharCode(B+((inv*(x-b+26))%26+26)%26)})}
+function rail(s,r=2){if(r<2||r>=s.length)return null;let rows=Array.from({length:r},()=>[]),row=0,dir=1;for(let c of s){rows[row].push(c);if(row===0)dir=1;if(row===r-1)dir=-1;row+=dir}let counts=Array(r).fill(0);let pos=0;let seq=[];for(let i=0;i<r;i++){seq[i]=s.slice(pos,pos+rows[i].length);pos+=rows[i].length}let out='',idx=Array(r).fill(0);row=0;dir=1;for(let i=0;i<s.length;i++){out+=seq[row][idx[row]++];if(row===0)dir=1;if(row===r-1)dir=-1;row+=dir}return out}
+const KEYS=['qwertyuiop','asdfghjkl','zxcvbnm'];function keyboard(s){let r=s.toLowerCase().replace(/[qwertyuiopasdfghjklzxcvbnm]/g,c=>{for(let row of KEYS){let i=row.indexOf(c);if(i>0)return row[i-1];if(i===0)return row[1]}return c});return r===s.toLowerCase()?null:r}
+function xor(s,k){let b=new TextEncoder().encode(s);return new TextDecoder().decode(b.map(x=>x^k))}
+function valid(m,r){if(r==null||r==='')return false;let p=printable(r);if(p<.92)return false;if(['ROT13','ROT47','CAESAR','ATBASH','REVERSE','VIGENERE','AFFINE','RAIL_FENCE','KEYBOARD_LAYOUT'].includes(m))return english(r)||words(r)>=2;return true}
+function score(m,r){let p=printable(r),w=words(r);let bonus=['BASE64','BASE32','BASE58','BASE85','HEX','BINARY','URL_ENCODING','UNICODE_ESCAPES','MORSE','A1Z26'].includes(m)?12:0;return p*60+Math.min(w,10)*5+bonus}
+export function decodeInput(input){let out=[];const add=(method,result,extra={})=>{if(!valid(method,result)||result===input)return;out.push({method,status:'TESTED',confidence:conf(result,true),score:score(method,result),result:clean(result,8000),...extra})};
+add('BASE64',b64(input));add('BASE32',base32(input));add('BASE58',base58(input));add('BASE85',base85(input));add('HEX',hex(input));add('BINARY',binary(input));add('OCTAL',octal(input));add('DECIMAL_ASCII',decimalAscii(input));add('URL_ENCODING',urlDecode(input));add('HTML_ENTITIES',htmlEntities(input));add('UNICODE_ESCAPES',unicodeEscapes(input));add('ASCII',/^[\x00-\x7F]+$/.test(input)&&/[A-Za-z]/.test(input)?input:null);add('ROT13',rot13(input));add('ROT47',rot47(input));for(let k=1;k<26;k++)add('CAESAR',caesar(input,k),{shift:k});add('ATBASH',atbash(input));add('VIGENERE',vigenere(input),{key:'KEY'});add('AFFINE',affine(input),{a:5,b:8});for(let r=2;r<=4;r++)add('RAIL_FENCE',rail(input,r),{rails:r});add('REVERSE',reverse(input));add('MORSE',morse(input));add('BACON',bacon(input));add('A1Z26',a1z26(input));for(let k of [1,2,3,13,32,42,51,65,127,255])add('XOR_SINGLE_BYTE',xor(input,k),{key:k});add('KEYBOARD_LAYOUT',keyboard(input));out.sort((a,b)=>b.score-a.score);let candidates=out.slice(0,8);return{input:clean(input),decoderKeys:DECODERS,totalKeys:25,candidates,primary:candidates[0]||null}}
+export function testSuite(){return TESTS.map(([method,input,expected])=>{let actual={BASE64:b64,HEX:hex,ROT13:rot13,CAESAR:s=>caesar(s,3),BINARY:binary,URL_ENCODING:urlDecode,UNICODE_ESCAPES:unicodeEscapes,MORSE:morse,A1Z26:a1z26,REVERSE:reverse}[method](input);return{test:method,input,expected,actual,pass:actual===expected}})}
+export default async function(req,res){try{let input=clean(req.body?.input||req.body?.prompt);if(!input)return res.status(400).json({ok:false,error:'input is required'});let report=decodeInput(input);res.json({ok:true,report:{type:'KAI 51 DECODER REPORT',status:'completed',summary:report.primary?'Most plausible result: '+report.primary.method+' ('+report.primary.confidence+' confidence).':'No convincing decoding result found.',methodCount:25,methodsTested:report.decoderKeys,primary:report.primary,alternatives:report.candidates.slice(1),tests:req.body?.testSuite===true?testSuite():null,disclaimer:'Results describe transformations actually tested; confidence is heuristic.'}})}catch(e){res.status(500).json({ok:false,error:'Decoder failed.'})}}
