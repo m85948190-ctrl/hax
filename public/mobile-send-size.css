@@ -1,0 +1,22 @@
+/* HAxBRO mobile composer — compact send control */
+@media (max-width:760px){
+  body.hax-modern #chatForm #sendBtn{
+    flex:0 0 32px!important;
+    width:32px!important;
+    min-width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    border-radius:9px!important;
+  }
+  body.hax-modern #chatForm #sendBtn b,
+  body.hax-modern #chatForm #sendBtn span{font-size:14px!important;line-height:1!important}
+}
+@media (max-width:380px){
+  body.hax-modern #chatForm #sendBtn{
+    flex-basis:30px!important;
+    width:30px!important;
+    min-width:30px!important;
+    height:30px!important;
+    min-height:30px!important;
+  }
+}
