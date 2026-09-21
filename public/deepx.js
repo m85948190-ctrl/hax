@@ -6,7 +6,7 @@ function ensure(){if($("deepxPanel"))return $("deepxPanel");const p=document.cre
 <section class="dx-target-card"><div class="dx-target-head"><div><b>TARGET</b><span>AUTO ANALYSIS · NO MACHINE SELECTION</span></div><span id="dxRunState">READY</span></div><div class="dx-input-wrap"><textarea id="deepxInput" placeholder="Paste a public URL or investigation target…&#10;&#10;Example: https://example.com"></textarea><div class="dx-input-glow"></div></div><div class="dx-actions"><input id="deepxFile" placeholder="Label / filename (optional)"><button id="deepxRun"><span class="dx-btn-pulse"></span>INVESTIGATE WITH X PRO <b>↗</b></button></div></section>
 <section id="deepxProgress" class="dx-progress" hidden><div class="dx-progress-head"><div><span>KAI 51 → DEEPX</span><b id="dxProgressTitle">INITIALIZING INVESTIGATION</b></div><span id="dxProgressPct">0%</span></div><div class="dx-progress-track"><i id="dxProgressBar"></i></div><div id="dxLiveLog" class="dx-live-log"></div></section>
 <section id="deepxResults" class="dx-results"><div class="dx-empty"><div class="dx-empty-orb">DX</div><b>X PRO STANDBY</b><span>One target in. One structured report out.</span></div></section>
-<section id="dxFollowup" class="dx-followup" hidden>
+<section id="dxFollowup" class="dx-followup">
 <div class="dx-followup-head"><span>X PRO · CONTINUE INVESTIGATION</span><small>Ask about the report without leaving X PRO</small></div>
 <form id="dxFollowupForm" class="dx-followup-form">
 <textarea id="dxFollowupInput" rows="1" placeholder="Ask X Pro a follow-up question about this investigation…"></textarea>
