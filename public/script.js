@@ -94,7 +94,11 @@ const lowerValue=value.toLowerCase();
     const appMakerOpen=!!document.getElementById('haxNewAppMaker')?.classList.contains('open');
     const wantsModification=/\b(?:modify|change|update|edit|adjust|make|add|remove|fix|improve|redesign|restyle|rename)\b/i.test(value)&&/\b(?:app|application|ui|interface|button|color|red|blue|green|spacing|layout|theme|title|name|feature|screen|page|existing|current)\b/i.test(value);
 const wantsInvestigation=!!investigationMatch&&['investigate','inspect','analyze','scan','check','verify','validate','review','look into','how this link works','how this website works','x-ray','xray','source code'].some(x=>lowerValue.includes(x));
-const wantsDecode=['decode','decoding','decrypt','encoded','cipher','rot13','base64','hex','morse'].some(x=>lowerValue.includes(x));
+const explicitDecode=['decode','decoding','decrypt','encoded','cipher','rot13','base64','hex','morse','binary','ascii','atbash','caesar','vigenere','rail fence','a1z26','xor'].some(x=>lowerValue.includes(x));const looksLikeEncodedPayload=/^(?:HAXBRO-AES1:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+|(?:[01]{8}[\\s,;]*){3,}|(?:[0-9A-Fa-f]{2}[\\s:]*){6,}|(?:[A-Za-z0-9+/]{4}){3,}={0,2}|(?:%[0-9A-Fa-f]{2}){3,}|(?:[.-]{3,}(?:\\s|$)){2,})$/.test(value.trim());const wantsDecode=explicitDecode||looksLikeEncodedPayload;
+if(wantsDecode&&window.HAxBRODecodingPartner?.openWithInput){
+  const payload=value.replace(/^.*?\\b(?:decode|decoding|decrypt)\\b[:\\s-]*/i,'').trim().replace(/^(?:this|this\\s+text|this\\s+code)[:\\s-]*/i,'').trim()||value;
+  await window.HAxBRODecodingPartner.openWithInput(payload);return true
+}
 if(appMakerOpen&&wantsModification&&window.HAxBROFutureMaker?.modifyCurrent){
   await window.HAxBROFutureMaker.modifyCurrent(value);return true;
 }
