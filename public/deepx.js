@@ -9,8 +9,8 @@ function ensure(){if($("deepxPanel"))return $("deepxPanel");const p=document.cre
 <section id="dxFollowup" class="dx-followup">
 <div class="dx-followup-head"><span>X PRO · CONTINUE INVESTIGATION</span><small>Ask about the report without leaving X PRO</small></div>
 <form id="dxFollowupForm" class="dx-followup-form">
-<textarea id="dxFollowupInput" rows="1" placeholder="Ask X Pro a follow-up question about this investigation…"></textarea>
-<button id="dxFollowupSend" type="submit">SEND <b>↗</b></button>
+<textarea id="dxFollowupInput" rows="5" placeholder="Continue the investigation here. Ask X Pro what you want to know next…"></textarea>
+<button id="dxFollowupSend" type="submit">FOLLOW UP <b>↗</b></button>
 </form>
 <div id="dxFollowupStatus" class="dx-followup-status">X PRO is ready for follow-up questions.</div>
 </section>
@@ -52,7 +52,7 @@ const status=$("dxFollowupStatus"), btn=$("dxFollowupSend"), box=$("dxFollowupIn
 const report=window.__HAxBRO_XPRO_REPORT||"";
 if(btn)btn.disabled=true;if(status)status.textContent="X PRO · KAI 51 is analyzing the follow-up…";
 try{
- const rr=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:q,prompt:"X PRO FOLLOW-UP MODE. Use ONLY the completed X Pro investigation report below as evidence. Explain observed behavior, architecture, technologies, and evidence clearly. Do not invent findings. If the report does not contain the answer, say so.\n\nREPORT:\n"+report+"\n\nFOLLOW-UP:\n"+q,mode:"normal",study:false,username:localStorage.getItem("haxbro_username")||"",history:"[]"})});
+ const rr=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"X PRO FOLLOW-UP: "+q,prompt:"You are continuing an X Pro investigation. The user is asking a follow-up question about the completed report. Answer the question directly using the report as evidence. Do not start a new investigation and do not ask the user to paste the report again. If the report lacks the answer, say exactly what evidence is missing.\n\nCOMPLETED X PRO REPORT:\n"+report+"\n\nUSER FOLLOW-UP QUESTION:\n"+q,mode:"normal",study:false,username:localStorage.getItem("haxbro_username")||"",history:"[]"})});
  const d=await rr.json().catch(()=>({})); if(!rr.ok)throw Error(d.error||("HTTP "+rr.status));
  const answer=d.response||d.text||d.message||d.answer||d.output||"No answer returned.";
  const card=document.createElement("article");card.className="dx-report-card dx-followup-answer";card.innerHTML="<h3>KAI 51 · FOLLOW-UP</h3><div class=\"dx-followup-question\"></div><div class=\"dx-followup-answer-text\"></div>";
