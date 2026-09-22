@@ -1,0 +1,17 @@
+/* X PRO · PREMIUM KAI 12 FOLLOW-UP */
+.dx-followup{border:1px solid rgba(70,210,255,.52)!important;background:linear-gradient(145deg,#071b2f,#061322 62%,#071a2b)!important;box-shadow:0 22px 70px rgba(0,95,180,.20),inset 0 1px 0 rgba(130,230,255,.08)!important}
+.dx-followup:before{content:"KAI 12 · 12 NODE EVIDENCE ENGINE";display:block;color:#6cecff;font:800 8px ui-monospace;letter-spacing:.18em;margin-bottom:10px}
+.dx-followup-head{margin-bottom:14px!important}
+.dx-followup-head span{font-size:12px!important;color:#e9fbff!important}
+.dx-followup-head small{color:#6f9eb0!important}
+.dx-followup-form{display:grid!important;grid-template-columns:1fr auto;gap:10px!important}
+.dx-followup-form textarea{min-height:82px!important;max-height:220px!important;border:1px solid #2c7187!important;background:#020b15!important;color:#ecfbff!important;border-radius:14px!important;font:14px Inter,system-ui,sans-serif!important;line-height:1.55!important}
+.dx-followup-form button{min-width:154px!important;min-height:82px!important;border-radius:14px!important;background:linear-gradient(180deg,#0d4964,#092b45)!important;color:#e6fbff!important;box-shadow:0 0 0 1px rgba(80,220,255,.1) inset!important}
+.dx-followup-status{color:#76aabd!important}
+.dx-followup-nodes{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:12px}
+.dx-followup-node{padding:7px 6px;border:1px solid rgba(61,189,229,.2);border-radius:8px;background:#061421;color:#72cbe5;font:700 7px ui-monospace;text-align:center;letter-spacing:.06em}
+.dx-followup-node.active{border-color:rgba(87,230,255,.55);color:#c9f8ff;box-shadow:0 0 16px rgba(49,211,255,.08)}
+.dx-followup-answer{background:linear-gradient(145deg,#0a2944,#082039)!important}
+.dx-followup-answer-text{font:13px Inter,system-ui,sans-serif!important;line-height:1.72!important;color:#e5f7ff!important}
+.dx-followup-question{color:#72e7ff!important}
+@media(max-width:760px){.dx-followup-form{grid-template-columns:1fr!important}.dx-followup-form textarea{min-height:96px!important}.dx-followup-form button{min-height:46px!important}.dx-followup-nodes{grid-template-columns:repeat(3,1fr)}}
