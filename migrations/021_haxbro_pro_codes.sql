@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS haxbro_pro_codes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), code text NOT NULL UNIQUE, reward text NOT NULL DEFAULT 'HAxBRO PRO', redeemed_by text, redeemed_at timestamptz, created_at timestamptz NOT NULL DEFAULT now())
