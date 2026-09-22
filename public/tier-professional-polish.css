@@ -1,0 +1,8 @@
+/* Final tier polish: hierarchy, contrast, spacing and readable surfaces */
+body.haxbro-pro .bot-msg .message-copy,body.haxbro-premium .bot-msg .message-copy{font-size:15px!important;line-height:1.72!important}
+body.haxbro-pro .message-copy h1,body.haxbro-pro .message-copy h2,body.haxbro-pro .message-copy h3,body.haxbro-premium .message-copy h1,body.haxbro-premium .message-copy h2,body.haxbro-premium .message-copy h3{margin-top:1.15em!important;margin-bottom:.45em!important;letter-spacing:-.02em!important}
+body.haxbro-pro .message-copy ul,body.haxbro-pro .message-copy ol,body.haxbro-premium .message-copy ul,body.haxbro-premium .message-copy ol{padding-left:1.35em!important}
+body.haxbro-pro .message-copy blockquote,body.haxbro-premium .message-copy blockquote{margin:12px 0!important;padding:10px 14px!important;border-left:3px solid currentColor!important;border-radius:8px!important;background:rgba(255,255,255,.035)!important}
+body.haxbro-pro .message-copy table,body.haxbro-premium .message-copy table{border-collapse:separate!important;border-spacing:0!important;overflow:hidden!important;border-radius:10px!important}
+body.haxbro-pro .message-copy th,body.haxbro-premium .message-copy th{background:rgba(255,255,255,.07)!important}
+@media(max-width:700px){body.haxbro-pro .bot-msg .message-copy,body.haxbro-premium .bot-msg .message-copy{font-size:14px!important;line-height:1.65!important}}

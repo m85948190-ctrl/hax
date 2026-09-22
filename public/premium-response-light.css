@@ -1,0 +1,22 @@
+/* HAxBRO PREMIUM — professional readable response layer */
+body.haxbro-premium .messages{background:linear-gradient(rgba(76,157,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(76,157,255,.022) 1px,transparent 1px),#071322!important;background-size:40px 40px!important}
+body.haxbro-premium .message-copy{color:#edf6ff!important}
+body.haxbro-premium .bot-msg .message-copy{
+ background:linear-gradient(145deg,#12365a,#0e2c4b)!important;
+ border:1px solid rgba(112,190,255,.38)!important;
+ color:#eaf5ff!important;
+ box-shadow:0 14px 38px rgba(0,35,70,.28),inset 0 1px rgba(255,255,255,.06)!important;
+}
+body.haxbro-premium .bot-msg .message-copy p,
+body.haxbro-premium .bot-msg .message-copy li,
+body.haxbro-premium .bot-msg .message-copy span,
+body.haxbro-premium .bot-msg .message-copy div{color:#eaf5ff!important}
+body.haxbro-premium .bot-msg .message-copy strong,
+body.haxbro-premium .bot-msg .message-copy b{color:#b8ddff!important}
+body.haxbro-premium .bot-msg .message-copy code{color:#c7e7ff!important;background:#0a2844!important}
+body.haxbro-premium .bot-msg .message-copy pre,
+body.haxbro-premium .bot-msg .hax-code-wrap{background:#092844!important;border-color:#2d78b8!important}
+body.haxbro-premium .bot-msg .message-avatar{background:linear-gradient(145deg,#1974bd,#10528d)!important;border-color:#65baff!important}
+body.haxbro-premium .user-msg .message-copy{background:linear-gradient(135deg,#185d99,#124b7d)!important;border-color:rgba(103,188,255,.45)!important}
+body.haxbro-premium .kai-thinking-pill{background:#0e365b!important;border-color:#3d9de9!important}
+body.haxbro-premium .composer{background:linear-gradient(145deg,rgba(11,42,72,.98),rgba(5,25,44,.99))!important}
