@@ -136,8 +136,11 @@ function wire(){
     const d=e.detail||{}; if(!d.report)return;
     sessionStorage.setItem('haxbro_workspace_context',String(d.report).slice(0,6000));
     sessionStorage.setItem('haxbro_workspace_type',String(d.type||'workspace'));
-    if(d.type==='decoder'){const p=$('#haxDecodingWorkspace');if(p)p.remove();}/* Keep X PRO open: its own follow-up composer owns the conversation. */
-    const headline=d.type==='xpro'?'X PRO completed the investigation.':'Decoding Partner completed the decode.';
+    /* Decoder results stay inside Decoding Partner. Never close the workspace or dump encrypted/decoded payloads into the normal AI chat. X Pro likewise owns its report/follow-up surface. */
+    if(d.type==='decoder'){
+      setBusy(false);resize();return;
+    }
+    const headline='X PRO completed the investigation.';
     addMessage(headline+'\\n\\n'+String(d.report).slice(0,6000),'bot');
     setBusy(false);resize();input?.focus();
     requestAnimationFrame(()=>$('#messages')?.lastElementChild?.scrollIntoView({behavior:'smooth',block:'end'}));
