@@ -1,16 +1,23 @@
-import { ai } from "hatchable";
+import { config } from "hatchable";
 
 async function kaiCompute({system="",prompt="",maxTokens=8000}){
-  const result=await ai.generateText({
-    model:"sonnet",
-    system:String(system),
-    prompt:String(prompt),
-    maxTokens:Math.min(Number(maxTokens)||8000,12000),
-    purpose:"haxbro-kai-builder"
-  });
-  const text=typeof result==="string"?result:(result?.text||result?.content||result?.output||"");
-  if(!String(text).trim()) throw new Error("KAI compute adapter returned no text.");
-  return {text:String(text).trim(),provider:"KAI compute adapter"};
+  // One KAI compute adapter. No provider fallback/cascade.
+  const key=await config.get("OPENROUTER_API_KEY_2");
+  if(!key) throw new Error("KAI compute adapter is not configured.");
+  const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{
+    Authorization:"Bearer "+key,"Content-Type":"application/json",
+    "HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI 2.0"
+  },body:JSON.stringify({
+    model:"nex-agi/nex-n2.5-pro:free",
+    messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],
+    max_tokens:Math.min(Number(maxTokens)||8000,12000),
+    temperature:0.2
+  })});
+  const raw=await r.text();
+  if(!r.ok) throw new Error("KAI compute adapter HTTP "+r.status+": "+raw.slice(0,500));
+  const j=JSON.parse(raw),text=j?.choices?.[0]?.message?.content||"";
+  if(!text.trim()) throw new Error("KAI compute adapter returned no text.");
+  return {text:text.trim(),provider:"KAI single compute adapter"};
 }
 
 export const access = "public";
