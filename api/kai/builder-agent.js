@@ -2,19 +2,41 @@ import { config } from "hatchable";
 
 async function googleGenerate({system="",prompt="",maxTokens=8000}){
   const key=await config.get("GOOGLE_API_KEY");
-  if(!key) throw new Error("GOOGLE_API_KEY is not configured.");
-  const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key="+encodeURIComponent(key);
-  const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({
-    systemInstruction:{parts:[{text:String(system)}]},
-    contents:[{role:"user",parts:[{text:String(prompt)}]}],
-    generationConfig:{maxOutputTokens:Math.min(Number(maxTokens)||8000,12000),temperature:0.2}
-  })});
-  const j=await r.json();
-  if(!r.ok) throw new Error("Gemini "+r.status+": "+String(j?.error?.message||"request failed"));
-  const parts=j?.candidates?.[0]?.content?.parts||[];
-  const text=parts.map(p=>p?.text||"").filter(Boolean).join("\n").trim();
-  if(!text) throw new Error("Gemini returned no text.");
-  return {text,usage:j?.usageMetadata||null};
+  const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key="+encodeURIComponent(key||"");
+  try{
+    if(!key) throw new Error("GOOGLE_API_KEY is not configured.");
+    const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({
+      systemInstruction:{parts:[{text:String(system)}]},
+      contents:[{role:"user",parts:[{text:String(prompt)}]}],
+      generationConfig:{maxOutputTokens:Math.min(Number(maxTokens)||8000,12000),temperature:0.2}
+    })});
+    const j=await r.json();
+    if(!r.ok) throw new Error("Gemini "+r.status+": "+String(j?.error?.message||"request failed"));
+    const parts=j?.candidates?.[0]?.content?.parts||[];
+    const text=parts.map(p=>p?.text||"").filter(Boolean).join("\n").trim();
+    if(!text) throw new Error("Gemini returned no text.");
+    return {text,usage:j?.usageMetadata||null,provider:"google"};
+  }catch(googleError){
+    console.warn("KAI Google provider unavailable; trying OpenRouter free fallback",googleError?.message);
+    const keys=["OPENROUTER_API_KEY_2","OPENROUTER_API_KEY_3"];
+    for(const name of keys){
+      const orKey=await config.get(name);
+      if(!orKey) continue;
+      const rr=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{
+        Authorization:"Bearer "+orKey,"Content-Type":"application/json",
+        "HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI Builder"
+      },body:JSON.stringify({
+        model:"nex-agi/nex-n2.5-pro:free",
+        messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],
+        max_tokens:Math.min(Number(maxTokens)||8000,12000),
+        temperature:0.2
+      })});
+      const jj=await rr.json();
+      const txt=jj?.choices?.[0]?.message?.content||"";
+      if(rr.ok && txt) return {text:txt,usage:jj?.usage||null,provider:"openrouter-free"};
+    }
+    throw googleError;
+  }
 }
 
 export const access = "public";
