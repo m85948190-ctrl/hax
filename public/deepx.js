@@ -19,6 +19,7 @@ document.body.appendChild(p);
 $("deepxClose").onclick=()=>p.style.display="none";
 $("dxFollowupForm").onsubmit=followup;
 $("dxFollowupInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();$("dxFollowupForm").requestSubmit()}});
+const nf=$("dxFollowup");if(nf&&!nf.querySelector(".dx-followup-nodes")){const ns=["TARGET","IDENTITY","SOURCE","TECH","ASSETS","STRUCTURE","DATA FLOW","SECURITY","EXPOSURE","CORRELATION","RECONSTRUCTION","REPORT"];const nd=document.createElement("div");nd.className="dx-followup-nodes";nd.innerHTML=ns.map((n,i)=>'<span class="dx-followup-node" data-node="'+i+'">'+String(i+1).padStart(2,"0")+' · '+n+'</span>').join("");nf.appendChild(nd)}
 $("dxSideClose").onclick=()=>p.classList.remove("dx-rail-open");$("deepxRun").onclick=run;setInterval(()=>{if(p.style.display!=="none"){const c=$("dxClock");if(c)c.textContent=new Date().toLocaleTimeString([], {hour12:false})}},1000);return p}
 function log(text,kind=""){const box=$("dxLiveLog");const side=$("dxSideLog");if(box){const r=document.createElement("div");r.className="dx-log "+kind;r.innerHTML='<i></i><span>'+esc(text)+'</span>';box.appendChild(r);box.scrollTop=box.scrollHeight}if(side){const r=document.createElement("div");r.className="dx-side-line "+kind;r.innerHTML='<i></i><span>'+esc(text)+'</span>';side.appendChild(r);side.scrollTop=side.scrollHeight}}
 function progress(title,pct){const t=$("dxProgressTitle"),n=$("dxProgressPct"),b=$("dxProgressBar");if(t)t.textContent=title;if(n)n.textContent=pct+"%";if(b)b.style.width=pct+"%"}
@@ -47,19 +48,21 @@ if(r.attackPath)blocks.push('<article class="dx-report-card"><h3>DEFENSIVE THREA
 blocks.push('<div class="dx-report-footer"><span>PERMISSION · '+esc(permissions.level)+'</span><span>NO DELETE / NO REMOTE MODIFICATION</span><span>KAI 51 LOCAL CORE</span></div>');out.innerHTML=blocks.join("");out.scrollIntoView({behavior:"smooth",block:"start"})}
 async function followup(e){
 e?.preventDefault();
-const q=$("dxFollowupInput")?.value.trim(); if(!q)return;
-const status=$("dxFollowupStatus"), btn=$("dxFollowupSend"), box=$("dxFollowupInput");
+const q=$("dxFollowupInput")?.value.trim();if(!q)return;
+const status=$("dxFollowupStatus"),btn=$("dxFollowupSend"),box=$("dxFollowupInput"),nodes=[...document.querySelectorAll(".dx-followup-node")];
 const report=window.__HAxBRO_XPRO_REPORT||"";
-if(btn)btn.disabled=true;if(status)status.textContent="X PRO · KAI 51 is analyzing the follow-up…";
+if(!report){if(status)status.textContent="X PRO · Run an investigation first.";return}
+if(btn)btn.disabled=true;if(status)status.textContent="KAI 12 · activating evidence nodes…";
+nodes.forEach((n,i)=>setTimeout(()=>n.classList.add("active"),i*45));
 try{
- const rr=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"X PRO FOLLOW-UP: "+q,prompt:"You are continuing an X Pro investigation. The user is asking a follow-up question about the completed report. Answer the question directly using the report as evidence. Do not start a new investigation and do not ask the user to paste the report again. If the report lacks the answer, say exactly what evidence is missing.\n\nCOMPLETED X PRO REPORT:\n"+report+"\n\nUSER FOLLOW-UP QUESTION:\n"+q,mode:"normal",study:false,username:localStorage.getItem("haxbro_username")||"",history:"[]"})});
- const d=await rr.json().catch(()=>({})); if(!rr.ok)throw Error(d.error||("HTTP "+rr.status));
- const answer=d.response||d.text||d.message||d.answer||d.output||"No answer returned.";
- const card=document.createElement("article");card.className="dx-report-card dx-followup-answer";card.innerHTML="<h3>KAI 51 · FOLLOW-UP</h3><div class=\"dx-followup-question\"></div><div class=\"dx-followup-answer-text\"></div>";
+ const rr=await fetch("/api/xpro-followup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q,report})});
+ const d=await rr.json().catch(()=>({}));if(!rr.ok||!d.ok)throw Error(d.error||("HTTP "+rr.status));
+ const answer=d.answer||"No evidence-backed answer returned.";
+ const card=document.createElement("article");card.className="dx-report-card dx-followup-answer";card.innerHTML="<h3>KAI 12 · EVIDENCE FOLLOW-UP</h3><div class=\"dx-followup-question\"></div><div class=\"dx-followup-answer-text\"></div>";
  card.querySelector(".dx-followup-question").textContent=q;card.querySelector(".dx-followup-answer-text").textContent=answer;
  $("deepxResults")?.appendChild(card);card.scrollIntoView({behavior:"smooth",block:"center"});
- box.value="";if(status)status.textContent="X PRO · FOLLOW-UP COMPLETE";
-}catch(err){if(status)status.textContent="X PRO · "+(err.message||"Follow-up failed");}
+ box.value="";if(status)status.textContent="KAI 12 · 12 EVIDENCE NODES COMPLETE";
+}catch(err){if(status)status.textContent="KAI 12 · "+(err.message||"Follow-up failed");}
 finally{if(btn)btn.disabled=false;box?.focus()}
 }
 function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
