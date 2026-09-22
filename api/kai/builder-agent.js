@@ -59,7 +59,7 @@ async function research(query){
 
 async function generateDraft(request, plan, evidence){
   const r=await ai.generateText({
-    model:"gpt",
+    model:"gemini",
     purpose:"haxbro-builder-draft",
     maxTokens:9000,
     system:`You are the BUILD sub-agent inside HAxBRO KAI Builder.
