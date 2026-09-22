@@ -1,42 +1,16 @@
-import { config } from "hatchable";
+import { ai } from "hatchable";
 
-async function googleGenerate({system="",prompt="",maxTokens=8000}){
-  const key=await config.get("GOOGLE_API_KEY");
-  const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key="+encodeURIComponent(key||"");
-  try{
-    if(!key) throw new Error("GOOGLE_API_KEY is not configured.");
-    const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({
-      systemInstruction:{parts:[{text:String(system)}]},
-      contents:[{role:"user",parts:[{text:String(prompt)}]}],
-      generationConfig:{maxOutputTokens:Math.min(Number(maxTokens)||8000,12000),temperature:0.2}
-    })});
-    const j=await r.json();
-    if(!r.ok) throw new Error("Gemini "+r.status+": "+String(j?.error?.message||"request failed"));
-    const parts=j?.candidates?.[0]?.content?.parts||[];
-    const text=parts.map(p=>p?.text||"").filter(Boolean).join("\n").trim();
-    if(!text) throw new Error("Gemini returned no text.");
-    return {text,usage:j?.usageMetadata||null,provider:"google"};
-  }catch(googleError){
-    console.warn("KAI Google provider unavailable; trying OpenRouter free fallback",googleError?.message);
-    const keys=["OPENROUTER_API_KEY_2","OPENROUTER_API_KEY_3"];
-    for(const name of keys){
-      const orKey=await config.get(name);
-      if(!orKey) continue;
-      const rr=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{
-        Authorization:"Bearer "+orKey,"Content-Type":"application/json",
-        "HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI Builder"
-      },body:JSON.stringify({
-        model:"nex-agi/nex-n2.5-pro:free",
-        messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],
-        max_tokens:Math.min(Number(maxTokens)||8000,12000),
-        temperature:0.2
-      })});
-      const jj=await rr.json();
-      const txt=jj?.choices?.[0]?.message?.content||"";
-      if(rr.ok && txt) return {text:txt,usage:jj?.usage||null,provider:"openrouter-free"};
-    }
-    throw googleError;
-  }
+async function kaiCompute({system="",prompt="",maxTokens=8000}){
+  const result=await ai.generateText({
+    model:"sonnet",
+    system:String(system),
+    prompt:String(prompt),
+    maxTokens:Math.min(Number(maxTokens)||8000,12000),
+    purpose:"haxbro-kai-builder"
+  });
+  const text=typeof result==="string"?result:(result?.text||result?.content||result?.output||"");
+  if(!String(text).trim()) throw new Error("KAI compute adapter returned no text.");
+  return {text:String(text).trim(),provider:"KAI compute adapter"};
 }
 
 export const access = "public";
@@ -97,9 +71,8 @@ async function research(query){
 }
 
 async function generateDraft(request, plan, evidence){
-  const r=await googleGenerate({
-    model:"gemini",
-    purpose:"haxbro-builder-draft",
+  const r=await kaiCompute({
+    
     maxTokens:9000,
     system:`You are the BUILD sub-agent inside HAxBRO KAI Builder.
 Generate a complete standalone web application from the supplied request and plan.
@@ -115,9 +88,8 @@ Do not expose chain-of-thought.`,
 }
 
 async function repairDraft(request, draft, inspection){
-  const r=await googleGenerate({
-    model:"gpt",
-    purpose:"haxbro-builder-repair",
+  const r=await kaiCompute({
+    
     maxTokens:9500,
     system:`You are the REPAIR sub-agent inside HAxBRO KAI Builder.
 Repair the supplied application against the user's request and failed validation checks.
@@ -139,9 +111,8 @@ export default async function(req,res){
     let evidence=[];
     let steps=[];
 
-    const planner=await googleGenerate({
-      model:"gpt",
-      purpose:"haxbro-builder-plan",
+    const planner=await kaiCompute({
+      
       maxTokens:3500,
       system:`You are KAI BUILDER's planning brain.
 Determine the actual product type and implementation requirements before code generation.
