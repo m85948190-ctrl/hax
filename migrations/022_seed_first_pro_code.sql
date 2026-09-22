@@ -1,1 +1,7 @@
-INSERT INTO haxbro_pro_codes (code, reward) SELECT 'HXB-PRO-7K4M-X92Q', 'HAxBRO PRO' WHERE NOT EXISTS (SELECT 1 FROM haxbro_pro_codes WHERE code = 'HXB-PRO-7K4M-X92Q')
+INSERT INTO haxbro_pro_codes (code, reward)
+SELECT 'HXB-PRO-7K4M-X92Q', 'HAxBRO PRO'
+WHERE NOT EXISTS (SELECT 1 FROM haxbro_pro_codes WHERE code = 'HXB-PRO-7K4M-X92Q');
+
+INSERT INTO haxbro_pro_codes (code, reward)
+SELECT 'HXB-PREMIUM-9X7K-M2QP', 'HAxBRO PREMIUM'
+WHERE NOT EXISTS (SELECT 1 FROM haxbro_pro_codes WHERE code = 'HXB-PREMIUM-9X7K-M2QP');
