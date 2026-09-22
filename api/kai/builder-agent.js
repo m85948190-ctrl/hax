@@ -93,7 +93,7 @@ Do not expose chain-of-thought.`,
 }
 
 async function repairDraft(request, draft, inspection){
-  const r=await ai.generateText({
+  const r=await googleGenerate({
     model:"gpt",
     purpose:"haxbro-builder-repair",
     maxTokens:9500,
@@ -117,7 +117,7 @@ export default async function(req,res){
     let evidence=[];
     let steps=[];
 
-    const planner=await ai.generateText({
+    const planner=await googleGenerate({
       model:"gpt",
       purpose:"haxbro-builder-plan",
       maxTokens:3500,
