@@ -40,14 +40,17 @@
     if(!api)return false;
     if(!api.status().ready){
       state.preparing=true;
-      button('download');
+      // First-use KAI setup is communicated inside the conversation, not as a download button.
+      button('send');
+      const prepMessage=window.addMessage?.('KAI needs to be downloaded for first use. Wait a few seconds — it will download automatically.','bot');
       const ok=await api.prepare();
       state.preparing=false;
       if(!ok){
-        button('error');
-        setTimeout(()=>{if(!state.preparing)button('send')},3500);
+        window.addMessage?.('KAI could not finish its first-time download. Please try sending again.','bot');
+        button('send');
         return true;
       }
+      window.addMessage?.('KAI downloaded. Ask anything.','bot');
     }
     button('ready');
     if(window.setBusy)window.setBusy(true);
