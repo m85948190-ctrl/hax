@@ -1,4 +1,21 @@
-import { ai } from "hatchable";
+import { config } from "hatchable";
+
+async function googleGenerate({system="",prompt="",maxTokens=8000}){
+  const key=await config.get("GOOGLE_API_KEY");
+  if(!key) throw new Error("GOOGLE_API_KEY is not configured.");
+  const url="https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key="+encodeURIComponent(key);
+  const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({
+    systemInstruction:{parts:[{text:String(system)}]},
+    contents:[{role:"user",parts:[{text:String(prompt)}]}],
+    generationConfig:{maxOutputTokens:Math.min(Number(maxTokens)||8000,12000),temperature:0.2}
+  })});
+  const j=await r.json();
+  if(!r.ok) throw new Error("Gemini "+r.status+": "+String(j?.error?.message||"request failed"));
+  const parts=j?.candidates?.[0]?.content?.parts||[];
+  const text=parts.map(p=>p?.text||"").filter(Boolean).join("\n").trim();
+  if(!text) throw new Error("Gemini returned no text.");
+  return {text,usage:j?.usageMetadata||null};
+}
 
 export const access = "public";
 export const methods = ["POST"];
@@ -58,7 +75,7 @@ async function research(query){
 }
 
 async function generateDraft(request, plan, evidence){
-  const r=await ai.generateText({
+  const r=await googleGenerate({
     model:"gemini",
     purpose:"haxbro-builder-draft",
     maxTokens:9000,
