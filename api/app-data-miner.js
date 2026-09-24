@@ -14,7 +14,7 @@ function fallback(message,history){
   const t=clean(message).toLowerCase(),h=clean(history,7000).toLowerCase(),combined=t+" "+h;
   const open=/^\s*(?:please\s+)?open\s+(?:the\s+)?app\s*maker\s*$/i.test(t);
   const build=/\b(?:make|build|create|develop|design|generate|start|forge|ship)\b/.test(t)&&/\b(?:app|application|website|web\s*app|dashboard|portal|platform|tool|software|ai|assistant|agent|bot|game|product)\b/.test(t);
-  const firstPerson=/\b(?:i|we)\s+(?:want|need|would like|am trying)\s+to\s+(?:make|build|create|develop|design|generate)\b/.test(t);
+  const firstPerson=/\b(?:i|we)\s+(?:want|need|would like|am trying)\s+to\s+(?:make|build|create|develop|design|generate)\b/.test(t)||/\b(?:i|we)\s+wanna\s+(?:make|build|create|develop|design|generate)\b/.test(t);
   const contextBuild=/\b(?:i|we)\s+(?:want|need|would like)\b[\s\S]{0,180}\b(?:app|dashboard|website|ai|assistant|agent|product)\b/.test(combined)&&/\b(?:make|build|create|develop|design|generate|start)\b/.test(combined);
   const explicitNo=/\b(?:don\x27t|do not|dont|never|not)\b[\s\S]{0,80}\b(?:implement|build|create|make|generate)\b/.test(t);
   if(open)return{route:"app-maker",action:"open",wantsApp:false,confidence:.99,reason:"explicit workspace-open command"};
@@ -44,7 +44,7 @@ export default async function(req,res){
     result.route="chat";result.action="discuss";result.wantsApp=false;result.confidence=.96;
   }
   /* A desire to create is an App Maker conversation opener, not permission to build yet. */
-  if(/^\s*(?:i|we)\s+(?:want|need|would like|am trying)\s+to\s+(?:make|build|create|develop|design|generate)\b/i.test(message) && result.route==="app-maker"){
+  if(/^(?:\s*)(?:i|we)\s+(?:(?:want|need|would like|am trying)\s+to\s+|wanna\s+)(?:make|build|create|develop|design|generate)\b/i.test(message) && result.route==="app-maker"){
     result.action="open";result.wantsApp=true;result.confidence=Math.max(Number(result.confidence)||0,.9);
   }
   return res.json({ok:true,...result,source,engine:"HAxBRO APP DATA MINER",fallback:"KAI semantic/local fallback"});
