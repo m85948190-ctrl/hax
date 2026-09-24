@@ -17,7 +17,7 @@ export default async function(req,res){
   if(req.method!=="POST")return res.status(405).json({error:"POST required"});
   const query=clean(req.body?.query,700);if(!query)return res.status(400).json({error:"query required"});
   try{
-    const searchHtml=await browser.html("https://html.duckduckgo.com/html/?q="+encodeURIComponent(query));
+    const sr=await fetch("https://html.duckduckgo.com/html/?q="+encodeURIComponent(query),{headers:{"user-agent":"Mozilla/5.0 HAxBRO-KAI-Web"}});if(!sr.ok)throw new Error("search HTTP "+sr.status);const searchHtml=await sr.text();
     const links=linksFrom(searchHtml).slice(0,5);
     const pages=await Promise.all(links.map(async x=>{try{return {...x,text:pageText(await browser.html(x.url))}}catch{return {...x,text:""}}}));
     return res.json({ok:true,engine:"KAI WEB ENGINE",query,sources:pages.filter(x=>x.text).slice(0,5)});
