@@ -138,7 +138,8 @@
       if(state.model!=='kai'||!state.preparing)return;
       const p=e.detail||{},b=send();
       if(b&&Number.isFinite(Number(p.progress))){
-        const n=Math.max(0,Math.min(100,Number(p.progress)));
+        const incoming=Math.max(0,Math.min(100,Number(p.progress)));
+        const n=Math.max(state.initProgress,incoming);
         state.initProgress=n; button('download',n);
         const status=String(p.status||'').toLowerCase();
         const file=p.file?String(p.file).split('/').pop():'';

@@ -31,7 +31,7 @@ const KAI51_VERSION='1.0';
       worker=new Worker(URL.createObjectURL(blob));
       worker.onmessage=e=>{
         const d=e.data||{};
-        if(d.type==='progress'){const p=d.progress||{};const raw=Number(p.progress??p.loaded??0);const total=Number(p.total??0);const pct=Number.isFinite(raw)?(total>0&&raw<=1?raw*100:(raw<=1?raw*100:raw)):0;emit('haxbro:kai-local-progress',{...p,progress:Math.max(0,Math.min(100,pct)),status:String(p.status||p.file||'Downloading')});}
+        if(d.type==='progress'){const p=(d.progress&&typeof d.progress==='object')?d.progress:{};const raw=Number(p.progress);const loaded=Number(p.loaded);const total=Number(p.total);let pct=0;if(Number.isFinite(loaded)&&Number.isFinite(total)&&total>0){pct=(loaded/total)*100;}else if(Number.isFinite(raw)){pct=raw<=1?raw*100:raw;}else if(String(p.status||'').toLowerCase()==='done'||String(p.status||'').toLowerCase()==='ready'){pct=100;}else{pct=1;}emit('haxbro:kai-local-progress',{...p,progress:Math.max(0,Math.min(100,pct)),status:String(p.status||'progress'),file:String(p.file||'')});}
         if(d.type==='ready'){ready=true;loading=false;resolve(true);preparePromise=null;emit('haxbro:kai-local-ready')}
         if(d.type==='fatal'){loading=false;ready=false;resolve(false);preparePromise=null;emit('haxbro:kai-local-error',d.error)}
         if(d.id&&queue.has(d.id)){const r=queue.get(d.id);queue.delete(d.id);d.type==='result'?r(d.text):r(null)}
