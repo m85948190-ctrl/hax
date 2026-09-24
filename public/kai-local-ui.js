@@ -79,7 +79,9 @@
   async function runLocal(value){
     const api=window.HAxBROLocalKai;
     if(!api)return false;
-    state.activeProfile=api.profileFor?.(value)||'light';
+    // Deterministic/simple requests never need KAI 51 initialization or model inference.
+    const trivialLocal=/^\s*[0-9](?:[0-9+*%().\s-]{0,80})\s*$/.test(value)||/^(hi|hello|hey|yo|sup|thanks|thank you|ok|okay)\b/i.test(value);
+    state.activeProfile=trivialLocal?'light':(api.profileFor?.(value)||'light');
     const orchestration=window.HAxBROKai51?.buildPlan?.(value,localStorage.getItem('haxbro_username')||'anonymous-device');
     const target=orchestration?.localCapability||'';
     const lower=String(value||'').toLowerCase();

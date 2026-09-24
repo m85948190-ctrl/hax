@@ -57,6 +57,7 @@
 
   const complexityProfile=text=>{
     const t=String(text||'').trim().toLowerCase();
+    if(/^\s*[0-9](?:[0-9+*%().\s-]{0,80})\s*$/.test(t))return'light';
     if(/^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|thanks|thank you|ok|okay)\b/.test(t))return'light';
     if(t.length<140&&!/https?:\/\//.test(t)&&!/\b(code|debug|research|investigate|analyze|security|cyber|app|build|create|compare|explain deeply|latest|today|current|project|prompt|decode|encode)\b/.test(t))return'light';
     return'heavy';
@@ -81,7 +82,7 @@
     const trivial=/^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|thanks|thank you|ok|okay)\b/i.test(text);
     if(trivial)return {response:/^(thanks|thank you|ok|okay)\b/i.test(text)?'You got it.':'Hey! 👋 I’m KAI. What are we working on?',provider:'KAI LOCAL',model:'deterministic-local',profile:'light',local:true,sources:[]};
     // Native KAI capability layer: deterministic tasks bypass the small local model.
-    const math=text.match(/^\s*(?:what is|calculate|compute|solve)\s+([0-9+*%().\s-]+)\??\s*$/i)||text.match(/^\s*([0-9][0-9+*%().\s-]{1,80})\s*$/);
+    const math=text.match(/^\s*(?:what is|calculate|compute|solve)\s+([0-9+*%().\s-]+)\??\s*$/i)||text.match(/^\s*([0-9](?:[0-9+*%().\s-]{0,80}))\s*$/);
     if(math){try{const expr=math[1].trim();if(/^[0-9+*%().\s-]+$/.test(expr)){const value=Function('"use strict";return ('+expr+')')();if(Number.isFinite(value))return {response:String(value),provider:'KAI LOCAL',model:'deterministic-math',profile:'light',local:true,sources:[]}}}catch{}}
     const lower=text.toLowerCase();
     if(/^(what can you do|what are you capable of|help me)\??$/i.test(text))return {response:'I’m KAI, HAxBRO’s local intelligence runtime. I can reason, explain, code, analyze, build with native HAxBRO workspaces, encode/decode, and use browser-local memory. Light reasoning is the default; deeper processing is reserved for genuinely complex or explicitly deep requests.',provider:'KAI LOCAL',model:'deterministic-capability',profile:'light',local:true,sources:[]};
