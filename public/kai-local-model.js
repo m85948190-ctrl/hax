@@ -1,6 +1,6 @@
 (() => {
-  // Smaller first-use model: materially faster to retrieve while preserving a local KAI runtime.
-  const MODEL = 'onnx-community/SmolLM2-135M-Instruct';
+  // Full local KAI foundation. It initializes in the background and never blocks first response.
+  const MODEL = 'onnx-community/SmolLM2-360M-Instruct';
 // KAI 51 foundation: one persistent browser-local runtime per user/device.
 const KAI51_VERSION='1.0';
   const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.2/+esm';
@@ -31,7 +31,7 @@ const KAI51_VERSION='1.0';
       worker=new Worker(URL.createObjectURL(blob));
       worker.onmessage=e=>{
         const d=e.data||{};
-        if(d.type==='progress')emit('haxbro:kai-local-progress',d.progress||{});
+        if(d.type==='progress'){const p=d.progress||{};const raw=Number(p.progress??p.loaded??0);const total=Number(p.total??0);const pct=Number.isFinite(raw)?(total>0&&raw<=1?raw*100:(raw<=1?raw*100:raw)):0;emit('haxbro:kai-local-progress',{...p,progress:Math.max(0,Math.min(100,pct)),status:String(p.status||p.file||'Downloading')});}
         if(d.type==='ready'){ready=true;loading=false;resolve(true);preparePromise=null;emit('haxbro:kai-local-ready')}
         if(d.type==='fatal'){loading=false;ready=false;resolve(false);preparePromise=null;emit('haxbro:kai-local-error',d.error)}
         if(d.id&&queue.has(d.id)){const r=queue.get(d.id);queue.delete(d.id);d.type==='result'?r(d.text):r(null)}

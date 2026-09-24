@@ -7,22 +7,26 @@
     if(el)return el;
     el=document.createElement('div');el.id='kaiInitOverlay';el.className='kai-init-overlay';el.setAttribute('aria-hidden','true');
     el.innerHTML='<div class="kai-init-card"><div class="kai-init-orbit"><span id="kaiInitPercent" class="kai-init-percent">0%</span></div><div class="kai-init-title">KAI 51 · FIRST-USE INITIALIZATION</div><div id="kaiInitStatus" class="kai-init-status">Connecting to the model server…</div><div class="kai-init-track"><div id="kaiInitFill" class="kai-init-fill"></div></div><div class="kai-init-hint">The model is downloaded once and cached on this device. Do not close this tab.</div></div>';
+    if(!document.getElementById('kai51InlineStyle')){const s=document.createElement('style');s.id='kai51InlineStyle';s.textContent='@keyframes kaiRingSpin{to{transform:rotate(360deg)}}';document.head.appendChild(s)}
+    el.style.pointerEvents='none';
+    el.style.position='fixed';el.style.inset='0';el.style.zIndex='99999';el.style.display='flex';el.style.alignItems='center';el.style.justifyContent='center';el.style.opacity='0';el.style.visibility='hidden';el.style.transition='opacity .7s ease,visibility .7s ease';el.style.background='rgba(247,250,252,.72)';el.style.backdropFilter='blur(10px)';
+    el.innerHTML='<div class="kai-init-card" style="width:min(390px,calc(100vw - 40px));padding:28px 26px 24px;border:1px solid rgba(0,170,220,.24);border-radius:24px;background:rgba(255,255,255,.94);box-shadow:0 24px 80px rgba(0,80,120,.16);text-align:center"><div class="kai-init-orbit" style="width:76px;height:76px;margin:0 auto 16px;border-radius:50%;border:4px solid rgba(0,180,230,.14);border-top-color:#00bde8;border-right-color:#00d9ff;animation:kaiRingSpin .8s linear infinite;position:relative"><span id="kaiInitPercent" class="kai-init-percent" style="font:900 17px/1 ui-monospace,monospace;color:#087f9f;position:absolute;inset:0;display:grid;place-items:center">0%</span></div><div class="kai-init-title" style="font:900 13px/1.2 ui-monospace,monospace;letter-spacing:.12em;color:#102532">KAI 51 · LOCAL RUNTIME</div><div id="kaiInitStatus" class="kai-init-status" style="margin-top:7px;font:600 11px/1.4 ui-monospace,monospace;color:#5c7380;min-height:16px">Warming in background…</div><div class="kai-init-track" style="height:7px;margin-top:18px;border-radius:99px;background:rgba(0,160,210,.11);overflow:hidden"><div id="kaiInitFill" class="kai-init-fill" style="height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#00a9df,#00e0ff,#00a9df);transition:width .45s ease"></div></div><div class="kai-init-hint" style="margin-top:12px;font:600 9px/1.4 ui-monospace,monospace;color:#78909b">This full-capacity local model warms once. You can keep chatting immediately.</div></div>';
     document.body.appendChild(el);return el;
   }
   function overlay(mode='show',progress=0,status='Retrieving KAI 51…'){
     const el=initOverlay(),pct=Math.max(0,Math.min(100,Math.round(Number(progress)||0)));
     const fill=$('kaiInitFill'),label=$('kaiInitPercent'),copy=$('kaiInitStatus');
     if(fill)fill.style.width=pct+'%';if(label)label.textContent=pct+'%';if(copy)copy.textContent=status;
-    if(mode==='show'){el.classList.remove('is-leaving');el.classList.add('is-visible');el.setAttribute('aria-hidden','false')}
-    if(mode==='hide'){el.classList.remove('is-visible');el.classList.add('is-leaving');el.setAttribute('aria-hidden','true');setTimeout(()=>el.remove(),1100)}
+    if(mode==='show'){el.style.opacity='1';el.style.visibility='visible';el.classList.remove('is-leaving');el.classList.add('is-visible');el.setAttribute('aria-hidden','false')}
+    if(mode==='hide'){el.style.opacity='0';el.style.visibility='hidden';el.classList.remove('is-visible');el.classList.add('is-leaving');el.setAttribute('aria-hidden','true');setTimeout(()=>el.remove(),900)}
   }
   function button(mode='send',progress=0){
     const b=send(); if(!b)return;
     b.classList.remove('kai-download-mode','kai-download-loading','kai-download-ready','kai-download-error');
     if(mode==='download'){
       b.classList.add('kai-download-mode','kai-download-loading');
-      b.disabled=true;
-      b.setAttribute('aria-label','Preparing KAI 51');
+      b.disabled=false;
+      b.setAttribute('aria-label','Send while KAI 51 warms in background');
       const pct=Math.max(0,Math.min(100,Math.round(progress)));
       b.innerHTML='<span class="kai-download-ring" aria-hidden="true"></span><span class="kai-download-text"><span class="kai-download-percent">'+pct+'%</span></span>';
     } else if(mode==='ready'){
@@ -68,26 +72,28 @@
     if(/\b(x pro|deep analysis|investigate this|analyze this deeply)\b/.test(lower) && window.HAxBRODeepX?.openWithTarget){
       window.HAxBRODeepX.openWithTarget(value); return true;
     }
-    if(!api.status().ready){
-      state.preparing=true;
-      window.addMessage?.('KAI 51 is initializing for first use. The real model download has started and will be cached on this device.','bot');
-      button('download',0);overlay('show',0,'Connecting to the KAI 51 model server…');
-      const ok=await api.prepare();
-      state.preparing=false;
-      if(!ok){
-        overlay('show',state.initProgress,'KAI 51 could not finish retrieving the model. Retry to resume.');
-        window.addMessage?.('KAI 51 initialization failed. The model was not marked ready. Retry to resume the real download.','bot');
-        button('error');
-        return true;
-      }
-      overlay('show',100,'KAI 51 is ready. Finalizing local cache…');
-      setTimeout(()=>overlay('hide',100,'KAI 51 ready'),420);
-      window.addMessage?.('KAI 51 is ready. Ask anything.','bot');
+    // Never make the user wait for a browser model download. KAI 51's full local model warms in the background,
+    // while the normal server compute path answers immediately. The local runtime becomes a zero-network fallback once ready.
+    if(!api.status().ready && !state.preparing){
+      state.preparing=true; state.initProgress=0;
+      window.addMessage?.('KAI 51 local runtime is warming in the background. Your response does not wait for the download.','bot');
+      button('download',0); overlay('show',0,'Warming the full KAI 51 local runtime in background…');
+      api.prepare().then(ok=>{
+        state.preparing=false;
+        if(ok){overlay('show',100,'KAI 51 local runtime ready. Switching to instant local fallback…');setTimeout(()=>overlay('hide',100),420);button('ready');window.addMessage?.('KAI 51 local runtime is ready on this device.','bot');}
+        else {overlay('hide');button('send');window.addMessage?.('KAI 51 local runtime could not finish warming. Server KAI remains available.','bot');}
+      });
     }
-    button('ready');
     if(window.setBusy)window.setBusy(true);
     try{
-      const result=await api.respond(value);
+      let result=null;
+      if(api.status().ready){
+        result=await api.respond(value);
+      } else {
+        const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:value,mode:'normal',username:localStorage.getItem('haxbro_username')||'',kaiId:'KAI51',modelChoice:'auto'})});
+        const d=await r.json().catch(()=>({}));
+        if(r.ok&&d.response) result={response:d.response,provider:d.provider||'KAI 51 compute',sources:d.sources||[]};
+      }
       if(result?.response){
         window.kaiActivityFinish?.({sources:result.sources||[]});
         window.addMessage?.(result.response,'bot');
@@ -107,7 +113,7 @@
   function intercept(e){
     if(state.model!=='kai')return;
     const value=String($('promptInput')?.value||'').trim();
-    if(!value || state.preparing)return;
+    if(!value)return;
     e.preventDefault();e.stopImmediatePropagation();
     window.addMessage?.(value,'user');
     $('promptInput').value='';
