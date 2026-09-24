@@ -133,8 +133,7 @@
     e.preventDefault();e.stopImmediatePropagation();
     window.addMessage?.(value,'user');
     $('promptInput').value='';
-    if(window.setBusy)window.setBusy(true);
-    Promise.resolve(runLocal(value)).finally(()=>{if(window.setBusy)window.setBusy(false)});
+    Promise.resolve(runLocal(value));
   }
   function beginWarmup(profile='light'){
     const api=window.HAxBROLocalKai;

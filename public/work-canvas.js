@@ -6,4 +6,4 @@
   }
   return false;
 }
-function close(){root.classList.remove('open');document.body.style.overflow=''}root.querySelector('.hax-exact-close').onclick=close;window.HAxBROFutureMaker={open,close,modify,modifyCurrent:modify};const bind=id=>{const b=document.getElementById(id);if(b&&!b.dataset.haxAppMakerBound){b.dataset.haxAppMakerBound='1';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()})}};['appMakerBtn','mobileAppMakerBtn','shortcutAppMaker','shortcutBuildAI'].forEach(bind)})();
+function close(){root.classList.remove('open');document.body.style.overflow=''}root.querySelector('.hax-exact-close').onclick=close;window.addEventListener('haxbro:open-app-maker',e=>open(String(e.detail?.prompt||''),!!e.detail?.autoBuild));window.HAxBROFutureMaker={open,close,modify,modifyCurrent:modify};const bind=id=>{const b=document.getElementById(id);if(b&&!b.dataset.haxAppMakerBound){b.dataset.haxAppMakerBound='1';b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();open()})}};['appMakerBtn','mobileAppMakerBtn','shortcutAppMaker','shortcutBuildAI'].forEach(bind)})();
