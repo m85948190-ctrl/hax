@@ -1,7 +1,7 @@
 (() => {
   const PROFILES={
-    light:{id:'onnx-community/SmolLM2-135M-Instruct-ONNX',label:'KAI FAST',maxTokens:64,timeout:9000},
-    heavy:{id:'onnx-community/SmolLM2-360M-Instruct-ONNX',label:'KAI 51',maxTokens:320,timeout:18000}
+    light:{id:'onnx-community/SmolLM2-135M-Instruct-ONNX',label:'KAI FAST',maxTokens:128,timeout:22000},
+    heavy:{id:'onnx-community/SmolLM2-360M-Instruct-ONNX',label:'KAI 51',maxTokens:512,timeout:35000}
   };
   let worker=null,readyProfiles=new Set(),loadingProfiles=new Map(),queue=new Map(),seq=0;
   const clean=(v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
@@ -80,6 +80,14 @@
     const text=clean(userPrompt,5000).trim();if(!text)return null;
     const trivial=/^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|thanks|thank you|ok|okay)\b/i.test(text);
     if(trivial)return {response:/^(thanks|thank you|ok|okay)\b/i.test(text)?'You got it.':'Hey! 👋 I’m KAI. What are we working on?',provider:'KAI LOCAL',model:'deterministic-local',profile:'light',local:true,sources:[]};
+    // Native KAI capability layer: deterministic tasks bypass the small local model.
+    const math=text.match(/^\s*(?:what is|calculate|compute|solve)\s+([0-9+*%().\s-]+)\??\s*$/i)||text.match(/^\s*([0-9][0-9+*%().\s-]{1,80})\s*$/);
+    if(math){try{const expr=math[1].trim();if(/^[0-9+*%().\s-]+$/.test(expr)){const value=Function('"use strict";return ('+expr+')')();if(Number.isFinite(value))return {response:String(value),provider:'KAI LOCAL',model:'deterministic-math',profile:'light',local:true,sources:[]}}}catch{}}
+    const lower=text.toLowerCase();
+    if(/^(what can you do|what are you capable of|help me)\??$/i.test(text))return {response:'I’m KAI, HAxBRO’s local intelligence runtime. I can reason, explain, code, analyze, build with native HAxBRO workspaces, encode/decode, and use browser-local memory. Light reasoning is the default; deeper processing is reserved for genuinely complex or explicitly deep requests.',provider:'KAI LOCAL',model:'deterministic-capability',profile:'light',local:true,sources:[]};
+    const typoMap={helo:'hello',whre:'where',calcultor:'calculator',wht:'what',hw:'how',plz:'please'};
+    if(/^[a-z]{2,20}$/i.test(text)&&typoMap[lower])return {response:'Did you mean “'+typoMap[lower]+'”?',provider:'KAI LOCAL',model:'deterministic-clarifier',profile:'light',local:true,sources:[]};
+    if(/^[a-z]{2,20}$/i.test(text)&&!['hello','hey','hi','thanks','okay'].includes(lower))return {response:'I’m not sure what “'+text+'” refers to yet. Give me a little context and I’ll work it out instead of inventing a meaning.',provider:'KAI LOCAL',model:'deterministic-clarifier',profile:'light',local:true,sources:[]};
     const explicitResearch=/\b(?:do|please|can you|could you)\s+(?:a\s+)?(?:deep\s+)?research\b|\bdeep\s+research\b|\b(?:research|investigate|look\s+up)\s+(?:this|that|it|the)\b/i.test(text);
     const freshness=/\b(?:latest|today|current|right now|news|recent|this week|this month|up to date)\b/i.test(text);
     const forced=forcedMode==='light'?'light':forcedMode==='deep'?'heavy':null;
