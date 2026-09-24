@@ -152,11 +152,7 @@
       }));
       document.addEventListener('click',e=>{if(!menu.hidden&&!menu.contains(e.target)&&e.target!==picker){menu.hidden=true;picker.setAttribute('aria-expanded','false')}});
     }
-    document.addEventListener('click',e=>{if(e.target.closest('#sendBtn'))intercept(e)},true);
-    document.addEventListener('submit',e=>{if(e.target?.id==='chatForm')intercept(e)},true);
-    document.addEventListener('keydown',e=>{
-      if(e.target?.id==='promptInput'&&e.key==='Enter'&&!e.shiftKey&&state.model==='kai')intercept(e);
-    },true);
+    /* The main KAI orchestrator owns Send/Enter. This UI module only renders local-model state; it must never block workspace routing or API recovery. */
     window.addEventListener('haxbro:kai-local-progress',e=>{
       if(state.model!=='kai'||!state.preparing)return;
       const p=e.detail||{}; if((p.profile||'light')!==state.activeProfile || p.installed)return;
