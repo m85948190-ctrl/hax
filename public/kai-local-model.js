@@ -18,17 +18,7 @@ const KAI51_VERSION='1.0';
     if(preparePromise)return preparePromise;
     loading=true;
     preparePromise=new Promise(resolve=>{
-      const source = "import {pipeline,env} from '" + CDN + "';try{"
-        + "env.allowRemoteModels=true;env.allowLocalModels=false;env.useBrowserCache=true;env.useFSCache=true;"
-        + "let adapter=null;try{adapter=typeof navigator!=='undefined'&&navigator.gpu?await navigator.gpu.requestAdapter({powerPreference:'high-performance'}):null}catch(_){}const hasGPU=!!adapter;let device=hasGPU?'webgpu':'wasm';let dtype=hasGPU?'q4f16':'q4';let gen;const report=(p)=>postMessage({type:'progress',progress:{status:String(p?.status||''),name:String(p?.name||''),file:String(p?.file||''),progress:Number.isFinite(Number(p?.progress))?Number(p.progress):undefined,loaded:Number.isFinite(Number(p?.loaded))?Number(p.loaded):undefined,total:Number.isFinite(Number(p?.total))?Number(p.total):undefined}});"
-        + "if(hasGPU){try{gen=await pipeline('text-generation','" + MODEL + "',{dtype:'q4f16',device:'webgpu',progress_callback:report});}catch(first){device='wasm';dtype='q4';gen=await pipeline('text-generation','" + MODEL + "',{dtype:'q4',device:'wasm',progress_callback:report});}}else{gen=await pipeline('text-generation','" + MODEL + "',{dtype:'q4',device:'wasm',progress_callback:(p)=>postMessage({type:'progress',progress:p})});}"
-        + "postMessage({type:'ready',device,dtype});"
-        + "onmessage=async e=>{try{const out=await gen(e.data.prompt,{max_new_tokens:e.data.maxTokens||320,temperature:.25,do_sample:true});"
-        + "const text=Array.isArray(out)?(out[0]?.generated_text||''):String(out?.generated_text||out||'');"
-        + "postMessage({type:'result',id:e.data.id,text});}catch(err){postMessage({type:'error',id:e.data.id,error:String(err?.message||err))}}};"
-        + "}catch(err){postMessage({type:'fatal',error:String(err?.stack||err?.message||err)})}";
-      const blob=new Blob([source],{type:'text/javascript'});
-      worker=new Worker(URL.createObjectURL(blob),{type:'module'});
+      worker=new Worker('/kai-local-worker.js',{type:'module'});
       worker.onerror=err=>{loading=false;ready=false;preparePromise=null;resolve(false);emit('haxbro:kai-local-error',String(err?.message||'KAI worker failed to start'));};
       worker.onmessage=e=>{
         const d=e.data||{};
