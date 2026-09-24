@@ -21,8 +21,7 @@ required = true
 expose = true
 description = "Tertiary OpenRouter key for HAxBRO KAI failover"
 
-[auth]
-enabled = false
+# Authentication is intentionally disabled; HAxBRO uses browser-local username identity.
 
 [[secret]]
 name = "OPENAI_API_KEY"
