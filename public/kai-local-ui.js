@@ -126,15 +126,7 @@
     }
     return true;
   }
-  function intercept(e){
-    if(state.model!=='kai')return;
-    const value=String($('promptInput')?.value||'').trim();
-    if(!value)return;
-    e.preventDefault();e.stopImmediatePropagation();
-    window.addMessage?.(value,'user');
-    $('promptInput').value='';
-    Promise.resolve(runLocal(value));
-  }
+  /* Main chat is owned by public/script.js. Do not intercept submit/click here: that used to bypass KAI's real router and made Decoder/Encoder/Expert/App Maker handoffs appear broken. */
   function beginWarmup(profile='light'){
     const api=window.HAxBROLocalKai;
     if(!api||state.model!=='kai'||state.preparing||api.status().profile===profile)return;
