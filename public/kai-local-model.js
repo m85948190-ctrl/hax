@@ -77,6 +77,11 @@
 
   const scrape=async()=>null; // Disabled: local-only KAI does not use server/web retrieval.
 
+  const conversationalMap={yu:'you',u:'you',ur:'your',yr:'your',bruh:'bro',bhai:'bro',helo:'hello',hllo:'hello',heyoo:'hey',thx:'thanks',thanx:'thanks',pls:'please',plz:'please',yep:'yes',yup:'yes',nope:'no',nah:'no'};
+  const conversationalTokens=new Set(['i','me','my','mine','you','your','yours','we','us','our','ours','he','him','his','she','her','hers','they','them','their','theirs','it','this','that','what','why','how','where','when','who','which','bro','bruh','bhai','u','yu','ur','yo','hey','hi','hello','thanks','thank','okay','ok','yes','yeah','yep','yup','no','nope','nah','please','pls','plz']);
+  const normalizeConversation=value=>{let changed=false;const text=String(value||'').trim().split(/(\\s+)/).map(part=>{if(!/^[a-z]+$/i.test(part))return part;const key=part.toLowerCase();if(Object.prototype.hasOwnProperty.call(conversationalMap,key)){changed=true;return conversationalMap[key]}return part}).join('');return {text,changed}};
+  const isConversationalInput=value=>{const words=String(value||'').trim().toLowerCase().split(/\\s+/).filter(Boolean);return words.length<=4&&words.every(w=>conversationalTokens.has(w.replace(/[^a-z]/g,''))) };
+
   async function respond(userPrompt,forcedMode='auto'){
     const text=clean(userPrompt,5000).trim();if(!text)return null;
     const trivial=/^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|thanks|thank you|ok|okay)\b/i.test(text);
@@ -86,6 +91,16 @@
     if(math){try{const expr=math[1].trim();if(/^[0-9+*%().\s-]+$/.test(expr)){const value=Function('"use strict";return ('+expr+')')();if(Number.isFinite(value))return {response:String(value),provider:'KAI LOCAL',model:'deterministic-math',profile:'light',local:true,sources:[]}}}catch{}}
     const lower=text.toLowerCase();
     if(/^(what can you do|what are you capable of|help me)\??$/i.test(text))return {response:'I’m KAI, HAxBRO’s local intelligence runtime. I can reason, explain, code, analyze, build with native HAxBRO workspaces, encode/decode, and use browser-local memory. Light reasoning is the default; deeper processing is reserved for genuinely complex or explicitly deep requests.',provider:'KAI LOCAL',model:'deterministic-capability',profile:'light',local:true,sources:[]};
+    const normalized=normalizeConversation(text);
+    const normalizedText=normalized.text.trim();
+    const normalizedLower=normalizedText.toLowerCase();
+    if(isConversationalInput(normalizedLower)){
+      if(/^(bro|bruh|bhai)$/.test(normalizedLower))return {response:'Yeah bro — I’m here. What are we working on?',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
+      if(/^(yu|u|you)$/.test(lower))return {response:'Yeah bro — I’m with you. Tell me what you want to do.',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
+      if(/^(i|me|we|us|my|our)$/.test(normalizedLower))return {response:'I’m listening, bro. Keep going.',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
+      if(/^(why|what|how|where|when|who|which)$/.test(normalizedLower))return {response:'I’m with you, bro — give me the thing you mean and I’ll work it out from context.',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
+      if(normalized.changed&&/^(hello|hey|thanks|please|yes|no|okay|ok)$/.test(normalizedLower))return {response:normalizedLower==='thanks'?'You got it.':'Got you, bro.',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
+    }
     const typoMap={helo:'hello',whre:'where',calcultor:'calculator',wht:'what',hw:'how',plz:'please'};
     if(/^[a-z]{2,20}$/i.test(text)&&typoMap[lower])return {response:'Did you mean “'+typoMap[lower]+'”?',provider:'KAI LOCAL',model:'deterministic-clarifier',profile:'light',local:true,sources:[]};
     if(/^[a-z]{2,20}$/i.test(text)&&!['hello','hey','hi','thanks','okay'].includes(lower))return {response:'I’m not sure what “'+text+'” refers to yet. Give me a little context and I’ll work it out instead of inventing a meaning.',provider:'KAI LOCAL',model:'deterministic-clarifier',profile:'light',local:true,sources:[]};
@@ -95,7 +110,7 @@
     const profile=forced||((explicitResearch||freshness||complexityProfile(text)==='heavy')?'heavy':'light');
     const sources=[];
     const m=readMemory();
-    const prompt='You are KAI 51, HAxBRO AI\'s private local intelligence runtime. Start with a lightweight interpretation. Only treat this as a deep task when the user explicitly asks for research/deep research, asks for an elaborate or deep explanation, requests current/latest information, or the task is genuinely complex. For short, ambiguous, misspelled, invented, or unfamiliar words, do not fail or invent a definition: briefly say what you can infer and ask what the user means. Never output an empty response. Use the local model and browser-local memory only. Do not call, mention, simulate, or depend on any API, provider, server model, web-search service, or external intelligence. USER: '+text+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nRespond directly.';
+    const prompt='You are KAI 51, HAxBRO AI\'s private local intelligence runtime. Understand ordinary conversation before treating words as unknown. Correct obvious typos and casual shorthand from context, such as yu/u→you, ur/yr→your, bro/bruh/bhai as a conversational address, and helo→hello. Do not ask what common pronouns, question words, greetings, slang, or obvious typos mean. For short conversational messages, respond naturally and briefly instead of producing dictionary definitions. Only treat a token as genuinely unknown when it is actually opaque or unsupported by context. Start with a lightweight interpretation. Only treat this as a deep task when the user explicitly asks for research/deep research, asks for an elaborate or deep explanation, requests current/latest information, or the task is genuinely complex. Never output an empty response. Use the local model and browser-local memory only. Do not call, mention, simulate, or depend on any API, provider, server model, web-search service, or external intelligence. USER: '+normalizedText+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nRespond directly.';
     const answer=await generate(prompt,PROFILES[profile].maxTokens,profile);
     if(!answer)return null;
     if(sources.length){m.sources.push(...sources.map(s=>({url:s.url,title:s.title,at:Date.now()})));writeMemory(m)}
