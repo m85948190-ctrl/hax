@@ -43,6 +43,43 @@ async function googleSearch(query){
   });
 }
 
+function queryVariants(query){
+  const q=clean(query,700).trim();
+  if(!q)return [];
+  const short=/^[a-z0-9][a-z0-9._-]{1,40}$/i.test(q);
+  if(!short)return [q];
+  return [
+    `"${q}" meaning`,
+    `"${q}" definition`,
+    `"${q}" slang`,
+    `"${q}" abbreviation`,
+    `"${q}" typo`,
+    `"${q}"`
+  ];
+}
+
+async function multiSearch(query){
+  const variants=queryVariants(query);
+  const googleResults=await Promise.all(variants.map(async q=>{
+    try{return await googleSearch(q)}catch{return []}
+  }));
+  const links=[];const seen=new Set();
+  for(const list of googleResults)for(const x of list){
+    if(!seen.has(x.url)){seen.add(x.url);links.push(x)}
+    if(links.length>=12)break;
+  }
+  if(links.length)return {links,engine:"Google Web"};
+  const fallbackResults=await Promise.all(variants.slice(0,4).map(async q=>{
+    try{return await ddgSearch(q)}catch{return []}
+  }));
+  const fallback=[];const seenFallback=new Set();
+  for(const list of fallbackResults)for(const x of list){
+    if(!seenFallback.has(x.url)){seenFallback.add(x.url);fallback.push(x)}
+    if(fallback.length>=12)break;
+  }
+  return {links:fallback,engine:fallback.length?"Fallback Web Search":"Web Search"};
+}
+
 async function ddgSearch(query){
   const sr=await fetch("https://html.duckduckgo.com/html/?q="+encodeURIComponent(query),{headers:{"user-agent":"Mozilla/5.0 HAxBRO-KAI-Web"}});
   if(!sr.ok)throw new Error("fallback search HTTP "+sr.status);
@@ -55,12 +92,11 @@ export default async function(req,res){
   if(!query)return res.status(400).json({error:"query required"});
   const mode=req.body?.mode==="deep"?"deep":"fast";
   try{
-    let links=[],engine="Google Web";
-    try{links=await googleSearch(query)}catch{links=[]}
-    if(!links.length){links=await ddgSearch(query);engine="Fallback Web Search"}
-    const take=mode==="deep"?4:2;
+    const searched=await multiSearch(query);
+    const links=searched.links||[];
+    const take=mode==="deep"?5:4;
     const pages=await Promise.all(links.slice(0,take).map(async x=>{try{return {...x,text:pageText(await browser.html(x.url))}}catch{return {...x,text:""}}}));
-    return res.json({ok:true,engine,mode,query,sources:pages.filter(x=>x.text).slice(0,take)});
+    return res.json({ok:true,engine:searched.engine,mode,query,searchQueries:queryVariants(query),sources:pages.filter(x=>x.text).slice(0,take)});
   }catch(e){
     return res.status(502).json({ok:false,error:"KAI web search unavailable",detail:clean(e?.message,300)});
   }

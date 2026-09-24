@@ -106,7 +106,7 @@
     const normalizedText=normalized.text.trim();
     const normalizedLower=normalizedText.toLowerCase();
     // Semantic understanding is web-first; these helpers are only retained for normalization, not meaning decisions.
-    const webQuery=/^\S{2,40}$/.test(text)?'"'+text+'" meaning definition slang':text;
+    const webQuery=/^\S{2,40}$/.test(text)?text:text;
     const web=await webLookup(webQuery);
     if(web?.sources?.length){
       const webContext=web.sources.map(s=>({title:s.title,url:s.url,text:String(s.text||'').slice(0,2400)}));
@@ -120,14 +120,10 @@
     // Live web grounding is the semantic correction path; no fixed typo dictionary is used.
     if(/^[a-z]{2,40}(?:[0-9]+)?$/i.test(text)&&!['hello','hey','hi','thanks','okay'].includes(lower)){
       const web=await webLookup('"'+text+'" meaning definition slang');
-      if(web?.sources?.length){
-        const webContext=web.sources.map(s=>({title:s.title,url:s.url,text:String(s.text||'').slice(0,2400)}));
-        const m=readMemory();
-        const prompt='You are KAI 51. The user entered a term that was not confidently understood locally. Use the live web evidence below to infer what the term means in context. Do not claim certainty if the sources disagree. Answer the user directly and briefly; if it is slang, profanity, a name, meme, abbreviation, or regional expression, say so naturally. Do not invent facts. USER TERM: '+text+'\\nWEB EVIDENCE: '+JSON.stringify(webContext)+'\\nAnswer with the likely meaning and useful context. No dictionary-style refusal.';
-        const answer=await generate(prompt,192,'light');
-        if(answer)return {response:answer.replace(/^.*?assistant\\s*[:：]\\s*/i,''),provider:'KAI WEB + LOCAL',model:'web-grounded-local',profile:'light',local:true,sources:web.sources.map(s=>({url:s.url,title:s.title}))};
-      }
-      return {response:'I couldn’t get a reliable web result for “'+text+'” right now. Try adding a little context.',provider:'KAI WEB',model:'web-lookup-failed',profile:'light',local:true,sources:[]};
+      const webContext=(web?.sources||[]).map(s=>({title:s.title,url:s.url,text:String(s.text||'').slice(0,2400)}));
+      const prompt='You are KAI 51. Understand the user input before answering. First form an internal interpretation from the input and available web evidence; then analyze competing meanings, typo/abbreviation/slang possibilities, and context; then choose the most useful answer. Never use a hard-coded vocabulary list. Never turn missing web evidence into a refusal. If the web has no useful evidence, use your language ability to make the best contextual interpretation and clearly signal uncertainty only when needed. If the token is likely a typo, explain the likely intended term only when the evidence supports it. USER INPUT: '+text+'\\nWEB EVIDENCE: '+JSON.stringify(webContext)+'\\nReturn the appropriate answer to the user, not your internal analysis.';
+      const answer=await generate(prompt,192,'light');
+      if(answer)return {response:answer.replace(/^.*?assistant\\s*[:：]\\s*/i,''),provider:webContext.length?'KAI WEB + LOCAL':'KAI LOCAL',model:webContext.length?'web-grounded-local':'local-context-interpreter',profile:'light',local:true,sources:(web?.sources||[]).map(s=>({url:s.url,title:s.title}))};
     }
     const explicitResearch=/\b(?:do|please|can you|could you)\s+(?:a\s+)?(?:deep\s+)?research\b|\bdeep\s+research\b|\b(?:research|investigate|look\s+up)\s+(?:this|that|it|the)\b/i.test(text);
     const freshness=/\b(?:latest|today|current|right now|news|recent|this week|this month|up to date)\b/i.test(text);
