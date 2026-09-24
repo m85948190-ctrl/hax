@@ -1,6 +1,6 @@
 (() => {
   // Full local KAI foundation. It initializes in the background and never blocks first response.
-  const MODEL = 'onnx-community/SmolLM2-360M-Instruct';
+  const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
 // KAI 51 foundation: one persistent browser-local runtime per user/device.
 const KAI51_VERSION='1.0';
   const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.2/+esm';
@@ -18,20 +18,19 @@ const KAI51_VERSION='1.0';
     if(preparePromise)return preparePromise;
     loading=true;
     preparePromise=new Promise(resolve=>{
-      const source = "import('" + CDN + "').then(async ({pipeline})=>{"
-        + "const gen=await pipeline('text-generation','" + MODEL + "',{" 
-        + "dtype:'q4',progress_callback:(p)=>postMessage({type:'progress',progress:p})"
-        + "});"
+      const source = "import {pipeline,env} from '" + CDN + "';"
+        + "env.allowRemoteModels=true;env.allowLocalModels=false;env.useBrowserCache=true;env.useFSCache=true;"
+        + "const gen=await pipeline('text-generation','" + MODEL + "',{dtype:'q4',progress_callback:(p)=>postMessage({type:'progress',progress:p})});"
         + "postMessage({type:'ready'});"
         + "onmessage=async e=>{try{const out=await gen(e.data.prompt,{max_new_tokens:e.data.maxTokens||320,temperature:.25,do_sample:true});"
         + "const text=Array.isArray(out)?(out[0]?.generated_text||''):String(out?.generated_text||out||'');"
-        + "postMessage({type:'result',id:e.data.id,text});}catch(err){postMessage({type:'error',id:e.data.id,error:String(err?.message||err))}}};"
-        + "}).catch(err=>postMessage({type:'fatal',error:String(err?.message||err)}));";
+        + "postMessage({type:'result',id:e.data.id,text});}catch(err){postMessage({type:'error',id:e.data.id,error:String(err?.message||err))}}};";
       const blob=new Blob([source],{type:'text/javascript'});
-      worker=new Worker(URL.createObjectURL(blob));
+      worker=new Worker(URL.createObjectURL(blob),{type:'module'});
+      worker.onerror=err=>{loading=false;ready=false;preparePromise=null;resolve(false);emit('haxbro:kai-local-error',String(err?.message||'KAI worker failed to start'));};
       worker.onmessage=e=>{
         const d=e.data||{};
-        if(d.type==='progress'){const p=(d.progress&&typeof d.progress==='object')?d.progress:{};const raw=Number(p.progress);const loaded=Number(p.loaded);const total=Number(p.total);let pct=0;if(Number.isFinite(loaded)&&Number.isFinite(total)&&total>0){pct=(loaded/total)*100;}else if(Number.isFinite(raw)){pct=raw<=1?raw*100:raw;}else if(String(p.status||'').toLowerCase()==='done'||String(p.status||'').toLowerCase()==='ready'){pct=100;}else{pct=1;}emit('haxbro:kai-local-progress',{...p,progress:Math.max(0,Math.min(100,pct)),status:String(p.status||'progress'),file:String(p.file||'')});}
+        if(d.type==='progress'){const p=(d.progress&&typeof d.progress==='object')?d.progress:{};const status=String(p.status||'').toLowerCase();const raw=Number(p.progress);const loaded=Number(p.loaded);const total=Number(p.total);const pct=status==='progress_total'&&Number.isFinite(raw)?raw:(Number.isFinite(loaded)&&Number.isFinite(total)&&total>0?(loaded/total)*100:(Number.isFinite(raw)?raw:(status==='ready'||status==='done'?100:0)));emit('haxbro:kai-local-progress',{...p,progress:Math.max(0,Math.min(100,pct)),status,file:String(p.file||'')});}
         if(d.type==='ready'){ready=true;loading=false;resolve(true);preparePromise=null;emit('haxbro:kai-local-ready')}
         if(d.type==='fatal'){loading=false;ready=false;resolve(false);preparePromise=null;emit('haxbro:kai-local-error',d.error)}
         if(d.id&&queue.has(d.id)){const r=queue.get(d.id);queue.delete(d.id);d.type==='result'?r(d.text):r(null)}
