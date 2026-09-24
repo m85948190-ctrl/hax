@@ -79,11 +79,14 @@
   async function respond(userPrompt,forcedMode='auto'){
     const text=clean(userPrompt,5000).trim();if(!text)return null;
     const trivial=/^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|thanks|thank you|ok|okay)\b/i.test(text);
-    if(trivial)return {response:/^(thanks|thank you|ok|okay)\b/i.test(text)?'You got it.':`Hey! 👋 I’m KAI. What are we building?`,provider:'KAI LOCAL',model:'deterministic-local',profile:'light',local:true,sources:[]};
-    const profile='heavy';
+    if(trivial)return {response:/^(thanks|thank you|ok|okay)\b/i.test(text)?'You got it.':'Hey! 👋 I’m KAI. What are we working on?',provider:'KAI LOCAL',model:'deterministic-local',profile:'light',local:true,sources:[]};
+    const explicitResearch=/\b(?:do|please|can you|could you)\s+(?:a\s+)?(?:deep\s+)?research\b|\bdeep\s+research\b|\b(?:research|investigate|look\s+up)\s+(?:this|that|it|the)\b/i.test(text);
+    const freshness=/\b(?:latest|today|current|right now|news|recent|this week|this month|up to date)\b/i.test(text);
+    const forced=forcedMode==='light'?'light':forcedMode==='deep'?'heavy':null;
+    const profile=forced||((explicitResearch||freshness||complexityProfile(text)==='heavy')?'heavy':'light');
     const sources=[];
     const m=readMemory();
-    const prompt='You are KAI 51, HAxBRO AI\'s private local intelligence runtime. Think through the request using the local model and the user\'s browser-local memory only. Do not call, mention, simulate, or depend on any API, provider, server model, web-search service, or external intelligence. Be direct, useful, and honest about what the local runtime can determine. USER: '+text+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nRespond directly.';
+    const prompt='You are KAI 51, HAxBRO AI\'s private local intelligence runtime. Start with a lightweight interpretation. Only treat this as a deep task when the user explicitly asks for research/deep research, asks for an elaborate or deep explanation, requests current/latest information, or the task is genuinely complex. For short, ambiguous, misspelled, invented, or unfamiliar words, do not fail or invent a definition: briefly say what you can infer and ask what the user means. Never output an empty response. Use the local model and browser-local memory only. Do not call, mention, simulate, or depend on any API, provider, server model, web-search service, or external intelligence. USER: '+text+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nRespond directly.';
     const answer=await generate(prompt,PROFILES[profile].maxTokens,profile);
     if(!answer)return null;
     if(sources.length){m.sources.push(...sources.map(s=>({url:s.url,title:s.title,at:Date.now()})));writeMemory(m)}

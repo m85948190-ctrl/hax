@@ -107,7 +107,7 @@
     if(window.setBusy)window.setBusy(true);
     try{
       let result=null;
-      result=api.status().ready ? await api.respond(value) : null;
+      result=api.status().ready ? await api.respond(value,state.activeProfile==='heavy'?'deep':'light') : null;
       if(result?.response){
         window.kaiActivityFinish?.({sources:result.sources||[]});
         window.addMessage?.(result.response,'bot');
@@ -167,11 +167,10 @@
         const file=p.file?String(p.file).split('/').pop():'';
         const initializing=n>=100 && !apiStatusReady();
         if(n>=100){
-          // 100% means the model bytes are downloaded. Do not trap the user behind the overlay
-          // while Transformers.js finishes compiling the local runtime.
           state.overlayReleased=true;
           button('ready');
           overlay('hide',100,'KAI 51 initializing in background…','initializing');
+          return;
         }
         const label=initializing?'Download complete — initializing KAI 51 locally…':(status.includes('download')||status==='progress'?'Downloading '+(file||'KAI 51 model')+'…':'Retrieving KAI 51…');
         overlay('show',n,label,initializing?'initializing':'download');
