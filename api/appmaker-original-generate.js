@@ -9,20 +9,12 @@ export default async function(req,res){
   const prompt=String(req.body?.prompt||"").trim();
   if(!prompt) return res.status(400).json({error:"Describe the app you want to build."});
   try{
-    const origin=req.headers?.origin||"";
-    const base=origin && /^https?:\/\//i.test(origin) ? origin : "https://haxbro.hatchable.site";
-    const controller=new AbortController();
-    // Keep the App Maker UX inside the normal ~5s budget. The API builder gets a short window; KAI native recovery is immediate and never waits for the outer function timeout.
-    const timer=setTimeout(()=>controller.abort(),3500);
-    try{
-      const r=await fetch(base+"/api/app-builder",{method:"POST",signal:controller.signal,headers:{"content-type":"application/json"},body:JSON.stringify({prompt:prompt.slice(0,12000),username:req.body?.username||"app-maker",kaiMode:"deep",kai51Context:{mode:"KAI DEEP",workspace:"APP MAKER",goal:"Understand the product before implementation and build the requested product itself."}})});
-      const data=await r.json().catch(()=>({}));
-      if(r.ok&&Array.isArray(data?.files)&&data.files.length)return res.json(data);
-    }catch(e){
-      console.warn("App Maker API generation unavailable; using native KAI fallback",e?.name||e?.message||e);
-    }finally{clearTimeout(timer)}
+    // This endpoint is the App Maker's fast delivery path. Do not synchronously call another
+    // serverless endpoint here: nested function execution can consume the platform's outer
+    // timeout even when an AbortController is present. Build locally first so normal requests
+    // return immediately and never surface a runtime timeout.
     const fallback=buildNativeProduct(prompt,{appName:"",existing:null});
-    return res.json({ok:true,...fallback,kai:{engine:"KAI 51 App Maker",provider:"KAI Native fallback",mode:"fast-recovery"}});
+    return res.json({ok:true,...fallback,kai:{engine:"KAI 51 App Maker",provider:"KAI Native fallback",mode:"fast-native"}});
   }catch(e){
     console.error("App Maker Builder bridge error",e);
     return res.status(500).json({error:e?.message||"KAI Builder connection failed"});
