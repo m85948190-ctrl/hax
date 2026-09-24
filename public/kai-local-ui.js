@@ -10,13 +10,21 @@
     if(!document.getElementById('kai51InlineStyle')){const s=document.createElement('style');s.id='kai51InlineStyle';s.textContent='@keyframes kaiRingSpin{to{transform:rotate(360deg)}}';document.head.appendChild(s)}
     el.style.pointerEvents='none';
     el.style.position='fixed';el.style.inset='0';el.style.zIndex='99999';el.style.display='flex';el.style.alignItems='center';el.style.justifyContent='center';el.style.opacity='0';el.style.visibility='hidden';el.style.transition='opacity .7s ease,visibility .7s ease';el.style.background='rgba(247,250,252,.72)';el.style.backdropFilter='blur(10px)';
-    el.innerHTML='<div class="kai-init-card" style="width:min(390px,calc(100vw - 40px));padding:28px 26px 24px;border:1px solid rgba(0,170,220,.24);border-radius:24px;background:rgba(255,255,255,.94);box-shadow:0 24px 80px rgba(0,80,120,.16);text-align:center"><div class="kai-init-orbit" style="width:76px;height:76px;margin:0 auto 16px;position:relative;display:grid;place-items:center"><i aria-hidden="true" style="position:absolute;inset:0;border-radius:50%;border:4px solid rgba(0,180,230,.14);border-top-color:#00bde8;border-right-color:#00d9ff;animation:kaiRingSpin .8s linear infinite"></i><span id="kaiInitPercent" class="kai-init-percent" style="position:relative;z-index:1;font:900 17px/1 ui-monospace,monospace;color:#087f9f">0%</span></div><div class="kai-init-title" style="font:900 13px/1.2 ui-monospace,monospace;letter-spacing:.12em;color:#102532">KAI 51 · LOCAL RUNTIME</div><div id="kaiInitStatus" class="kai-init-status" style="margin-top:7px;font:600 11px/1.4 ui-monospace,monospace;color:#5c7380;min-height:16px">Starting local download…</div><div class="kai-init-track" style="height:7px;margin-top:18px;border-radius:99px;background:rgba(0,160,210,.11);overflow:hidden"><div id="kaiInitFill" class="kai-init-fill" style="height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#00a9df,#00e0ff,#00a9df);transition:width .2s linear"></div></div><div class="kai-init-hint" style="margin-top:12px;font:600 9px/1.4 ui-monospace,monospace;color:#78909b">KAI 51 downloads once and stays cached on this device.</div></div>';
+    el.innerHTML='<div class="kai-init-card"><div class="kai-init-brand"><span class="kai-init-live-dot"></span><span>LOCAL ENGINE</span><span class="kai-init-brand-line"></span><span>KAI 51</span></div><div class="kai-init-orbit"><i class="kai-init-ring" aria-hidden="true"></i><span id="kaiInitPercent" class="kai-init-percent">0%</span></div><div class="kai-init-title">KAI 51 · LOCAL RUNTIME</div><div id="kaiInitStatus" class="kai-init-status">Starting secure local initialization…</div><div class="kai-init-track"><div id="kaiInitFill" class="kai-init-fill"></div></div><div id="kaiInitPhase" class="kai-init-phase"><span class="kai-init-phase-dot"></span><span>MODEL DOWNLOAD</span><b>0%</b></div><div class="kai-init-hint">Downloaded once · cached locally · no provider handoff</div></div>';
     document.body.appendChild(el);return el;
   }
-  function overlay(mode='show',progress=0,status='Retrieving KAI 51…'){
+  function overlay(mode='show',progress=0,status='Retrieving KAI 51…',phase='download'){
     const el=initOverlay(),pct=Math.max(0,Math.min(100,Math.round(Number(progress)||0)));
-    const fill=$('kaiInitFill'),label=$('kaiInitPercent'),copy=$('kaiInitStatus');
-    if(fill)fill.style.width=pct+'%';if(label)label.textContent=pct+'%';if(copy)copy.textContent=status;
+    const fill=$('kaiInitFill'),label=$('kaiInitPercent'),copy=$('kaiInitStatus'),phaseEl=$('kaiInitPhase');
+    if(fill)fill.style.width=pct+'%';
+    if(label)label.textContent=pct+'%';
+    if(copy)copy.textContent=status;
+    if(phaseEl){
+      phaseEl.classList.toggle('is-initializing',phase==='initializing');
+      phaseEl.innerHTML=phase==='initializing'
+        ? '<span class="kai-init-phase-dot"></span><span>INITIALIZING RUNTIME</span><b class="kai-init-live-text">ACTIVE</b>'
+        : '<span class="kai-init-phase-dot"></span><span>MODEL DOWNLOAD</span><b>'+pct+'%</b>';
+    }
     if(mode==='show'){el.style.opacity='1';el.style.visibility='visible';el.classList.remove('is-leaving');el.classList.add('is-visible');el.setAttribute('aria-hidden','false')}
     if(mode==='hide'){el.style.opacity='0';el.style.visibility='hidden';el.classList.remove('is-visible');el.classList.add('is-leaving');el.setAttribute('aria-hidden','true');setTimeout(()=>el.remove(),900)}
   }
@@ -111,8 +119,8 @@
   function beginWarmup(){
     const api=window.HAxBROLocalKai;
     if(!api||state.model!=='kai'||state.preparing||api.status().ready)return;
-    state.preparing=true;button('download',state.initProgress);overlay('show',state.initProgress,'Starting KAI 51 local download…');
-    api.prepare().then(ok=>{state.preparing=false;if(ok){state.initProgress=100;button('ready');overlay('show',100,'KAI 51 local runtime ready.');setTimeout(()=>overlay('hide',100),500);window.addMessage?.('KAI 51 local runtime is ready on this device.','bot');}else{button('error');overlay('show',state.initProgress,'KAI 51 local download failed — retry to resume.');}});
+    state.preparing=true;button('download',state.initProgress);overlay('show',state.initProgress,'Starting KAI 51 local download…','download');
+    api.prepare().then(ok=>{state.preparing=false;if(ok){state.initProgress=100;button('ready');overlay('show',100,'KAI 51 local runtime ready.','initializing');setTimeout(()=>overlay('hide',100),500);window.addMessage?.('KAI 51 local runtime is ready on this device.','bot');}else{button('error');overlay('show',state.initProgress,'KAI 51 local download failed — retry to resume.');}});
   }
   document.addEventListener('DOMContentLoaded',()=>{
     const picker=$('modelPickerBtn'),menu=$('modelPickerMenu');
@@ -138,11 +146,13 @@
         state.initProgress=n; button('download',n);
         const status=String(p.status||'').toLowerCase();
         const file=p.file?String(p.file).split('/').pop():'';
-        const label=n>=100?'Download complete — initializing KAI 51 locally…':(status.includes('download')||status==='progress'?'Downloading '+(file||'KAI 51 model')+'…':'Retrieving KAI 51…');
-        overlay('show',n,label+' '+Math.round(n)+'%');
+        const initializing=n>=100 && !apiStatusReady();
+        const label=initializing?'Download complete — initializing KAI 51 locally…':(status.includes('download')||status==='progress'?'Downloading '+(file||'KAI 51 model')+'…':'Retrieving KAI 51…');
+        overlay('show',n,label,initializing?'initializing':'download');
       }
     });
-    window.addEventListener('haxbro:kai-local-ready',()=>{if(state.model==='kai'){state.preparing=false;state.initProgress=100;button('ready');overlay('show',100,'KAI 51 is ready. Finalizing local cache…');setTimeout(()=>overlay('hide',100,'KAI 51 ready'),420)}});
+    function apiStatusReady(){return !!window.HAxBROLocalKai?.status?.().ready;}
+    window.addEventListener('haxbro:kai-local-ready',()=>{if(state.model==='kai'){state.preparing=false;state.initProgress=100;button('ready');overlay('show',100,'KAI 51 is ready. Finalizing local cache…','initializing');setTimeout(()=>overlay('hide',100,'KAI 51 ready'),420)}});
     window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');overlay('show',state.initProgress,'KAI 51 local download failed — '+(detail?detail.slice(0,180):'retry to resume.'));button('error')}});
     applyChoice(localStorage.getItem('haxbro_model_choice')||'kai');
     if(state.model==='kai') setTimeout(beginWarmup,250);
