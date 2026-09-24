@@ -1,5 +1,5 @@
 (() => {
-  const state={model:localStorage.getItem('haxbro_model_choice')||'kai',preparing:false,initProgress:0,displayProgress:0,progressTimer:null,overlayReleased:false};
+  const state={model:localStorage.getItem('haxbro_model_choice')||'kai',preparing:false,activeProfile:'light',initProgress:0,displayProgress:0,progressTimer:null,overlayReleased:false};
   const $=id=>document.getElementById(id);
   const send=()=>$('sendBtn');
   function initOverlay(){
@@ -79,6 +79,7 @@
   async function runLocal(value){
     const api=window.HAxBROLocalKai;
     if(!api)return false;
+    state.activeProfile=api.profileFor?.(value)||'light';
     const orchestration=window.HAxBROKai51?.buildPlan?.(value,localStorage.getItem('haxbro_username')||'anonymous-device');
     const target=orchestration?.localCapability||'';
     const lower=String(value||'').toLowerCase();
@@ -94,14 +95,14 @@
     if(/\b(x pro|deep analysis|investigate this|analyze this deeply)\b/.test(lower) && window.HAxBRODeepX?.openWithTarget){
       window.HAxBRODeepX.openWithTarget(value); return true;
     }
-    // KAI 51 is the primary runtime. Never silently send the user's message to /api/chat while the local model is warming.
-    if(!api.status().ready){
-      if(!state.preparing) beginWarmup();
-      if(!state.overlayReleased){
-        overlay('show',state.initProgress,'KAI 51 is still downloading locally…');
+    // KAI remains primary. Pick the fast 135M runtime for simple requests and the full 360M KAI 51 runtime for complex work.
+    if(!api.status().ready || api.status().profile!==state.activeProfile){
+      if(!state.preparing) beginWarmup(state.activeProfile);
+      if(!state.overlayReleased && !api.status().models?.[state.activeProfile]?.installed){
+        overlay('show',state.initProgress,state.activeProfile==='heavy'?'Installing KAI 51 locally…':'Installing KAI FAST locally…');
         button('download',state.initProgress);
       }
-      await api.prepare();
+      await api.prepare(state.activeProfile);
     }
     if(window.setBusy)window.setBusy(true);
     try{
@@ -130,13 +131,16 @@
     e.preventDefault();e.stopImmediatePropagation();
     window.addMessage?.(value,'user');
     $('promptInput').value='';
-    runLocal(value);
+    if(window.setBusy)window.setBusy(true);
+    Promise.resolve(runLocal(value)).finally(()=>{if(window.setBusy)window.setBusy(false)});
   }
-  function beginWarmup(){
+  function beginWarmup(profile='light'){
     const api=window.HAxBROLocalKai;
-    if(!api||state.model!=='kai'||state.preparing||api.status().ready)return;
-    state.preparing=true;button('download',state.initProgress);overlay('show',state.initProgress,'Starting KAI 51 local download…','download');
-    api.prepare().then(ok=>{state.preparing=false;if(ok){state.initProgress=100;button('ready');overlay('show',100,'KAI 51 local runtime ready.','initializing');setTimeout(()=>overlay('hide',100),500);window.addMessage?.('KAI 51 local runtime is ready on this device.','bot');}else{button('error');overlay('show',state.initProgress,'KAI 51 local download failed — retry to resume.');}});
+    if(!api||state.model!=='kai'||state.preparing||api.status().profile===profile)return;
+    state.preparing=true;state.activeProfile=profile;
+    const installed=!!api.status().models?.[profile]?.installed;
+    if(!installed){button('download',state.initProgress);overlay('show',state.initProgress,profile==='heavy'?'Installing KAI 51 locally…':'Installing KAI FAST locally…','download');}
+    api.prepare(profile).then(ok=>{state.preparing=false;if(ok){state.initProgress=100;state.displayProgress=100;button('ready');if(!installed)overlay('hide',100,profile==='heavy'?'KAI 51 installed and ready.':'KAI FAST installed and ready.','initializing');}else{button('error');if(!installed)overlay('show',state.initProgress,profile==='heavy'?'KAI 51 installation failed — retry to resume.':'KAI FAST installation failed — retry to resume.');}});
   }
   document.addEventListener('DOMContentLoaded',()=>{
     const picker=$('modelPickerBtn'),menu=$('modelPickerMenu');
@@ -155,7 +159,8 @@
     },true);
     window.addEventListener('haxbro:kai-local-progress',e=>{
       if(state.model!=='kai'||!state.preparing)return;
-      const p=e.detail||{},b=send();
+      const p=e.detail||{}; if((p.profile||'light')!==state.activeProfile || p.installed)return;
+      const b=send();
       if(b&&Number.isFinite(Number(p.progress))){
         const incoming=Math.max(0,Math.min(100,Number(p.progress)));
         const n=Math.max(state.initProgress,incoming);
@@ -177,9 +182,9 @@
       }
     });
     function apiStatusReady(){return !!window.HAxBROLocalKai?.status?.().ready;}
-    window.addEventListener('haxbro:kai-local-ready',()=>{if(state.model==='kai'){state.preparing=false;state.initProgress=100;state.overlayReleased=true;button('ready');overlay('hide',100,'KAI 51 ready','initializing')}});
-    window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');overlay('show',state.initProgress,'KAI 51 local download failed — '+(detail?detail.slice(0,180):'retry to resume.'));button('error')}});
+    window.addEventListener('haxbro:kai-local-ready',e=>{if(state.model==='kai'){const p=e.detail?.profile||state.activeProfile;if(p!==state.activeProfile)return;state.preparing=false;state.initProgress=100;state.displayProgress=100;state.overlayReleased=true;button('ready');if(!e.detail?.profile||!window.HAxBROLocalKai?.status?.().models?.[p]?.installed)overlay('hide',100,p==='heavy'?'KAI 51 ready':'KAI FAST ready','initializing')}});
+    window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');overlay('show',state.initProgress,(state.activeProfile==='heavy'?'KAI 51':'KAI FAST')+' local installation failed — '+(detail?detail.slice(0,180):'retry to resume.'));button('error')}});
     applyChoice(localStorage.getItem('haxbro_model_choice')||'kai');
-    if(state.model==='kai') setTimeout(beginWarmup,80);
+    if(state.model==='kai') setTimeout(()=>beginWarmup('light'),80);
   });
 })();
