@@ -85,7 +85,7 @@
     const sources=[];
     for(const url of urls){const d=await scrape(url);if(d?.ok)sources.push({url:d.url,title:d.title,text:clean(d.text,3500)})}
     const needsWeb=profile==='heavy'||/\b(search|research|latest|current|today|news|what is happening|compare|look up|find out|according to|source|website)\b/i.test(text);
-    if(needsWeb){try{const r=await fetch('/api/kai/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:text})});const d=await r.json();if(r.ok&&Array.isArray(d.sources))sources.push(...d.sources.map(s=>({url:s.url,title:s.title,text:clean(s.text,3500)})))}catch{}}
+    if(needsWeb){try{const r=await fetch('/api/kai/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:text,mode:profile==='heavy'?'deep':'fast'})});const d=await r.json();if(r.ok&&Array.isArray(d.sources))sources.push(...d.sources.map(s=>({url:s.url,title:s.title,text:clean(s.text,3500)})))}catch{}}
     const m=readMemory();
     const web=sources.map((s,i)=>'SOURCE '+(i+1)+': '+(s.title||s.url)+'\n'+s.text).join('\n\n');
     const prompt='You are KAI, HAxBRO AI\'s local-first intelligence. '+(profile==='light'?'Use KAI FAST for this simple request.':'Use KAI 51 for this complex request.')+'\nBe direct and useful. Do not claim to be an external provider.\nUSER: '+text+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nPUBLIC WEB EVIDENCE: '+(web||'None.')+'\nRespond directly.';
