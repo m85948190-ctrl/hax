@@ -83,6 +83,18 @@
   const normalizeConversation=value=>{let changed=false;const text=String(value||'').trim().split(/(\\s+)/).map(part=>{if(!/^[a-z]+$/i.test(part))return part;const key=part.toLowerCase();if(Object.prototype.hasOwnProperty.call(conversationalMap,key)){changed=true;return conversationalMap[key]}if(Object.prototype.hasOwnProperty.call(typoWords,key)){changed=true;return typoWords[key]}return part}).join('');return {text,changed}};
   const isConversationalInput=value=>{const original=String(value||'').trim().toLowerCase();const normalized=normalizeConversation(original).text.toLowerCase();const words=normalized.split(/\\s+/).filter(Boolean);return words.length<=7&&words.every(w=>conversationalTokens.has(w.replace(/[^a-z]/g,''))||w==='a') };
   const isTrivial=value=>{const text=String(value||'').trim();if(!text)return true;if(/^\s*[0-9](?:[0-9+*%().\s-]{0,80})\s*$/.test(text))return true;return isConversationalInput(text)};
+  const kai89NeedsHelp=value=>{const t=String(value||'').trim();if(!t||t.length>240)return false;const words=t.split(/\\s+/).filter(Boolean);return words.some(w=>/^[a-z]{3,}$/i.test(w)&&(/(.)\\1{2,}/i.test(w)||/^[^aeiou]{3,}[a-z]*$/i.test(w)||/[a-z]{4,}[^aeiou]{3,}[a-z]*/i.test(w)));};
+  const kai89Understand=async value=>{
+    const input=clean(value,5000);if(!kai89NeedsHelp(input))return {text:input,changed:false,intent:null,confidence:1,engine:'KAI 89'};
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),2600);
+    try{
+      const r=await fetch('/api/kai/understanding',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text:input}),signal:controller.signal});
+      if(!r.ok)return {text:input,changed:false,intent:null,confidence:0,engine:'KAI 89'};
+      const d=await r.json();return {text:clean(d?.normalizedText||input,5000),changed:Boolean(d?.changed),intent:d?.intent||null,confidence:Number(d?.confidence)||0,engine:d?.engine||'KAI 89'};
+    }catch{return {text:input,changed:false,intent:null,confidence:0,engine:'KAI 89'}}
+    finally{clearTimeout(timer)}
+  };
+
   const webLookup=async query=>{
     const key='haxbro:kai:web:'+btoa(unescape(encodeURIComponent(String(query)))).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,180);
     try{const cached=JSON.parse(localStorage.getItem(key)||'null');if(cached&&Date.now()-Number(cached.at)<86400000)return cached.data}catch{}
@@ -98,7 +110,9 @@
   };
 
   async function respond(userPrompt,forcedMode='auto'){
-    const text=clean(userPrompt,5000).trim();if(!text)return null;
+    let text=clean(userPrompt,5000).trim();if(!text)return null;
+    const understanding=await kai89Understand(text);
+    if(understanding?.changed&&understanding.text)text=understanding.text;
     const normalizedConversation=normalizeConversation(text);
     const normalizedInput=normalizedConversation.text.trim().toLowerCase();
     if(/^have a good time$/i.test(normalizedInput)||/^have a (?:good|great|nice) (?:day|time|one)$/i.test(normalizedInput))return {response:'Thanks, bro! You too 😎 Have a good one!',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
