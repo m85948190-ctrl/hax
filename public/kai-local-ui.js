@@ -1,5 +1,5 @@
 (() => {
-  const state={model:localStorage.getItem('haxbro_model_choice')||'kai',preparing:false,initProgress:0};
+  const state={model:localStorage.getItem('haxbro_model_choice')||'kai',preparing:false,initProgress:0,displayProgress:0,progressTimer:null,overlayReleased:false};
   const $=id=>document.getElementById(id);
   const send=()=>$('sendBtn');
   function initOverlay(){
@@ -27,6 +27,20 @@
     }
     if(mode==='show'){el.style.opacity='1';el.style.visibility='visible';el.classList.remove('is-leaving');el.classList.add('is-visible');el.setAttribute('aria-hidden','false')}
     if(mode==='hide'){el.style.opacity='0';el.style.visibility='hidden';el.classList.remove('is-visible');el.classList.add('is-leaving');el.setAttribute('aria-hidden','true');setTimeout(()=>el.remove(),900)}
+  }
+  function animateProgress(target){
+    target=Math.max(0,Math.min(100,Number(target)||0));
+    clearInterval(state.progressTimer);
+    state.progressTimer=setInterval(()=>{
+      if(state.displayProgress>=target){clearInterval(state.progressTimer);return}
+      const step=state.displayProgress<20?1:state.displayProgress<70?2:1;
+      state.displayProgress=Math.min(target,state.displayProgress+step);
+      button('download',state.displayProgress);
+      const fill=$('kaiInitFill'),label=$('kaiInitPercent'),phase=$('kaiInitPhase');
+      if(fill)fill.style.width=state.displayProgress+'%';
+      if(label)label.textContent=state.displayProgress+'%';
+      if(phase&&!phase.classList.contains('is-initializing')){const b=phase.querySelector('b');if(b)b.textContent=state.displayProgress+'%';}
+    },55);
   }
   function button(mode='send',progress=0){
     const b=send(); if(!b)return;
@@ -143,10 +157,11 @@
       if(b&&Number.isFinite(Number(p.progress))){
         const incoming=Math.max(0,Math.min(100,Number(p.progress)));
         const n=Math.max(state.initProgress,incoming);
-        state.initProgress=n; button('download',n);
+        state.initProgress=n; animateProgress(n);
         const status=String(p.status||'').toLowerCase();
         const file=p.file?String(p.file).split('/').pop():'';
         const initializing=n>=100 && !apiStatusReady();
+        if(initializing && !state.overlayReleased){state.overlayReleased=true;setTimeout(()=>{if(!apiStatusReady())overlay('hide',100,'KAI 51 initializing in background…','initializing')},900)}
         const label=initializing?'Download complete — initializing KAI 51 locally…':(status.includes('download')||status==='progress'?'Downloading '+(file||'KAI 51 model')+'…':'Retrieving KAI 51…');
         overlay('show',n,label,initializing?'initializing':'download');
       }
