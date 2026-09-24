@@ -23,14 +23,17 @@ const report = (p) => {
 let gen = null;
 let device = 'wasm';
 let dtype = 'q4';
+const FORCE_WASM = new URL(self.location.href).searchParams.get('forceWasm') === '1';
 
 async function load() {
   let adapter = null;
-  try {
-    adapter = self.navigator?.gpu ? await self.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }) : null;
-  } catch (_) {}
+  if (!FORCE_WASM) {
+    try {
+      adapter = self.navigator?.gpu ? await self.navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }) : null;
+    } catch (_) {}
+  }
 
-  if (adapter) {
+  if (adapter){
     try {
       device = 'webgpu';
       dtype = 'q4f16';

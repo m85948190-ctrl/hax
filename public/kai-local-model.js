@@ -13,16 +13,18 @@ const KAI51_VERSION='1.0';
   const addMemory=(note)=>{const m=readMemory();m.notes.push({text:clean(note,500),at:Date.now()});writeMemory(m)};
   const emit=(name,detail={})=>window.dispatchEvent(new CustomEvent(name,{detail}));
   const scrape=async(url)=>{try{const r=await fetch('/api/kai/browser',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});const d=await r.json();return r.ok?d:null}catch{return null}};
-  function start(){
+  function start(forceWasm=false){
     if(ready)return Promise.resolve(true);
     if(preparePromise)return preparePromise;
     loading=true;
     preparePromise=new Promise(resolve=>{
-      worker=new Worker('/kai-local-worker.js',{type:'module'});
+      // Prefer the stable WASM path for first-run initialization. WebGPU can expose an adapter
+// while still hanging during model graph initialization on some browser/driver combinations.
+worker=new Worker('/kai-local-worker.js?forceWasm=1',{type:'module'});
       worker.onerror=err=>{loading=false;ready=false;preparePromise=null;resolve(false);emit('haxbro:kai-local-error',String(err?.message||'KAI worker failed to start'));};
       worker.onmessage=e=>{
         const d=e.data||{};
-        if(d.type==='progress'){const p=(d.progress&&typeof d.progress==='object')?d.progress:{};const status=String(p.status||'').toLowerCase();const raw=Number(p.progress);const loaded=Number(p.loaded);const total=Number(p.total);const pct=status==='progress_total'&&Number.isFinite(raw)?raw:(Number.isFinite(loaded)&&Number.isFinite(total)&&total>0?(loaded/total)*100:(Number.isFinite(raw)?raw:(status==='ready'||status==='done'?100:0)));emit('haxbro:kai-local-progress',{...p,progress:Math.max(0,Math.min(100,pct)),status,file:String(p.file||'')});}
+        if(d.type==='progress'){const p=(d.progress&&typeof d.progress==='object')?d.progress:{};const status=String(p.status||'').toLowerCase();const raw=Number(p.progress);const loaded=Number(p.loaded);const total=Number(p.total);const pct=status==='progress_total'&&Number.isFinite(raw)?raw:(Number.isFinite(loaded)&&Number.isFinite(total)&&total>0?(loaded/total)*100:(Number.isFinite(raw)?raw:(status==='ready'||status==='done'?100:0)));const normalized=Math.max(0,Math.min(100,pct));emit('haxbro:kai-local-progress',{...p,progress:normalized,status,file:String(p.file||'')});}
         if(d.type==='ready'){ready=true;loading=false;resolve(true);preparePromise=null;emit('haxbro:kai-local-ready')}
         if(d.type==='fatal'){loading=false;ready=false;resolve(false);preparePromise=null;emit('haxbro:kai-local-error',d.error)}
         if(d.id&&queue.has(d.id)){const r=queue.get(d.id);queue.delete(d.id);d.type==='result'?r(d.text):r(null)}
