@@ -143,7 +143,7 @@
       }
     });
     window.addEventListener('haxbro:kai-local-ready',()=>{if(state.model==='kai'){state.preparing=false;state.initProgress=100;button('ready');overlay('show',100,'KAI 51 is ready. Finalizing local cache…');setTimeout(()=>overlay('hide',100,'KAI 51 ready'),420)}});
-    window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;overlay('show',state.initProgress,'Model retrieval failed — retry to resume.');button('error')}});
+    window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');overlay('show',state.initProgress,'KAI 51 local download failed — '+(detail?detail.slice(0,180):'retry to resume.'));button('error')}});
     applyChoice(localStorage.getItem('haxbro_model_choice')||'kai');
     if(state.model==='kai') setTimeout(beginWarmup,250);
   });
