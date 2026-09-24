@@ -81,6 +81,7 @@
   const conversationalTokens=new Set(['i','me','my','mine','you','your','yours','we','us','our','ours','he','him','his','she','her','hers','they','them','their','theirs','it','this','that','what','why','how','where','when','who','which','bro','bruh','bhai','u','yu','ur','yo','hey','hi','hello','thanks','thank','okay','ok','yes','yeah','yep','yup','no','nope','nah','please','pls','plz']);
   const normalizeConversation=value=>{let changed=false;const text=String(value||'').trim().split(/(\\s+)/).map(part=>{if(!/^[a-z]+$/i.test(part))return part;const key=part.toLowerCase();if(Object.prototype.hasOwnProperty.call(conversationalMap,key)){changed=true;return conversationalMap[key]}return part}).join('');return {text,changed}};
   const isConversationalInput=value=>{const words=String(value||'').trim().toLowerCase().split(/\\s+/).filter(Boolean);return words.length<=4&&words.every(w=>conversationalTokens.has(w.replace(/[^a-z]/g,''))) };
+  const isTrivial=value=>{const text=String(value||'').trim();if(!text)return true;if(/^\s*[0-9](?:[0-9+*%().\s-]{0,80})\s*$/.test(text))return true;return isConversationalInput(text)};
   const webLookup=async query=>{
     const key='haxbro:kai:web:'+btoa(unescape(encodeURIComponent(String(query)))).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,180);
     try{const cached=JSON.parse(localStorage.getItem(key)||'null');if(cached&&Date.now()-Number(cached.at)<86400000)return cached.data}catch{}
@@ -95,7 +96,7 @@
 
   async function respond(userPrompt,forcedMode='auto'){
     const text=clean(userPrompt,5000).trim();if(!text)return null;
-    const trivial=/^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|thanks|thank you|ok|okay)\b/i.test(text);
+    const trivial=isTrivial(text);
     if(trivial)return {response:/^(thanks|thank you|ok|okay)\b/i.test(text)?'You got it.':'Hey! 👋 I’m KAI. What are we working on?',provider:'KAI LOCAL',model:'deterministic-local',profile:'light',local:true,sources:[]};
     // Native KAI capability layer: deterministic tasks bypass the small local model.
     const math=text.match(/^\s*(?:what is|calculate|compute|solve)\s+([0-9+*%().\s-]+)\??\s*$/i)||text.match(/^\s*([0-9](?:[0-9+*%().\s-]{0,80}))\s*$/);
@@ -137,5 +138,5 @@
     if(sources.length){m.sources.push(...sources.map(s=>({url:s.url,title:s.title,at:Date.now()})));writeMemory(m)}
     return {response:answer.replace(/^.*?assistant\s*[:：]\s*/i,''),provider:'KAI LOCAL',model:PROFILES[profile].id,profile,local:true,sources:sources.map(s=>({url:s.url,title:s.title}))};
   }
-  window.HAxBROLocalKai={start:prepare,prepare,generate,respond,profileFor:complexityProfile,readMemory,addMemory(note){const m=readMemory();m.notes.push({text:clean(note,500),at:Date.now()});writeMemory(m)},status};
+  window.HAxBROLocalKai={start:prepare,prepare,generate,respond,profileFor,isTrivial,readMemory,addMemory(note){const m=readMemory();m.notes.push({text:clean(note,500),at:Date.now()});writeMemory(m)},status};
 })();

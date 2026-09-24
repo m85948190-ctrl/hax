@@ -14,7 +14,7 @@ function kaiHostFromUrl(url){try{return new URL(url).hostname.replace(/^www\\./,
 function kaiFavicon(url){const host=kaiHostFromUrl(url);return host?'https://www.google.com/s2/favicons?domain='+encodeURIComponent(host)+'&sz=32':''}
 function kaiActivityRow(label,detail='',iconUrl=''){const row=document.createElement('div');row.className='kai-activity-row';const icon=document.createElement('span');icon.className='kai-activity-icon';if(iconUrl){const img=document.createElement('img');img.alt='';img.src=iconUrl;img.onerror=()=>{img.remove();icon.textContent='•'};icon.appendChild(img)}else{icon.textContent='•'}const copy=document.createElement('span');copy.className='kai-activity-copy';const main=document.createElement('span');main.textContent=label;copy.appendChild(main);if(detail){const sub=document.createElement('small');sub.textContent=detail;copy.appendChild(sub)}row.append(icon,copy);return row}
 function kaiActivityDeepX(steps){if(!thinkingBubble||!Array.isArray(steps)||!steps.length)return;const list=thinkingBubble.querySelector('.kai-activity-list');if(!list)return;steps.forEach(s=>{const label=typeof s==='string'?s:(s?.label||s?.message||s?.title||'DEEPX step completed');const detail=typeof s==='string'?'':(s?.detail||s?.status||'');list.appendChild(kaiActivityRow(label,detail,s?.url?kaiFavicon(s.url):''));});messages.scrollTop=messages.scrollHeight}
-function kaiActivityStart(){
+function kaiActivityStart(profile='heavy'){
  if(!messages)return;
  if(thinkingBubble)thinkingBubble.remove();
  thinkingStartedAt=Date.now();
@@ -30,7 +30,8 @@ function kaiActivityStart(){
   ['Validating the result','Cross-checking before showing it'],
   ['Finalizing','Turning the work into a clean answer']
  ];
- thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">KAI 51 · THINKING</span><span class="kai-thinking-pill-time kai-activity-time">0s</span></span></div></div><div class="kai-activity-list"></div>';
+ const label=profile==='light'?'KAI FAST · THINKING':'KAI 51 · THINKING';
+ thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span><span class="kai-thinking-pill-time kai-activity-time">0s</span></span></div></div><div class="kai-activity-list"></div>';
  messages.appendChild(thinkingBubble);
  const currentLine=thinkingBubble.querySelector('.kai-activity-current');
  const setPhrase=(i)=>{if(!currentLine)return;const p=phrases[i%phrases.length];currentLine.querySelector('b').textContent=p[0];currentLine.querySelector('small').textContent=p[1];};
@@ -74,9 +75,9 @@ function kaiActivityFinish(data){
  thinkingBubble.classList.add('is-complete');
  setTimeout(()=>{if(thinkingBubble){thinkingBubble.classList.add('is-fading');setTimeout(()=>{thinkingBubble?.remove();thinkingBubble=null},420)}},520);
 }
-function setBusy(v){
+function setBusy(v,profile='heavy'){
  const b=$('#sendBtn');if(b){b.disabled=v;b.classList.toggle('busy',v);b.setAttribute('aria-busy',v?'true':'false')}
- if(v&&!thinkingBubble)kaiActivityStart();
+ if(v&&!thinkingBubble)kaiActivityStart(profile);
  else if(!v&&thinkingBubble){if(thinkingTimer){clearInterval(thinkingTimer);thinkingTimer=null}thinkingBubble.classList.add('is-fading');setTimeout(()=>{thinkingBubble?.remove();thinkingBubble=null},420)}
 }
 const BUILD_WORDS='ai|artificial intelligence|agent|assistant|bot|copilot|builder|app|application|web application|webapp|web app|website|web site|site|landing page|dashboard|portal|platform|product|software|tool|system|saas|pwa|mobile app|desktop app|frontend|front end|backend|full stack|full-stack|fullstack|interface|ui|ux|experience|page|pages|screen|screens|workspace|client|admin panel|admin dashboard|control panel|ecommerce|store|shop|marketplace|blog|portfolio|forum|community|chat app|social app|game|web game|browser app|chrome extension|extension|plugin|widget|component|template|prototype|mvp|project|repo|repository|github|git|html|css|javascript|typescript|react|nextjs|next.js|vue|svelte|angular|tailwind|node|api|database|form|login|signup|authentication|auth|profile|settings|search|upload|download|checkout|payment|stripe|analytics|chart|graph|table|calendar|booking|reservation|messaging|chat|voice|video|image|media|generator|editor|cms|crm|erp|automation|workflow|dashboard app|internal tool|customer portal|user portal|ai tool|ai website|ai app|ai assistant|personal ai|my ai|my website|my web application|my app|my application|my software|my product|make ai|build ai|create ai|develop ai|make an app|build an app|create an app|make a website|build a website|create a website|make a web application|build a web application|create a web application|make a web app|build a web app|create a web app|turn this into an app|turn this into a website|launch|deploy|publish|ship|forge|generate|create|make|build|develop|design';
@@ -102,10 +103,14 @@ let ultimaxRunStarted=0,ultimaxTimer=null;function fmtSecs(s){s=Math.max(0,Math.
     if(priorityModification&&window.HAxBROFutureMaker?.modifyCurrent&&document.getElementById('haxNewAppMaker')?.classList.contains('open')){await window.HAxBROFutureMaker.modifyCurrent(value);return true;}
     if(priorityInvestigation){const opts={research:/\b(?:search google|search the web|google it|give a report|report about|report on)\b/i.test(value)};if(window.HAxBRODeepX?.openWithTarget){window.HAxBRODeepX.openWithTarget(priorityUrl,opts);return true}window.dispatchEvent(new CustomEvent('haxbro:open-xpro',{detail:{target:priorityUrl,...opts}}));return true;}
     if(priorityApp){if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,true);return true}window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value,autoBuild:true}}));return true;}
-    /* Normal KAI requests still get the full thinking animation. Workspace actions above intentionally bypass it so they can open immediately. */
-    setBusy(true);
-    if(window.HAxBROLocalKai?.respond){
-      const localResult=await window.HAxBROLocalKai.respond(value,'deep');
+    /* Choose depth before showing work. Trivial conversational input stays immediate; light work uses KAI FAST; genuinely complex/current/research work uses KAI 51. */
+    const localApi=window.HAxBROLocalKai;
+    const localProfile=localApi?.profileFor?.(value)||'light';
+    const trivialLocal=/^\s*[0-9](?:[0-9+*%().\s-]{0,80})\s*$/.test(value)||localApi?.isTrivial?.(value);
+    const chosenProfile=trivialLocal?'light':localProfile;
+    if(!trivialLocal)setBusy(true,chosenProfile);
+    if(localApi?.respond){
+      const localResult=await localApi.respond(value,chosenProfile==='heavy'?'deep':'light');
       if(localResult?.response){kaiActivityFinish({sources:localResult.sources||[]});addMessage(localResult.response,'bot');return true;}
       kaiActivityFinish({sources:[]});
       addMessage('KAI 51 local runtime did not return a response. The request was not sent to any API or external provider.','bot');
