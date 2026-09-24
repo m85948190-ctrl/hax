@@ -39,6 +39,10 @@ export default async function(req,res){
   if(!message)return res.status(400).json({ok:false,error:"message required"});
   let result,source="api";try{result=await apiClassify(message,history)}catch(e){source="kai-fallback";result=fallback(message,history)}
   result=Object.assign({route:"chat",action:"answer",wantsApp:false,confidence:0,reason:""},result);
+  /* Explicit non-implementation language on the current message always overrides older build context. */
+  if(/\b(?:this is|just an?|example only|do not|don\x27t|dont|never)\b[\s\S]{0,120}\b(?:implement|build|create|make|generate|rule[- ]based)\b/i.test(message) && /\b(?:implement|build|create|make|generate|rule[- ]based)\b/i.test(message)){
+    result.route="chat";result.action="discuss";result.wantsApp=false;result.confidence=.96;
+  }
   /* A desire to create is an App Maker conversation opener, not permission to build yet. */
   if(/^\s*(?:i|we)\s+(?:want|need|would like|am trying)\s+to\s+(?:make|build|create|develop|design|generate)\b/i.test(message) && result.route==="app-maker"){
     result.action="open";result.wantsApp=true;result.confidence=Math.max(Number(result.confidence)||0,.9);
