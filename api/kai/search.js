@@ -58,6 +58,25 @@ function queryVariants(query){
   ];
 }
 
+async function bingSearch(query){
+  const url="https://www.bing.com/search?q="+encodeURIComponent(query);
+  return browser.session(async page=>{
+    await page.goto(url,{waitUntil:"domcontentloaded"});
+    return await page.evaluate(()=>{
+      const out=[];const seen=new Set();
+      for(const a of Array.from(document.querySelectorAll("li.b_algo h2 a, h2 a"))){
+        const href=a.href||"",title=(a.innerText||a.textContent||"").replace(/\\s+/g," ").trim();
+        if((!href.startsWith("http://")&&!href.startsWith("https://"))||!title||seen.has(href))continue;
+        let host="";try{host=new URL(href).hostname}catch{continue}
+        if(host.includes("bing.com"))continue;
+        seen.add(href);out.push({title,url:href});
+        if(out.length>=8)break;
+      }
+      return out;
+    });
+  });
+}
+
 async function multiSearch(query){
   const variants=queryVariants(query);
   const googleResults=await Promise.all(variants.map(async q=>{
@@ -69,6 +88,16 @@ async function multiSearch(query){
     if(links.length>=12)break;
   }
   if(links.length)return {links,engine:"Google Web"};
+  const bingResults=await Promise.all(variants.map(async q=>{
+    try{return await bingSearch(q)}catch{return []}
+  }));
+  const bingLinks=[];const bingSeen=new Set();
+  for(const list of bingResults)for(const x of list){
+    if(!bingSeen.has(x.url)){bingSeen.add(x.url);bingLinks.push(x)}
+    if(bingLinks.length>=12)break;
+  }
+  if(bingLinks.length)return {links:bingLinks,engine:"Bing Web"};
+
   const fallbackResults=await Promise.all(variants.slice(0,4).map(async q=>{
     try{return await ddgSearch(q)}catch{return []}
   }));
