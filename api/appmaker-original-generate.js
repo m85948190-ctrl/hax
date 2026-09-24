@@ -12,7 +12,8 @@ export default async function(req,res){
     const origin=req.headers?.origin||"";
     const base=origin && /^https?:\/\//i.test(origin) ? origin : "https://haxbro.hatchable.site";
     const controller=new AbortController();
-    const timer=setTimeout(()=>controller.abort(),12000);
+    // Keep the App Maker UX inside the normal ~5s budget. The API builder gets a short window; KAI native recovery is immediate and never waits for the outer function timeout.
+    const timer=setTimeout(()=>controller.abort(),3500);
     try{
       const r=await fetch(base+"/api/app-builder",{method:"POST",signal:controller.signal,headers:{"content-type":"application/json"},body:JSON.stringify({prompt:prompt.slice(0,12000),username:req.body?.username||"app-maker",kaiMode:"deep",kai51Context:{mode:"KAI DEEP",workspace:"APP MAKER",goal:"Understand the product before implementation and build the requested product itself."}})});
       const data=await r.json().catch(()=>({}));
