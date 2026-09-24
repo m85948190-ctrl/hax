@@ -97,7 +97,7 @@ export default async function(req,res){
   const modeSystem=requestedMode==='expert'?EXPERT_SYSTEM:requestedMode==='work'?WORK_SYSTEM:NORMAL_SYSTEM;
   const system=RESPONSE_RULES+'\n\n'+modeSystem+'\n\n'+CREATOR_RULE+identity+localAgent+godEngineContext;
   try{
-    const result=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:6000,username,history,imageData,modelChoice});
+    const result=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:1200,username,history,imageData,modelChoice});
     if(modelChoice==='astra'&&astraWindowStarted){
       await db.query('INSERT INTO haxbro_astra_usage (username, window_started_at, request_count, updated_at) VALUES ($1, $2, 1, NOW()) ON CONFLICT (username) DO UPDATE SET window_started_at = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.window_started_at ELSE EXCLUDED.window_started_at END, request_count = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.request_count + 1 ELSE 1 END, updated_at = NOW()',[username,astraWindowStarted]);
     }
