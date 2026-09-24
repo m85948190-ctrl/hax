@@ -81,6 +81,17 @@
   const conversationalTokens=new Set(['i','me','my','mine','you','your','yours','we','us','our','ours','he','him','his','she','her','hers','they','them','their','theirs','it','this','that','what','why','how','where','when','who','which','bro','bruh','bhai','u','yu','ur','yo','hey','hi','hello','thanks','thank','okay','ok','yes','yeah','yep','yup','no','nope','nah','please','pls','plz']);
   const normalizeConversation=value=>{let changed=false;const text=String(value||'').trim().split(/(\\s+)/).map(part=>{if(!/^[a-z]+$/i.test(part))return part;const key=part.toLowerCase();if(Object.prototype.hasOwnProperty.call(conversationalMap,key)){changed=true;return conversationalMap[key]}return part}).join('');return {text,changed}};
   const isConversationalInput=value=>{const words=String(value||'').trim().toLowerCase().split(/\\s+/).filter(Boolean);return words.length<=4&&words.every(w=>conversationalTokens.has(w.replace(/[^a-z]/g,''))) };
+  const webLookup=async query=>{
+    const key='haxbro:kai:web:'+btoa(unescape(encodeURIComponent(String(query)))).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,180);
+    try{const cached=JSON.parse(localStorage.getItem(key)||'null');if(cached&&Date.now()-Number(cached.at)<86400000)return cached.data}catch{}
+    try{
+      const r=await fetch('/api/kai/search',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query,mode:'fast'})});
+      if(!r.ok)return null;
+      const d=await r.json();
+      if(d?.ok&&Array.isArray(d.sources)){try{localStorage.setItem(key,JSON.stringify({at:Date.now(),data:d}))}catch{};return d}
+    }catch{}
+    return null;
+  };
 
   async function respond(userPrompt,forcedMode='auto'){
     const text=clean(userPrompt,5000).trim();if(!text)return null;
@@ -94,23 +105,37 @@
     const normalized=normalizeConversation(text);
     const normalizedText=normalized.text.trim();
     const normalizedLower=normalizedText.toLowerCase();
-    if(isConversationalInput(normalizedLower)){
-      if(/^(bro|bruh|bhai)$/.test(normalizedLower))return {response:'Yeah bro — I’m here. What are we working on?',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
-      if(/^(yu|u|you)$/.test(lower))return {response:'Yeah bro — I’m with you. Tell me what you want to do.',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
-      if(/^(i|me|we|us|my|our)$/.test(normalizedLower))return {response:'I’m listening, bro. Keep going.',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
-      if(/^(why|what|how|where|when|who|which)$/.test(normalizedLower))return {response:'I’m with you, bro — give me the thing you mean and I’ll work it out from context.',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
-      if(normalized.changed&&/^(hello|hey|thanks|please|yes|no|okay|ok)$/.test(normalizedLower))return {response:normalizedLower==='thanks'?'You got it.':'Got you, bro.',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
+    // Semantic understanding is web-first; these helpers are only retained for normalization, not meaning decisions.
+    const webQuery=/^\S{2,40}$/.test(text)?'"'+text+'" meaning definition slang':text;
+    const web=await webLookup(webQuery);
+    if(web?.sources?.length){
+      const webContext=web.sources.map(s=>({title:s.title,url:s.url,text:String(s.text||'').slice(0,2400)}));
+      const webProfile=(explicit=>explicit?'heavy':'light')( /\b(?:latest|today|current|news|recent|research|investigate)\b/i.test(text) );
+      const m=readMemory();
+      const prompt='You are KAI 51, HAxBRO AI\'s web-grounded intelligence. Understand the user naturally from live web evidence rather than a fixed vocabulary or rule list. Use context, language, slang, regional usage, typos, and ordinary conversation. If evidence is irrelevant, use your language ability but do not invent facts that require web evidence. Answer directly and naturally; for tiny conversational messages, keep it brief. If the term is slang or profanity, explain its meaning and tone neutrally when useful. USER: '+normalizedText+'\\nLIVE WEB EVIDENCE: '+JSON.stringify(webContext)+'\\nAnswer directly.';
+      const answer=await generate(prompt,PROFILES[webProfile].maxTokens,webProfile);
+      if(answer)return {response:answer.replace(/^.*?assistant\\s*[:：]\\s*/i,''),provider:'KAI WEB + LOCAL',model:'web-grounded-local',profile:webProfile,local:true,sources:web.sources.map(s=>({url:s.url,title:s.title}))};
     }
-    const typoMap={helo:'hello',whre:'where',calcultor:'calculator',wht:'what',hw:'how',plz:'please'};
-    if(/^[a-z]{2,20}$/i.test(text)&&typoMap[lower])return {response:'Did you mean “'+typoMap[lower]+'”?',provider:'KAI LOCAL',model:'deterministic-clarifier',profile:'light',local:true,sources:[]};
-    if(/^[a-z]{2,20}$/i.test(text)&&!['hello','hey','hi','thanks','okay'].includes(lower))return {response:'I’m not sure what “'+text+'” refers to yet. Give me a little context and I’ll work it out instead of inventing a meaning.',provider:'KAI LOCAL',model:'deterministic-clarifier',profile:'light',local:true,sources:[]};
+    // No hard-coded conversational vocabulary: if the web has no useful evidence, the local model gets the original context.
+    // Live web grounding is the semantic correction path; no fixed typo dictionary is used.
+    if(/^[a-z]{2,40}(?:[0-9]+)?$/i.test(text)&&!['hello','hey','hi','thanks','okay'].includes(lower)){
+      const web=await webLookup('"'+text+'" meaning definition slang');
+      if(web?.sources?.length){
+        const webContext=web.sources.map(s=>({title:s.title,url:s.url,text:String(s.text||'').slice(0,2400)}));
+        const m=readMemory();
+        const prompt='You are KAI 51. The user entered a term that was not confidently understood locally. Use the live web evidence below to infer what the term means in context. Do not claim certainty if the sources disagree. Answer the user directly and briefly; if it is slang, profanity, a name, meme, abbreviation, or regional expression, say so naturally. Do not invent facts. USER TERM: '+text+'\\nWEB EVIDENCE: '+JSON.stringify(webContext)+'\\nAnswer with the likely meaning and useful context. No dictionary-style refusal.';
+        const answer=await generate(prompt,192,'light');
+        if(answer)return {response:answer.replace(/^.*?assistant\\s*[:：]\\s*/i,''),provider:'KAI WEB + LOCAL',model:'web-grounded-local',profile:'light',local:true,sources:web.sources.map(s=>({url:s.url,title:s.title}))};
+      }
+      return {response:'I couldn’t get a reliable web result for “'+text+'” right now. Try adding a little context.',provider:'KAI WEB',model:'web-lookup-failed',profile:'light',local:true,sources:[]};
+    }
     const explicitResearch=/\b(?:do|please|can you|could you)\s+(?:a\s+)?(?:deep\s+)?research\b|\bdeep\s+research\b|\b(?:research|investigate|look\s+up)\s+(?:this|that|it|the)\b/i.test(text);
     const freshness=/\b(?:latest|today|current|right now|news|recent|this week|this month|up to date)\b/i.test(text);
     const forced=forcedMode==='light'?'light':forcedMode==='deep'?'heavy':null;
     const profile=forced||((explicitResearch||freshness||complexityProfile(text)==='heavy')?'heavy':'light');
     const sources=[];
     const m=readMemory();
-    const prompt='You are KAI 51, HAxBRO AI\'s private local intelligence runtime. Understand ordinary conversation before treating words as unknown. Correct obvious typos and casual shorthand from context, such as yu/u→you, ur/yr→your, bro/bruh/bhai as a conversational address, and helo→hello. Do not ask what common pronouns, question words, greetings, slang, or obvious typos mean. For short conversational messages, respond naturally and briefly instead of producing dictionary definitions. Only treat a token as genuinely unknown when it is actually opaque or unsupported by context. Start with a lightweight interpretation. Only treat this as a deep task when the user explicitly asks for research/deep research, asks for an elaborate or deep explanation, requests current/latest information, or the task is genuinely complex. Never output an empty response. Use the local model and browser-local memory only. Do not call, mention, simulate, or depend on any API, provider, server model, web-search service, or external intelligence. USER: '+normalizedText+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nRespond directly.';
+    const prompt='You are KAI 51, HAxBRO AI\'s local language runtime with live web grounding when available. Understand ordinary conversation, slang, typos, regional language, profanity, names, abbreviations, and unfamiliar terms from context. Do not rely on a fixed vocabulary or hard-coded meaning rules. If live web evidence was unavailable, use your language ability honestly and do not invent facts. Start with a lightweight interpretation. Only treat this as a deep task when the user explicitly asks for research/deep research, asks for an elaborate or deep explanation, requests current/latest information, or the task is genuinely complex. Never output an empty response. Use browser-local memory and the supplied web context when present. USER: '+text+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nRespond directly.';
     const answer=await generate(prompt,PROFILES[profile].maxTokens,profile);
     if(!answer)return null;
     if(sources.length){m.sources.push(...sources.map(s=>({url:s.url,title:s.title,at:Date.now()})));writeMemory(m)}
