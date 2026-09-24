@@ -6,10 +6,11 @@ function linksFrom(html){
   const out=[];const s=String(html||"");
   const re=/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;let m;
   while((m=re.exec(s))&&out.length<8){
-    const href=m[1];const title=clean(m[2].replace(/<[^>]+>/g," "));
-    if(!title||/bing|microsoft|google|duckduckgo/i.test(href))continue;
+    const href=m[1].replace(/&amp;/g,"&");const title=clean(m[2].replace(/<[^>]+>/g," "));
+    if(!title)continue;
     let url=href;const q=url.match(/[?&]uddg=([^&]+)/i);if(q)try{url=decodeURIComponent(q[1])}catch{}
-    if(/^https?:\/\//i.test(url)&&!out.some(x=>x.url===url))out.push({title,url});
+    if(url.startsWith("//"))url="https:"+url;
+    if(/^https?:\/\//i.test(url)&&!/duckduckgo\.com\/l\//i.test(url)&&!out.some(x=>x.url===url))out.push({title,url});
   }return out;
 }
 const pageText=html=>clean(String(html||"").replace(/<script[\s\S]*?<\/script>/gi," ").replace(/<style[\s\S]*?<\/style>/gi," ").replace(/<[^>]+>/g," "),6000);
