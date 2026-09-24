@@ -78,9 +78,10 @@
   const scrape=async()=>null; // Disabled: local-only KAI does not use server/web retrieval.
 
   const conversationalMap={yu:'you',u:'you',ur:'your',yr:'your',bruh:'bro',bhai:'bro',helo:'hello',hllo:'hello',heyoo:'hey',thx:'thanks',thanx:'thanks',pls:'please',plz:'please',yep:'yes',yup:'yes',nope:'no',nah:'no'};
-  const conversationalTokens=new Set(['i','me','my','mine','you','your','yours','we','us','our','ours','he','him','his','she','her','hers','they','them','their','theirs','it','this','that','what','why','how','where','when','who','which','bro','bruh','bhai','u','yu','ur','yo','hey','hi','hello','thanks','thank','okay','ok','yes','yeah','yep','yup','no','nope','nah','please','pls','plz']);
-  const normalizeConversation=value=>{let changed=false;const text=String(value||'').trim().split(/(\\s+)/).map(part=>{if(!/^[a-z]+$/i.test(part))return part;const key=part.toLowerCase();if(Object.prototype.hasOwnProperty.call(conversationalMap,key)){changed=true;return conversationalMap[key]}return part}).join('');return {text,changed}};
-  const isConversationalInput=value=>{const words=String(value||'').trim().toLowerCase().split(/\\s+/).filter(Boolean);return words.length<=4&&words.every(w=>conversationalTokens.has(w.replace(/[^a-z]/g,''))) };
+  const conversationalTokens=new Set(['i','me','my','mine','you','your','yours','we','us','our','ours','he','him','his','she','her','hers','they','them','their','theirs','it','this','that','what','why','how','where','when','who','which','bro','bruh','bhai','u','yu','ur','yo','hey','hi','hello','thanks','thank','okay','ok','yes','yeah','yep','yup','no','nope','nah','please','pls','plz','have','good','time','morning','afternoon','evening','night','day','welcome','bye','later']);
+  const typoWords={hsve:'have',hve:'have',hvae:'have',godo:'good',tme:'time',tim:'time',goood:'good',thnak:'thank',thnaks:'thanks',pleaes:'please'};
+  const normalizeConversation=value=>{let changed=false;const text=String(value||'').trim().split(/(\\s+)/).map(part=>{if(!/^[a-z]+$/i.test(part))return part;const key=part.toLowerCase();if(Object.prototype.hasOwnProperty.call(conversationalMap,key)){changed=true;return conversationalMap[key]}if(Object.prototype.hasOwnProperty.call(typoWords,key)){changed=true;return typoWords[key]}return part}).join('');return {text,changed}};
+  const isConversationalInput=value=>{const original=String(value||'').trim().toLowerCase();const normalized=normalizeConversation(original).text.toLowerCase();const words=normalized.split(/\\s+/).filter(Boolean);return words.length<=7&&words.every(w=>conversationalTokens.has(w.replace(/[^a-z]/g,''))||w==='a') };
   const isTrivial=value=>{const text=String(value||'').trim();if(!text)return true;if(/^\s*[0-9](?:[0-9+*%().\s-]{0,80})\s*$/.test(text))return true;return isConversationalInput(text)};
   const webLookup=async query=>{
     const key='haxbro:kai:web:'+btoa(unescape(encodeURIComponent(String(query)))).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,180);
@@ -98,6 +99,9 @@
 
   async function respond(userPrompt,forcedMode='auto'){
     const text=clean(userPrompt,5000).trim();if(!text)return null;
+    const normalizedConversation=normalizeConversation(text);
+    const normalizedInput=normalizedConversation.text.trim().toLowerCase();
+    if(/^have a good time$/i.test(normalizedInput)||/^have a (?:good|great|nice) (?:day|time|one)$/i.test(normalizedInput))return {response:'Thanks, bro! You too 😎 Have a good one!',provider:'KAI LOCAL',model:'deterministic-conversation',profile:'light',local:true,sources:[]};
     const trivial=isTrivial(text);
     if(trivial)return {response:/^(thanks|thank you|ok|okay)\b/i.test(text)?'You got it.':'Hey! 👋 I’m KAI. What are we working on?',provider:'KAI LOCAL',model:'deterministic-local',profile:'light',local:true,sources:[]};
     // Native KAI capability layer: deterministic tasks bypass the small local model.
