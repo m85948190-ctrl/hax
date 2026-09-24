@@ -118,7 +118,7 @@ let ultimaxRunStarted=0,ultimaxTimer=null;function fmtSecs(s){s=Math.max(0,Math.
       const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
         message:value,
         kaiMode,
-        prompt:'KAI 51 ordered recovery contract: use the configured provider chain in order. Keep KAI identity independent of providers. KAI 89 is the language-recognition backup layer and KAI 51 is the local backup capability before later providers.',
+        prompt:'Answer the user naturally as HAxBRO. Keep internal orchestration and implementation details private.',
         mode,
         study,
         username:localStorage.getItem('haxbro_username')||'',
@@ -127,7 +127,7 @@ let ultimaxRunStarted=0,ultimaxTimer=null;function fmtSecs(s){s=Math.max(0,Math.
       const dd=await rr.json().catch(()=>({}));
       if(rr.ok&&(dd.response||dd.text||dd.message||dd.answer||dd.output)){
         apiAnswered=true;
-        kaiActivityResearch(dd?.webSteps||dd?.sources||[]);
+        kaiActivityResearch([]);
         kaiActivityFinish(dd);
         addMessage(dd.response||dd.text||dd.message||dd.answer||dd.output,'bot');
         return true;
