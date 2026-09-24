@@ -114,10 +114,12 @@ let ultimaxRunStarted=0,ultimaxTimer=null;function fmtSecs(s){s=Math.max(0,Math.
     const chosenProfile=trivialLocal?'light':localProfile;
     if(!trivialLocal)setBusy(true,chosenProfile);
     if(localApi?.respond){
-      const localResult=await localApi.respond(value,chosenProfile==='heavy'?'deep':'light');
+      const responsePromise=localApi.respond(value,chosenProfile==='heavy'?'deep':'light');
+      const timeout=new Promise(resolve=>setTimeout(()=>resolve({response:"Bro, I don't know what you mean yet. Please elaborate a little — tell me what you're trying to do, what the input refers to, or what result you want.",provider:'KAI LOCAL',model:'deterministic-clarification-timeout',profile:'light',local:true,sources:[]}),9000));
+      const localResult=await Promise.race([responsePromise,timeout]);
       if(localResult?.response){kaiActivityFinish({sources:localResult.sources||[]});addMessage(localResult.response,'bot');return true;}
       kaiActivityFinish({sources:[]});
-      addMessage('KAI 51 local runtime did not return a response. The request was not sent to any API or external provider.','bot');
+      addMessage("Bro, I don't know what you mean yet. Please elaborate a little.",'bot');
       return true;
     }
     kaiActivityFinish({sources:[]});

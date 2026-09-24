@@ -85,12 +85,14 @@
   const webLookup=async query=>{
     const key='haxbro:kai:web:'+btoa(unescape(encodeURIComponent(String(query)))).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,180);
     try{const cached=JSON.parse(localStorage.getItem(key)||'null');if(cached&&Date.now()-Number(cached.at)<86400000)return cached.data}catch{}
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),4500);
     try{
-      const r=await fetch('/api/kai/search',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query,mode:'fast'})});
+      const r=await fetch('/api/kai/search',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query,mode:'fast'}),signal:controller.signal});
       if(!r.ok)return null;
       const d=await r.json();
       if(d?.ok&&Array.isArray(d.sources)){try{localStorage.setItem(key,JSON.stringify({at:Date.now(),data:d}))}catch{};return d}
     }catch{}
+    finally{clearTimeout(timer)}
     return null;
   };
 
@@ -106,9 +108,12 @@
     const normalized=normalizeConversation(text);
     const normalizedText=normalized.text.trim();
     const normalizedLower=normalizedText.toLowerCase();
-    // Semantic understanding is web-first; these helpers are only retained for normalization, not meaning decisions.
-    const webQuery=/^\S{2,40}$/.test(text)?text:text;
-    const web=await webLookup(webQuery);
+    // Unknown single-token input should be handled immediately instead of wasting the user's time on a web-search spinner.
+    if(/^[a-z][a-z0-9_-]{1,39}$/i.test(text)&&!isConversationalInput(text)&&!/^\d+$/.test(text)){
+      return {response:"Bro, I don't know what you mean by “"+text+"”. Please elaborate a little — tell me what it refers to or what you want me to do with it.",provider:'KAI LOCAL',model:'deterministic-clarification',profile:'light',local:true,sources:[]};
+    }
+    // Semantic understanding may use web evidence, but it is time-bounded and never allowed to leave the chat hanging.
+    const web=await webLookup(text);
     if(web?.sources?.length){
       const webContext=web.sources.map(s=>({title:s.title,url:s.url,text:String(s.text||'').slice(0,2400)}));
       const webProfile=(explicit=>explicit?'heavy':'light')( /\b(?:latest|today|current|news|recent|research|investigate)\b/i.test(text) );
