@@ -97,8 +97,10 @@
     // KAI 51 is the primary runtime. Never silently send the user's message to /api/chat while the local model is warming.
     if(!api.status().ready){
       if(!state.preparing) beginWarmup();
-      overlay('show',state.initProgress,'KAI 51 is still downloading locally…');
-      button('download',state.initProgress);
+      if(!state.overlayReleased){
+        overlay('show',state.initProgress,'KAI 51 is still downloading locally…');
+        button('download',state.initProgress);
+      }
       await api.prepare();
     }
     if(window.setBusy)window.setBusy(true);
@@ -157,7 +159,9 @@
       if(b&&Number.isFinite(Number(p.progress))){
         const incoming=Math.max(0,Math.min(100,Number(p.progress)));
         const n=Math.max(state.initProgress,incoming);
-        state.initProgress=n; animateProgress(n);
+        state.initProgress=n;
+        if(state.overlayReleased) return;
+        animateProgress(n);
         const status=String(p.status||'').toLowerCase();
         const file=p.file?String(p.file).split('/').pop():'';
         const initializing=n>=100 && !apiStatusReady();
@@ -166,14 +170,14 @@
           // while Transformers.js finishes compiling the local runtime.
           state.overlayReleased=true;
           button('ready');
-          setTimeout(()=>{if(!apiStatusReady())overlay('hide',100,'KAI 51 initializing in background…','initializing')},250);
+          overlay('hide',100,'KAI 51 initializing in background…','initializing');
         }
         const label=initializing?'Download complete — initializing KAI 51 locally…':(status.includes('download')||status==='progress'?'Downloading '+(file||'KAI 51 model')+'…':'Retrieving KAI 51…');
         overlay('show',n,label,initializing?'initializing':'download');
       }
     });
     function apiStatusReady(){return !!window.HAxBROLocalKai?.status?.().ready;}
-    window.addEventListener('haxbro:kai-local-ready',()=>{if(state.model==='kai'){state.preparing=false;state.initProgress=100;button('ready');overlay('show',100,'KAI 51 is ready. Finalizing local cache…','initializing');setTimeout(()=>overlay('hide',100,'KAI 51 ready'),420)}});
+    window.addEventListener('haxbro:kai-local-ready',()=>{if(state.model==='kai'){state.preparing=false;state.initProgress=100;state.overlayReleased=true;button('ready');overlay('hide',100,'KAI 51 ready','initializing')}});
     window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');overlay('show',state.initProgress,'KAI 51 local download failed — '+(detail?detail.slice(0,180):'retry to resume.'));button('error')}});
     applyChoice(localStorage.getItem('haxbro_model_choice')||'kai');
     if(state.model==='kai') setTimeout(beginWarmup,80);
