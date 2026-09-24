@@ -20,8 +20,9 @@ const KAI51_VERSION='1.0';
     preparePromise=new Promise(resolve=>{
       const source = "import {pipeline,env} from '" + CDN + "';"
         + "env.allowRemoteModels=true;env.allowLocalModels=false;env.useBrowserCache=true;env.useFSCache=true;"
-        + "const gen=await pipeline('text-generation','" + MODEL + "',{dtype:'q4',progress_callback:(p)=>postMessage({type:'progress',progress:p})});"
-        + "postMessage({type:'ready'});"
+        + "const hasGPU=typeof navigator!=='undefined'&&!!navigator.gpu;const device=hasGPU?'webgpu':'wasm';const dtype=hasGPU?'q4f16':'q4';"
+        + "let gen;try{gen=await pipeline('text-generation','" + MODEL + "',{dtype,device,progress_callback:(p)=>postMessage({type:'progress',progress:p})});}catch(first){if(!hasGPU)throw first;gen=await pipeline('text-generation','" + MODEL + "',{dtype:'q4',device:'wasm',progress_callback:(p)=>postMessage({type:'progress',progress:p})});}"
+        + "postMessage({type:'ready',device,dtype});"
         + "onmessage=async e=>{try{const out=await gen(e.data.prompt,{max_new_tokens:e.data.maxTokens||320,temperature:.25,do_sample:true});"
         + "const text=Array.isArray(out)?(out[0]?.generated_text||''):String(out?.generated_text||out||'');"
         + "postMessage({type:'result',id:e.data.id,text});}catch(err){postMessage({type:'error',id:e.data.id,error:String(err?.message||err))}}};";
