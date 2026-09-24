@@ -8,8 +8,9 @@
     if(mode==='download'){
       b.classList.add('kai-download-mode','kai-download-loading');
       b.disabled=true;
-      b.setAttribute('aria-label','Downloading KAI model');
-      b.innerHTML='<span class="kai-download-icon">↓</span><span class="kai-download-text">DOWNLOAD KAI</span>';
+      b.setAttribute('aria-label','Preparing KAI 51');
+      const pct=Math.max(0,Math.min(100,Math.round(progress)));
+      b.innerHTML='<span class="kai-download-text"><span class="kai-download-percent">'+pct+'%</span></span>';
     } else if(mode==='ready'){
       b.classList.add('kai-download-ready');
       b.disabled=false;
@@ -38,19 +39,33 @@
   async function runLocal(value){
     const api=window.HAxBROLocalKai;
     if(!api)return false;
+    const orchestration=window.HAxBROKai51?.buildPlan?.(value,localStorage.getItem('haxbro_username')||'anonymous-device');
+    const target=orchestration?.localCapability||'';
+    const lower=String(value||'').toLowerCase();
+    if(/\b(decode|decrypt)\b/.test(lower) && window.HAxBRODecodingPartner?.openWithInput){
+      window.HAxBRODecodingPartner.openWithInput(value.replace(/^.*?\b(decode|decrypt)\b/i,'').trim()||''); return true;
+    }
+    if(/\b(encode|encrypt)\b/.test(lower) && window.HAxBRODecodingPartner?.open){
+      window.HAxBRODecodingPartner.open(); return true;
+    }
+    if(/\b(app maker|build me an app|build an app|create an app|make an app)\b/.test(lower) && window.HAxBROFutureMaker?.open){
+      await window.HAxBROFutureMaker.open(value,true); return true;
+    }
+    if(/\b(x pro|deep analysis|investigate this|analyze this deeply)\b/.test(lower) && window.HAxBRODeepX?.openWithTarget){
+      window.HAxBRODeepX.openWithTarget(value); return true;
+    }
     if(!api.status().ready){
       state.preparing=true;
-      // First-use KAI setup is communicated inside the conversation, not as a download button.
-      button('send');
-      const prepMessage=window.addMessage?.('KAI needs to be downloaded for first use. Wait a few seconds — it will download automatically.','bot');
+      window.addMessage?.('KAI 51 is initializing for first use. Wait a few seconds — this happens only once on this device.','bot');
+      button('download',0);
       const ok=await api.prepare();
       state.preparing=false;
       if(!ok){
-        window.addMessage?.('KAI could not finish its first-time download. Please try sending again.','bot');
-        button('send');
+        window.addMessage?.('KAI 51 initialization failed. Nothing was marked complete. Retry when ready.','bot');
+        button('error');
         return true;
       }
-      window.addMessage?.('KAI downloaded. Ask anything.','bot');
+      window.addMessage?.('KAI 51 is ready. Ask anything.','bot');
     }
     button('ready');
     if(window.setBusy)window.setBusy(true);
@@ -101,7 +116,7 @@
       const p=e.detail||{},b=send();
       if(b&&p.status==='progress_total'&&Number.isFinite(p.progress)){
         const n=Math.round(p.progress);
-        b.innerHTML='<span class="kai-download-icon">↓</span><span class="kai-download-text">DOWNLOAD '+n+'%</span>';
+        state.initProgress=n; button('download',n);
       }
     });
     window.addEventListener('haxbro:kai-local-ready',()=>{if(state.model==='kai'&&!state.preparing)button('send')});
