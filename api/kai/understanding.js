@@ -9,6 +9,7 @@ async function webRecognize(input){
   if(!sr.ok)throw new Error('Bing suggestions HTTP '+sr.status);
   const data=await sr.json();
   const suggestions=Array.isArray(data?.[1])?data[1].map(x=>clean(x,240)).filter(Boolean).slice(0,8):[];
+  const words=input.split(/\\s+/).filter(Boolean);
   let language='unknown';
   try{
     const gr=await fetch('https://www.google.com/search?gbv=1&hl=en&q='+encodeURIComponent(input),{headers:{'user-agent':'Mozilla/5.0 HAxBRO-KAI-89'}});
@@ -17,7 +18,7 @@ async function webRecognize(input){
       language=(html.match(/<html[^>]+lang=["']([^"']+)/i)||[])[1]||'unknown';
     }
   }catch{}
-  return {corrected:suggestions[0]||'',language,evidence:suggestions.join(' | '),suggestions};
+  const candidate=suggestions[0]||''; return {corrected:candidate,language,evidence:suggestions.join(' | '),suggestions};
 }
 function safeCorrection(input,web){
   const original=clean(input),candidate=clean(web?.corrected||'');
