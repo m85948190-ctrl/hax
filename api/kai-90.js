@@ -1,5 +1,10 @@
-import { complete } from 'lib/kai';
+import { raceApis, KAI678_PROVIDERS } from 'lib/kai678';
 export const access='public';
-export const methods=['POST'];
-const SYSTEM=`You are KAI 9.0, HAxBRO's code presentation and execution-safety inspector. Analyze generated code blocks and return JSON only. Check language correctness, obvious syntax/runtime hazards, whether browser execution is appropriate, and a safe preview strategy. Never claim execution occurred. Output {verdict:"PASS"|"REVIEW"|"FAIL",language,summary,checks:[],runSupported:boolean,previewMode:"html"|"javascript"|"python"|"css"|"java"|"none",repairPlan:[]}.`;
-export default async function(req,res){const b=req.body||{};const code=typeof b.code==='string'?b.code.slice(0,30000):'';const language=typeof b.language==='string'?b.language.slice(0,40):'text';if(!code)return res.status(400).json({error:'Code is required.'});try{const r=await complete({system:SYSTEM,prompt:`LANGUAGE: ${language}\nCODE:\n${code}`,maxTokens:1200});let out;try{out=JSON.parse(r.text)}catch{out={verdict:'REVIEW',language,summary:'KAI 9.0 returned a non-JSON inspection; review the code before running.',checks:[],runSupported:['html','javascript','python','css'].includes(language.toLowerCase()),previewMode:language.toLowerCase(),repairPlan:[]}}return res.json({ok:true,...out,provider:r.provider,model:r.model})}catch(e){return res.status(503).json({ok:false,error:'KAI 9.0 inspection unavailable right now.'})}}
+export const methods=['POST','OPTIONS'];
+export default async function(req,res){
+  if(req.method==='OPTIONS')return res.status(204).send('');
+  const prompt=String(req.body?.prompt||req.body?.message||'').trim();
+  if(!prompt)return res.status(400).json({ok:false,error:'prompt required'});
+  const r=await raceApis({prompt,maxTokens:Math.min(3000,Number(req.body?.maxTokens)||1800),timeoutMs:Math.min(6000,Number(req.body?.timeoutMs)||4200)});
+  return res.status(r.ok?200:503).json({ok:!!r.ok,engine:'KAI 90',controller:'KAI 6·7·8',primary:true,providers:KAI678_PROVIDERS,...r});
+}
