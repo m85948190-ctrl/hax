@@ -60,6 +60,12 @@ expose = true
 description = "Optional Mistral API key for Kai fallback"
 
 [[secret]]
+name = "CEREBRAS_API_KEY"
+required = false
+expose = true
+description = "Optional Cerebras API key for Kai fallback"
+
+[[secret]]
 name = "OPENROUTER_API_KEY"
 required = false
 expose = true

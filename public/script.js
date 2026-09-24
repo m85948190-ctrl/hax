@@ -107,23 +107,49 @@ let ultimaxRunStarted=0,ultimaxTimer=null;function fmtSecs(s){s=Math.max(0,Math.
     if(priorityModification&&window.HAxBROFutureMaker?.modifyCurrent&&document.getElementById('haxNewAppMaker')?.classList.contains('open')){await window.HAxBROFutureMaker.modifyCurrent(value);return true;}
     if(priorityInvestigation){const opts={research:/\b(?:search google|search the web|google it|give a report|report about|report on)\b/i.test(value)};if(window.HAxBRODeepX?.openWithTarget){window.HAxBRODeepX.openWithTarget(priorityUrl,opts);return true}window.dispatchEvent(new CustomEvent('haxbro:open-xpro',{detail:{target:priorityUrl,...opts}}));return true;}
     if(priorityApp){if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,true);return true}window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value,autoBuild:true}}));return true;}
-    /* Choose depth before showing work. Trivial conversational input stays immediate; light work uses KAI FAST; genuinely complex/current/research work uses KAI 51. */
+    /* Live thinking stays visible while the ordered server backup chain runs. */
     const localApi=window.HAxBROLocalKai;
     const localProfile=localApi?.profileFor?.(value)||'light';
     const trivialLocal=/^\s*[0-9](?:[0-9+*%().\s-]{0,80})\s*$/.test(value)||localApi?.isTrivial?.(value);
     const chosenProfile=trivialLocal?'light':localProfile;
-    if(!trivialLocal)setBusy(true,chosenProfile);
+    setBusy(true,chosenProfile);
+    let apiAnswered=false;
+    try{
+      const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        message:value,
+        kaiMode,
+        prompt:'KAI 51 ordered recovery contract: use the configured provider chain in order. Keep KAI identity independent of providers. KAI 89 is the language-recognition backup layer and KAI 51 is the local backup capability before later providers.',
+        mode,
+        study,
+        username:localStorage.getItem('haxbro_username')||'',
+        history:JSON.stringify(active()?.items?.slice(-20)||[])
+      })});
+      const dd=await rr.json().catch(()=>({}));
+      if(rr.ok&&(dd.response||dd.text||dd.message||dd.answer||dd.output)){
+        apiAnswered=true;
+        kaiActivityResearch(dd?.webSteps||dd?.sources||[]);
+        kaiActivityFinish(dd);
+        addMessage(dd.response||dd.text||dd.message||dd.answer||dd.output,'bot');
+        return true;
+      }
+    }catch{}
+    /* If the server chain is unavailable, keep HAxBRO alive with the browser-local KAI 51 runtime. */
     if(localApi?.respond){
-      const responsePromise=localApi.respond(value,chosenProfile==='heavy'?'deep':'light');
-      const timeout=new Promise(resolve=>setTimeout(()=>resolve({response:"Bro, I don't know what you mean yet. Please elaborate a little — tell me what you're trying to do, what the input refers to, or what result you want.",provider:'KAI LOCAL',model:'deterministic-clarification-timeout',profile:'light',local:true,sources:[]}),9000));
-      const localResult=await Promise.race([responsePromise,timeout]);
-      if(localResult?.response){kaiActivityFinish({sources:localResult.sources||[]});addMessage(localResult.response,'bot');return true;}
-      kaiActivityFinish({sources:[]});
-      addMessage("Bro, I don't know what you mean yet. Please elaborate a little.",'bot');
-      return true;
+      try{
+        const responsePromise=localApi.respond(value,chosenProfile==='heavy'?'deep':'light');
+        const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),9000));
+        const localResult=await Promise.race([responsePromise,timeout]);
+        if(localResult?.response){
+          kaiActivityFinish(localResult);
+          addMessage(localResult.response,'bot');
+          return true;
+        }
+      }catch{}
     }
-    kaiActivityFinish({sources:[]});
-    addMessage('KAI 51 local runtime is not loaded yet. No API or external provider will be used.','bot');
+    if(!apiAnswered){
+      kaiActivityFinish({sources:[]});
+      addMessage("KAI could not complete the request right now. Please try again.",'bot');
+    }
     return true;
 /* KAI workspace handoff: users describe the task once; KAI opens the correct workspace and carries the exact target/input with it. */
 const investigationMatch=(value.match(/https?:\/\/[^\s<>"']+/i)||[''])[0].replace(/[),.;!?]+$/,'');
