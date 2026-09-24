@@ -8,7 +8,7 @@ export default async function(req,res){
   try{
     const origin=req.headers?.origin||"";
     const base=origin && /^https?:\/\//i.test(origin) ? origin : "https://haxbro.hatchable.site";
-    const r=await fetch(base+"/api/kai/builder-agent",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt:prompt.slice(0,12000)})});
+    const r=await fetch(base+"/api/app-builder",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({prompt:prompt.slice(0,12000),username:req.body?.username||"app-maker",kaiMode:"deep",kai51Context:{mode:"KAI DEEP",workspace:"APP MAKER",policy:"KAI-first; public web retrieval for requirements; external model/API only as recovery compute",goal:"Understand the product before implementation and build the requested product itself, not a generic chatbot."}})});
     const data=await r.json();
     if(!r.ok) return res.status(r.status).json(data);
     return res.json(data);
