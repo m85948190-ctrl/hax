@@ -138,7 +138,7 @@
         state.initProgress=n; button('download',n);
         const status=String(p.status||'').toLowerCase();
         const file=p.file?String(p.file).split('/').pop():'';
-        const label=status.includes('ready')?'Finalizing local model…':(status.includes('download')||status==='progress'?'Downloading '+(file||'KAI 51 model')+'…':'Retrieving KAI 51…');
+        const label=n>=100?'Download complete — initializing KAI 51 locally…':(status.includes('download')||status==='progress'?'Downloading '+(file||'KAI 51 model')+'…':'Retrieving KAI 51…');
         overlay('show',n,label+' '+Math.round(n)+'%');
       }
     });
