@@ -74,21 +74,16 @@
     });
   }
 
-  const scrape=async url=>{try{const r=await fetch('/api/kai/browser',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});const d=await r.json();return r.ok?d:null}catch{return null}};
+  const scrape=async()=>null; // Disabled: local-only KAI does not use server/web retrieval.
 
   async function respond(userPrompt,forcedMode='auto'){
     const text=clean(userPrompt,5000).trim();if(!text)return null;
     const trivial=/^(hi|hello|hey|yo|sup|good morning|good afternoon|good evening|thanks|thank you|ok|okay)\b/i.test(text);
     if(trivial)return {response:/^(thanks|thank you|ok|okay)\b/i.test(text)?'You got it.':`Hey! 👋 I’m KAI. What are we building?`,provider:'KAI LOCAL',model:'deterministic-local',profile:'light',local:true,sources:[]};
-    const profile=forcedMode==='fast'?'light':forcedMode==='deep'?'heavy':complexityProfile(text);
-    const urls=[...text.matchAll(/https?:\/\/[^\s<>"']+/gi)].map(x=>x[0].replace(/[),.;!?]+$/,'')).slice(0,3);
+    const profile='heavy';
     const sources=[];
-    for(const url of urls){const d=await scrape(url);if(d?.ok)sources.push({url:d.url,title:d.title,text:clean(d.text,3500)})}
-    const needsWeb=profile==='heavy'||/\b(search|research|latest|current|today|news|what is happening|compare|look up|find out|according to|source|website)\b/i.test(text);
-    if(needsWeb){try{const r=await fetch('/api/kai/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:text,mode:profile==='heavy'?'deep':'fast'})});const d=await r.json();if(r.ok&&Array.isArray(d.sources))sources.push(...d.sources.map(s=>({url:s.url,title:s.title,text:clean(s.text,3500)})))}catch{}}
     const m=readMemory();
-    const web=sources.map((s,i)=>'SOURCE '+(i+1)+': '+(s.title||s.url)+'\n'+s.text).join('\n\n');
-    const prompt='You are KAI, HAxBRO AI\'s local-first intelligence. '+(profile==='light'?'Use KAI FAST for this simple request.':'Use KAI 51 for this complex request.')+'\nBe direct and useful. Do not claim to be an external provider.\nUSER: '+text+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nPUBLIC WEB EVIDENCE: '+(web||'None.')+'\nRespond directly.';
+    const prompt='You are KAI 51, HAxBRO AI\'s private local intelligence runtime. Think through the request using the local model and the user\'s browser-local memory only. Do not call, mention, simulate, or depend on any API, provider, server model, web-search service, or external intelligence. Be direct, useful, and honest about what the local runtime can determine. USER: '+text+'\nLOCAL MEMORY: '+JSON.stringify(m.notes.slice(-12))+'\nRespond directly.';
     const answer=await generate(prompt,PROFILES[profile].maxTokens,profile);
     if(!answer)return null;
     if(sources.length){m.sources.push(...sources.map(s=>({url:s.url,title:s.title,at:Date.now()})));writeMemory(m)}

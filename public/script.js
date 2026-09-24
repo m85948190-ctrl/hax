@@ -99,16 +99,17 @@ let ultimaxRunStarted=0,ultimaxTimer=null;function fmtSecs(s){s=Math.max(0,Math.
     if(priorityModification&&window.HAxBROFutureMaker?.modifyCurrent&&document.getElementById('haxNewAppMaker')?.classList.contains('open')){await window.HAxBROFutureMaker.modifyCurrent(value);return true;}
     if(priorityInvestigation){if(window.HAxBRODeepX?.openWithTarget){window.HAxBRODeepX.openWithTarget(priorityUrl);return true}window.dispatchEvent(new CustomEvent('haxbro:open-xpro',{detail:{target:priorityUrl}}));return true;}
     if(priorityApp&&window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,true);return true;}
-    /* KAI LOCAL is primary for ordinary chat. If it stalls, the normal KAI API recovery path takes over. */
+    /* KAI LOCAL is the only normal-chat intelligence path. No API/provider timeout or fallback exists. */
     if(window.HAxBROLocalKai?.respond){
-      const profile=window.HAxBROLocalKai.profileFor?.(value)||'light';
-      const timeoutMs=profile==='light'?3500:7000;
-      let localTimedOut=false;
-      const localPromise=window.HAxBROLocalKai.respond(value,kaiMode);
-      const localResult=await Promise.race([localPromise,new Promise(resolve=>setTimeout(()=>{localTimedOut=true;resolve(null)},timeoutMs))]);
+      const localResult=await window.HAxBROLocalKai.respond(value,'deep');
       if(localResult?.response){kaiActivityFinish({sources:localResult.sources||[]});addMessage(localResult.response,'bot');return true;}
-      if(localTimedOut)kaiActivityResearch([{label:'KAI local runtime exceeded its response window; activating API recovery'}]);
+      kaiActivityFinish({sources:[]});
+      addMessage('KAI 51 local runtime did not return a response. The request was not sent to any API or external provider.','bot');
+      return true;
     }
+    kaiActivityFinish({sources:[]});
+    addMessage('KAI 51 local runtime is not loaded yet. No API or external provider will be used.','bot');
+    return true;
 /* KAI workspace handoff: users describe the task once; KAI opens the correct workspace and carries the exact target/input with it. */
 const investigationMatch=(value.match(/https?:\/\/[^\s<>"']+/i)||[''])[0].replace(/[),.;!?]+$/,'');
 const lowerValue=value.toLowerCase();
