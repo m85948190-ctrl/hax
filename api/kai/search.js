@@ -14,7 +14,7 @@ function extractLinks(html){
     if(url.startsWith("/url?q="))try{url=decodeURIComponent(url.slice(7).split("&")[0])}catch{}
     if(url.startsWith("//"))url="https:"+url;
     if(/^https?:\/\//i.test(url)){
-      try{if(new URL(url).hostname.includes("google."))continue}catch{}
+      try{const host=new URL(url).hostname;if(host.includes("google.")||host.includes("duckduckgo.")||host.includes("bing."))continue}catch{}
       if(!out.some(x=>x.url===url))out.push({title,url});
     }
   }
