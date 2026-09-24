@@ -32,13 +32,22 @@ export default async function(req,res){
     const existing=req.body?.existingProduct?.files?req.body.existingProduct:null;
     const appName=requestedName(prompt)||cleanName(req.body?.appName);
     const kai51Plan=createKai51Plan({prompt,username:req.body?.username||'local-user',history:''});
-    const result=harden(identity(buildNativeProduct(prompt,{existing,appName}),appName));
+    /* API-first build compute. KAI remains the orchestrator; native compiler is the fallback. */
+    let result=null,computeSource='kai-fallback';
+    try{
+      const origin=req.headers?.origin&&String(req.headers.origin).startsWith('http')?req.headers.origin:'https://haxbro.hatchable.site';
+      const br=await fetch(origin+'/api/kai/builder-agent',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt,username:req.body?.username||'local-user'})});
+      const bd=await br.json().catch(()=>({}));
+      if(br.ok&&bd?.files?.length){result={name:bd.name,summary:bd.summary,files:bd.files,plan:bd.plan,testChecklist:bd.testChecklist,validation:bd.validation,steps:bd.steps};computeSource='api';}
+    }catch(e){console.warn('KAI Builder API compute unavailable; using native fallback',e?.message||e)}
+    if(!result)result=buildNativeProduct(prompt,{existing,appName});
+    result=harden(identity(result,appName));
     result.kai={
-      engine:'KAI 51 → KAI Native Product Compiler',
-      mode:'provider-free',
-      provider:'none',
+      engine:'KAI 51 App Maker',
+      mode:'api-first-with-kai-fallback',
+      provider:computeSource==='api'?'KAI Builder API':'KAI Native fallback',
       local:true,
-      pipeline:['intent','product-type detection','native build','responsive hardening','delivery'],
+      pipeline:['intent','product-type detection','API build','validation','KAI fallback if needed','delivery'],
       plan:kai51Plan,
       ownerSecretsExcluded:true
     };
