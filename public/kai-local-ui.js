@@ -1,5 +1,5 @@
 (() => {
-  const state={model:localStorage.getItem('haxbro_model_choice')||'kai',preparing:false};
+  const state={model:localStorage.getItem('haxbro_model_choice')||'kai',preparing:false,initProgress:0};
   const $=id=>document.getElementById(id);
   const send=()=>$('sendBtn');
   function button(mode='send',progress=0){

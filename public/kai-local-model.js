@@ -1,5 +1,7 @@
 (() => {
   const MODEL = 'onnx-community/SmolLM2-360M-Instruct';
+// KAI 51 foundation: one persistent browser-local runtime per user/device.
+const KAI51_VERSION='1.0';
   const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.2/+esm';
   let worker = null, ready = false, loading = false, queue = new Map(), seq = 0, preparePromise = null;
   const clean = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
