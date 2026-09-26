@@ -30,6 +30,12 @@ expose = true
 description = "Fourth Groq chat key for HAxBRO failover"
 
 [[secret]]
+name = "GEMINI_API_KEY_1"
+required = false
+expose = true
+description = "Gemini chat fallback key for HAxBRO"
+
+[[secret]]
 name = "ART_IMAGE_API_1_KEY"
 required = false
 expose = true

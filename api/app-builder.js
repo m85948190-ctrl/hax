@@ -9,6 +9,17 @@ const safe=(v,n=14000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
 const cleanName=v=>String(v||'').replace(/[<>"'\`]/g,'').replace(/\s+/g,' ').trim().slice(0,70);
 const requestedName=q=>{const m=String(q||'').match(/\b(?:called|named|name it|call it)\s+["']?([^"'\n,.!?]{1,60})/i);return cleanName(m?.[1]||'')};
 
+async function kaiWebBuildResearch(prompt,origin){
+  try{
+    const r=await fetch(origin+'/api/kai/search',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({query:String(prompt||'').slice(0,700),mode:'deep'})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.ok)return {ok:false,sources:[],blueprint:''};
+    const sources=Array.isArray(d.sources)?d.sources.slice(0,5).map(x=>({title:safe(x.title,180),url:safe(x.url,500),text:safe(x.text,1200)})):[];
+    const blueprint=['WEB BUILD BLUEPRINT — KAI WEB AGENT','Build request: '+safe(prompt,3000),...sources.map((s,i)=>'Reference '+(i+1)+': '+s.title+'\nURL: '+s.url+'\nEvidence: '+s.text),'Use public evidence as design/feature guidance only; do not copy proprietary code or private data.'].join('\n\n');
+    return {ok:true,engine:d.engine||'KAI Web Search',sources,blueprint};
+  }catch(e){return {ok:false,sources:[],blueprint:''};}
+}
+
 function harden(result){
   if(!result?.files?.length)return result;
   const files=result.files.map(f=>({...f,content:String(f.content||'')}));
@@ -33,16 +44,19 @@ export default async function(req,res){
     const existing=req.body?.existingProduct?.files?req.body.existingProduct:null;
     const appName=requestedName(prompt)||cleanName(req.body?.appName);
     const kai51Plan=createKai51Plan({prompt,username:req.body?.username||'local-user',history:''});
+    const origin=req.headers?.origin&&String(req.headers.origin).startsWith('http')?req.headers.origin:'https://haxbro.hatchable.site';
+    const webResearch=await kaiWebBuildResearch(prompt,origin);
+    const researchedPrompt=webResearch.ok&&webResearch.blueprint?prompt+'\n\n'+webResearch.blueprint:prompt;
     /* API-first build compute. KAI remains the orchestrator; native compiler is the fallback. */
     let result=null,computeSource='kai-fallback';
     try{
       if(KAI_NATIVE_ONLY) throw new Error('KAI_NATIVE_ONLY');
       const origin=req.headers?.origin&&String(req.headers.origin).startsWith('http')?req.headers.origin:'https://haxbro.hatchable.site';
-      const br=await fetch(origin+'/api/kai/builder-agent',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt,username:req.body?.username||'local-user'})});
+      const br=await fetch(origin+'/api/kai/builder-agent',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt:researchedPrompt,username:req.body?.username||'local-user'})});
       const bd=await br.json().catch(()=>({}));
       if(br.ok&&bd?.files?.length){result={name:bd.name,summary:bd.summary,files:bd.files,plan:bd.plan,testChecklist:bd.testChecklist,validation:bd.validation,steps:bd.steps};computeSource='api';}
     }catch(e){console.warn('KAI Builder API compute unavailable; using native fallback',e?.message||e)}
-    if(!result)result=buildNativeProduct(prompt,{existing,appName});
+    if(!result)result=buildNativeProduct(researchedPrompt,{existing,appName});
     result=harden(identity(result,appName));
     result.kai={
       engine:'KAI 51 App Maker',
