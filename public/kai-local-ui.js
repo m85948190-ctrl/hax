@@ -68,7 +68,8 @@
     }
   }
   function applyChoice(choice){
-    state.model=choice||'kai';
+    // Native-only test: keep the selector visually on KAI and never switch the active engine.
+    state.model='kai';
     localStorage.setItem('haxbro_model_choice',state.model);
     window.HAxBROSelectedModel=state.model;
     document.querySelectorAll('.model-option').forEach(x=>x.classList.toggle('active',x.dataset.modelChoice===state.model));

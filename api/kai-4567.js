@@ -1,4 +1,5 @@
 import { ai, browser } from 'hatchable';
+import { KAI_NATIVE_ONLY } from 'lib/kai-native-test-mode';
 
 export const access='public';
 export const methods=['POST','OPTIONS'];
@@ -34,6 +35,7 @@ function fallbackPlan(p,l){
 
 export default async function(req,res){
   if(req.method==='OPTIONS')return res.status(204).send('');
+  if(KAI_NATIVE_ONLY)return res.status(503).json({ok:false,error:'KAI_NATIVE_ONLY',message:'Native-only test mode is active.'});
   const b=req.body||{},prompt=clean(b.prompt);
   if(!prompt)return res.status(400).json({ok:false,error:'Add an art prompt first.'});
   const lexicalResult=lexical(prompt);

@@ -1,4 +1,5 @@
 import { ai } from 'hatchable';
+import { KAI_NATIVE_ONLY } from 'lib/kai-native-test-mode';
 export const access='public';
 export const methods=['POST','OPTIONS'];
 
@@ -31,6 +32,7 @@ function localPlan(prompt,mode){
 }
 
 export default async function(req,res){
+  if(KAI_NATIVE_ONLY)return res.status(503).json({ok:false,error:'KAI_NATIVE_ONLY',message:'Native-only test mode is active.'});
   if(req.method==='OPTIONS')return res.status(204).send('');
   const b=req.body||{};
   const action=clean(b.action||'plan',40);

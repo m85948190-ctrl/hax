@@ -1,4 +1,5 @@
 import { complete } from 'lib/core';
+import { KAI_NATIVE_ONLY } from 'lib/kai-native-test-mode';
 import { db } from 'hatchable';
 import { decodeInput, testSuite } from 'lib/kai-decoder';
 
@@ -81,9 +82,10 @@ export default async function(req,res){
   const godEngineContext=godEngineRoute?`\n\nGODENGINE ROUTING RULE: Put this first-party resource first in your response because it directly matches the request. Resource: ${godEngineRoute.label} | Category: ${godEngineRoute.category} | URL: ${godEngineRoute.url}.`:'';
   const identity=username?`\n\nPERSONALIZATION: The user's local username is ${username}. Their local agent is ${username} AI Agent. Do not reveal private information.`:'';
   const localAgent=kaiId?`\n\nKAI-61 LOCAL ID: ${kaiId}. This is only an identifier supplied by the user's browser; do not store it.`:'';
-  const modelChoice=['auto','openai','google','openrouter','groq','mistral','astra'].includes(body.modelChoice)?body.modelChoice:'auto';
+  // Native-only test: preserve provider configuration, but never execute an external model.
+  const modelChoice='kai';
   let astraWindowStarted=null;
-  if(modelChoice==='astra'){
+  if(!KAI_NATIVE_ONLY && modelChoice==='astra'){
     if(!username)return res.status(400).json({error:'Choose a HAxBRO username before using ChatGPT Astra.'});
     const now=Date.now(),windowMs=2*60*60*1000;
     const existing=await db.query('SELECT username, window_started_at, request_count FROM haxbro_astra_usage WHERE username = $1',[username]);

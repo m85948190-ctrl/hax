@@ -1,4 +1,5 @@
 import { ai } from 'hatchable';
+import { KAI_NATIVE_ONLY } from 'lib/kai-native-test-mode';
 
 export const access = 'public';
 
@@ -11,6 +12,7 @@ const RUBRICS = {
 };
 
 export default async function(req,res){
+  if(KAI_NATIVE_ONLY)return res.status(503).json({ok:false,error:'KAI_NATIVE_ONLY',message:'Native-only test mode is active.'});
   if(req.method !== 'POST') return res.status(405).json({ok:false,error:'POST required'});
   const body=req.body||{};
   const type=String(body.type||'generic').toLowerCase();
