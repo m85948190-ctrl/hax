@@ -11,6 +11,6 @@
   "categories":["productivity","developer","utilities"],
   "description":"HAxBRO personal AI workspace for coding, app building, research, and defensive cybersecurity.",
   "icons":[
-    {"src":"/logo-symbol.svg?v=999","sizes":"400x400","type":"image/svg+xml","purpose":"any"}
+    {"src":"/icon-192.svg?v=753","sizes":"400x400","type":"image/svg+xml","purpose":"any"}
   ]
 }
