@@ -1,87 +1,33 @@
 [ai]
 required = true
 providers = ["openai", "google"]
-description = "HAxBRO core AI provider configuration; KAI uses its own OpenRouter key failover chain"
-
-[[secret]]
-name = "OPENROUTER_API_KEY_1"
-required = true
-expose = true
-description = "Primary OpenRouter key for HAxBRO KAI"
-
-[[secret]]
-name = "OPENROUTER_API_KEY_2"
-required = true
-expose = true
-description = "Secondary OpenRouter key for HAxBRO KAI failover"
-
-[[secret]]
-name = "OPENROUTER_API_KEY_3"
-required = true
-expose = true
-description = "Tertiary OpenRouter key for HAxBRO KAI failover"
+description = "HAxBRO chat compute uses the four Groq keys; native KAI remains the local fallback."
 
 # Authentication is intentionally disabled; HAxBRO uses browser-local username identity.
 
 [[secret]]
-name = "OPENAI_API_KEY"
+name = "GROQ_API_KEY_1"
 required = false
 expose = true
-description = "OpenAI API key for HAxBRO primary AI provider"
-
-[[secret]]
-name = "GOOGLE_API_KEY"
-required = false
-expose = true
-description = "Google Gemini API key for HAxBRO secondary AI provider"
-
-[[secret]]
-name = "GROQ_API_KEY"
-required = false
-expose = true
-description = "Optional Groq API key for Kai fallback"
+description = "Primary Groq chat key for HAxBRO"
 
 [[secret]]
 name = "GROQ_API_KEY_2"
 required = false
 expose = true
-description = "Second optional Groq API key for Kai fallback"
+description = "Second Groq chat key for HAxBRO failover"
 
 [[secret]]
 name = "GROQ_API_KEY_3"
 required = false
 expose = true
-description = "Third optional Groq API key for Kai fallback"
+description = "Third Groq chat key for HAxBRO failover"
 
 [[secret]]
-name = "MISTRAL_API_KEY"
+name = "GROQ_API_KEY_4"
 required = false
 expose = true
-description = "Optional Mistral API key for Kai fallback"
-
-[[secret]]
-name = "CEREBRAS_API_KEY"
-required = false
-expose = true
-description = "Optional Cerebras API key for Kai fallback"
-
-[[secret]]
-name = "OPENROUTER_API_KEY"
-required = false
-expose = true
-description = "Final OpenRouter fallback key for the Ultimax Normal API chain"
-
-[[secret]]
-name = "GROQ_API_KEY_ULTIMAX"
-required = false
-expose = true
-description = "Optional dedicated Groq API key for the Grook steps in the Ultimax Normal API fallback chain"
-
-[[secret]]
-name = "HF_TOKEN"
-required = false
-expose = true
-description = "Optional Hugging Face token for Kai model fallback"
+description = "Fourth Groq chat key for HAxBRO failover"
 
 [[secret]]
 name = "ART_IMAGE_API_1_KEY"
