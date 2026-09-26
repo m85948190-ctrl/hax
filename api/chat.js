@@ -54,7 +54,8 @@ export default async function(req,res){
   cors(res);
   if(req.method==='OPTIONS')return res.status(204).send('');
   const body=req.body||{};
-  const prompt=typeof body.prompt==='string'?body.prompt.trim():(typeof body.message==='string'?body.message.trim():'');
+  // `message` is the actual user request; `prompt` is only an optional instruction wrapper from the client.
+  const prompt=typeof body.message==='string'?body.message.trim():(typeof body.prompt==='string'?body.prompt.trim():'');
   const configuredAdminSecret=String(process.env.ADMIN69_PASSWORD||'');
   const adminAuthenticated=!!configuredAdminSecret && await verifyAdminCookie(req.headers?.cookie,configuredAdminSecret).catch(()=>false);
   const requestedMode=body.mode==='expert'||body.mode==='beast'||body.mode==='hacking'?'expert':body.mode==='work'||body.mode==='code'?'work':'normal';
