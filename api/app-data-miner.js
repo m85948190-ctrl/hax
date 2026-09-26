@@ -1,4 +1,5 @@
 import { config } from "hatchable";
+import { KAI_NATIVE_ONLY } from "lib/kai-native-test-mode";
 
 export const access="public";
 export const methods=["POST"];
@@ -37,7 +38,9 @@ export default async function(req,res){
   if(req.method!=="POST")return res.status(405).json({ok:false,error:"POST required"});
   const message=clean(req.body?.message,6000),history=clean(req.body?.history,8000);
   if(!message)return res.status(400).json({ok:false,error:"message required"});
-  let result,source="api";try{result=await apiClassify(message,history)}catch(e){source="kai-fallback";result=fallback(message,history)}
+  let result,source="kai-fallback";
+  if(KAI_NATIVE_ONLY){ result=fallback(message,history); }
+  else { try{result=await apiClassify(message,history)}catch(e){source="kai-fallback";result=fallback(message,history)} }
   result=Object.assign({route:"chat",action:"answer",wantsApp:false,confidence:0,reason:""},result);
   /* Explicit non-implementation language on the current message always overrides older build context. */
   if(/\b(?:this is|just an?|example only|do not|don\x27t|dont|never)\b[\s\S]{0,120}\b(?:implement|build|create|make|generate|rule[- ]based)\b/i.test(message) && /\b(?:implement|build|create|make|generate|rule[- ]based)\b/i.test(message)){

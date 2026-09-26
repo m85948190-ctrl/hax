@@ -1,5 +1,6 @@
 import { buildNativeProduct } from 'lib/kai-native-builder';
 import { createKai51Plan } from 'lib/kai51-core';
+import { KAI_NATIVE_ONLY } from 'lib/kai-native-test-mode';
 
 export const access='public';
 export const methods=['POST'];
@@ -35,6 +36,7 @@ export default async function(req,res){
     /* API-first build compute. KAI remains the orchestrator; native compiler is the fallback. */
     let result=null,computeSource='kai-fallback';
     try{
+      if(KAI_NATIVE_ONLY) throw new Error('KAI_NATIVE_ONLY');
       const origin=req.headers?.origin&&String(req.headers.origin).startsWith('http')?req.headers.origin:'https://haxbro.hatchable.site';
       const br=await fetch(origin+'/api/kai/builder-agent',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt,username:req.body?.username||'local-user'})});
       const bd=await br.json().catch(()=>({}));

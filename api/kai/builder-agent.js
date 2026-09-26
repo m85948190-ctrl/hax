@@ -1,4 +1,5 @@
 import { config } from "hatchable";
+import { KAI_NATIVE_ONLY } from "lib/kai-native-test-mode";
 
 async function kaiCompute({system="",prompt="",maxTokens=8000}){
   // One KAI compute adapter. No provider fallback/cascade.
@@ -115,6 +116,7 @@ export default async function(req,res){
   if(req.method!=="POST") return res.status(405).json({error:"POST required"});
   const request=String(req.body?.prompt||"").trim();
   if(!request) return res.status(400).json({error:"Describe the application you want to build."});
+  if(KAI_NATIVE_ONLY) return res.status(503).json({error:"KAI native-only test mode is active; external builder intelligence is disabled."});
   try{
     let final=null;
     let plan=null;
