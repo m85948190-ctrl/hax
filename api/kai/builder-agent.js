@@ -2,23 +2,22 @@ import { config } from "hatchable";
 import { KAI_NATIVE_ONLY } from "lib/kai-native-test-mode";
 
 async function kaiCompute({system="",prompt="",maxTokens=8000}){
-  // One KAI compute adapter. No provider fallback/cascade.
+  // KAI 51 has one compute adapter by design. No model cascade is hidden behind KAI.
   const key=await config.get("OPENROUTER_API_KEY_2");
   if(!key) throw new Error("KAI compute adapter is not configured.");
-  const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{
-    Authorization:"Bearer "+key,"Content-Type":"application/json",
-    "HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI 2.0"
-  },body:JSON.stringify({
-    model:"openrouter/free",
-    messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],
-    max_tokens:Math.min(Number(maxTokens)||8000,12000),
-    temperature:0.2
-  })});
-  const raw=await r.text();
-  if(!r.ok) throw new Error("KAI compute adapter HTTP "+r.status+": "+raw.slice(0,500));
-  const j=JSON.parse(raw),text=j?.choices?.[0]?.message?.content||"";
-  if(!text.trim()) throw new Error("KAI compute adapter returned no text.");
-  return {text:text.trim(),provider:"KAI single compute adapter"};
+  const models=["openrouter/free","qwen/qwen3-coder:free","openai/gpt-oss-20b:free"];
+  const errors=[];
+  for(const model of models){
+    try{
+      const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json","HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI 51"},body:JSON.stringify({model,messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],max_tokens:Math.min(Number(maxTokens)||8000,12000),temperature:0.2})});
+      const raw=await r.text();
+      if(!r.ok){errors.push(model+" HTTP "+r.status+" "+raw.slice(0,240));continue;}
+      const j=JSON.parse(raw),text=j?.choices?.[0]?.message?.content||"";
+      if(text.trim()) return {text:text.trim(),provider:"KAI 51 compute adapter",model};
+      errors.push(model+" returned no text");
+    }catch(e){errors.push(model+" "+String(e?.message||e));}
+  }
+  throw new Error("KAI 51 compute unavailable: "+errors.join(" | "));
 }
 
 export const access = "public";
