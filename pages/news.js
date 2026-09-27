@@ -12,8 +12,16 @@ export default async function (req, res) {
       }
     });
 
-    const body = await upstream.text();
+    let body = await upstream.text();
     const contentType = upstream.headers.get("content-type") || "text/html; charset=utf-8";
+
+    // Keep the Stork Wire article pages visually independent from Hatchable's
+    // platform badge. Hatchable injects #hb-badge at the platform edge, so
+    // suppress it in the proxied document and remove it if it is later added.
+    if (contentType.toLowerCase().includes("text/html")) {
+      const badgeGuard = `<style id="haxbro-badge-guard">#hb-badge{display:none!important}</style><script>(function(){function removeBadge(){var b=document.getElementById('hb-badge');if(b)b.remove()}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',removeBadge)}else{removeBadge()}new MutationObserver(removeBadge).observe(document.documentElement,{childList:true,subtree:true})})();</script>`;
+      body = body.includes("</head>") ? body.replace("</head>", badgeGuard + "</head>") : badgeGuard + body;
+    }
 
     res.status(upstream.status || 200);
     res.setHeader("content-type", contentType);
