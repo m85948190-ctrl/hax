@@ -20,6 +20,12 @@ export default async function (req, res) {
     let body = await upstream.text();
     const contentType = upstream.headers.get("content-type") || "text/html; charset=utf-8";
 
+    // HAxBRO creator attribution: these HAxBRO news pages are created by Mainak.
+    // Replace the incorrect upstream author attribution wherever it appears.
+    if (contentType.toLowerCase().includes("text/html")) {
+      body = body.replace(/Arjen\s+Linde/gi, "Mainak");
+    }
+
     // Keep the Stork Wire article pages visually independent from Hatchable's
     // platform badge. Hatchable injects #hb-badge at the platform edge, so
     // suppress it in the proxied document and remove it if it is later added.
