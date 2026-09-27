@@ -5,7 +5,7 @@ async function kaiCompute({system="",prompt="",maxTokens=8000}){
   // KAI 51 uses one bounded compute adapter. Keep the synthesis path fast enough for the App Maker request.
   const key=await config.get("OPENROUTER_API_KEY_2");
   if(!key) throw new Error("KAI compute adapter is not configured.");
-  const model="qwen/qwen3-coder:free";
+  const model="openai/gpt-oss-20b:free";
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),12000);
   try{
