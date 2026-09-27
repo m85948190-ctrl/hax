@@ -5,7 +5,7 @@ async function kaiCompute({system="",prompt="",maxTokens=8000}){
   // KAI 51 owns synthesis; this is only its bounded server-side compute adapter.
   const key=String(await config.get("OPENROUTER_API_KEY_2")||"").trim();
   if(!key) throw new Error("KAI compute adapter is not configured.");
-  const model="qwen/qwen3.8-27b:free";
+  const model="nvidia/nemotron-3-ultra:free";
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),14000);
   try{
