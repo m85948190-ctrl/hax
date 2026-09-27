@@ -2,16 +2,18 @@ const $=s=>document.querySelector(s),messages=$('#messages'),input=$('#promptInp
 function closeUltimaxMode(){const panel=$('#ultimaxMode');if(panel){panel.hidden=true;panel.setAttribute('aria-hidden','true')}const header=$('#adminUltimaxHeader');if(header){header.setAttribute('aria-hidden','true');header.style.display='none'}document.body.classList.remove('ultimax-open')}
 function setOverdrive(v=true){overdrive=!!v;document.body.classList.toggle('overdrive-ui',overdrive);document.body.classList.toggle('kai69-secret-mode',overdrive);if(overdrive){document.body.classList.remove('beast-ui','cyber-ui','cyber-alert');document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.sidebar,.topbar,.chat-head,.chat-panel,.mobile-menu,.ultimax-live-rail').forEach(el=>{if(el)el.dataset.kai69Hidden='1'});if(window.HAxBROAdmin69Simulation?.open)window.HAxBROAdmin69Simulation.open();}else{document.querySelectorAll('[data-kai69-hidden]').forEach(el=>delete el.dataset.kai69Hidden);window.HAxBROAdmin69Simulation?.close?.();setMode(mode);renderHistory();renderMessages();applyContextTheme('')}}async function checkAdmin69(text){
  const v=String(text||'').trim().toLowerCase();
- // Accept only the exact owner trigger, with harmless spacing variants. Intercept before every other router.
+ // ADMIN 69 is an explicit local workspace command. It always wins before
+ // App Maker, Decoder, research, normal chat, or any other router.
  const isAdmin69=/^admin\s*69$/.test(v);
- if(!isAdmin69||admin69Busy)return false;
- if(sessionStorage.getItem('haxbro_admin69_authenticated')==='true'){
-   setOverdrive(true);return true;
- }
- admin69Busy=true;
- const gate=$('#adminPasswordGate'),field=$('#adminPasswordInput'),err=$('#adminPasswordError');
- if(gate){gate.hidden=false;gate.setAttribute('aria-hidden','false');if(err)err.hidden=true;if(field){field.value='';setTimeout(()=>field.focus(),40)}}
- return true
+ if(!isAdmin69)return false;
+ admin69Busy=false;
+ sessionStorage.setItem('haxbro_admin69_triggered','true');
+ setOverdrive(true);
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+   if(!document.body.classList.contains('overdrive-ui'))setOverdrive(true);
+   window.HAxBROAdmin69Simulation?.open?.();
+ }));
+ return true;
 }
 
 
