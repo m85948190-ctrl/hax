@@ -12,7 +12,7 @@ async function kaiCompute({system="",prompt="",maxTokens=8000}){
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),10000);
     try{
-      const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",signal:controller.signal,headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],max_tokens:Math.min(Number(maxTokens)||8000,8000),temperature:0.2})});
+      const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",signal:controller.signal,headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],max_tokens:Math.min(Number(maxTokens)||5000,5000),temperature:0.2})});
       const raw=await r.text();
       if(!r.ok){errors.push(name+" HTTP "+r.status);continue;}
       const j=JSON.parse(raw),text=j?.choices?.[0]?.message?.content||"";
