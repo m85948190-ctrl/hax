@@ -118,6 +118,8 @@ $('#build').addEventListener('click',build);prompt.addEventListener('keydown',e=
     side.appendChild(el); side.scrollTop=side.scrollHeight; return el;
   }
   function setBusy(v){btn.disabled=v;input.disabled=v;btn.classList.toggle('working',v)}
+  function resizeComposer(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,110)+'px'}
+  input.addEventListener('input',resizeComposer); resizeComposer();
   async function sendToKai(){
     const change=input.value.trim();
     if(!change)return;
