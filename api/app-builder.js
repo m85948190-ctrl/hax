@@ -46,7 +46,7 @@ export default async function(req,res){
     const origin=req.headers?.origin&&String(req.headers.origin).startsWith('http')?req.headers.origin:'https://haxbro.hatchable.site';
     /* KAI 51 LOCAL BUILD: no external search, provider API, judge or remote builder is used. */
     const researchedPrompt=prompt;
-    const result=buildNativeProduct(researchedPrompt,{existing,appName});
+    let result=buildNativeProduct(researchedPrompt,{existing,appName});
     const computeSource='local';
     result=harden(identity(result,appName));
     result.kai={
