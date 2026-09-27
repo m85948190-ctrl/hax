@@ -2,22 +2,26 @@ import { config } from "hatchable";
 import { KAI_NATIVE_ONLY } from "lib/kai-native-test-mode";
 
 async function kaiCompute({system="",prompt="",maxTokens=8000}){
-  // KAI 51 uses one bounded compute adapter. Keep the synthesis path fast enough for the App Maker request.
-  const key=await config.get("OPENROUTER_API_KEY_2");
-  if(!key) throw new Error("KAI compute adapter is not configured.");
-  const model="openrouter/free";
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),12000);
-  try{
-    const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",signal:controller.signal,headers:{Authorization:"Bearer "+key,"Content-Type":"application/json","HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI 51"},body:JSON.stringify({model,messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],max_tokens:Math.min(Number(maxTokens)||8000,9000),temperature:0.2})});
-    const raw=await r.text();
-    if(!r.ok) throw new Error("KAI compute HTTP "+r.status+": "+raw.slice(0,300));
-    const j=JSON.parse(raw),text=j?.choices?.[0]?.message?.content||"";
-    if(!text.trim()) throw new Error("KAI compute returned no text");
-    return {text:text.trim(),provider:"KAI 51 compute adapter",model};
-  }catch(e){
-    throw new Error("KAI 51 compute unavailable: "+String(e?.message||e));
-  }finally{clearTimeout(timer)}
+  // KAI 51 owns synthesis; this is only its bounded server-side compute adapter.
+  const keys=["GROQ_API_KEY_4","GROQ_API_KEY_3","GROQ_API_KEY_2","GROQ_API_KEY_1"];
+  const model="openai/gpt-oss-20b";
+  const errors=[];
+  for(const name of keys){
+    const key=String(await config.get(name)||"").trim();
+    if(!key) continue;
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),10000);
+    try{
+      const r=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",signal:controller.signal,headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({model,messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],max_tokens:Math.min(Number(maxTokens)||8000,8000),temperature:0.2})});
+      const raw=await r.text();
+      if(!r.ok){errors.push(name+" HTTP "+r.status);continue;}
+      const j=JSON.parse(raw),text=j?.choices?.[0]?.message?.content||"";
+      if(text.trim()) return {text:text.trim(),provider:"KAI 51 compute adapter",model};
+      errors.push(name+" returned no text");
+    }catch(e){errors.push(name+" "+String(e?.message||e))}
+    finally{clearTimeout(timer)}
+  }
+  throw new Error("KAI 51 compute unavailable: "+errors.join(" | "));
 }
 
 export const access = "public";
