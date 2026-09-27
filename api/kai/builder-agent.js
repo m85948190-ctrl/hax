@@ -5,9 +5,9 @@ async function kaiCompute({system="",prompt="",maxTokens=8000}){
   // KAI 51 owns synthesis; this is only its bounded server-side compute adapter.
   const key=String(await config.get("OPENROUTER_API_KEY_2")||"").trim();
   if(!key) throw new Error("KAI compute adapter is not configured.");
-  const model="openai/gpt-oss-120b:free";
+  const model="openrouter/free";
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),14000);
+  const timer=setTimeout(()=>controller.abort(),24000);
   try{
     const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",signal:controller.signal,headers:{Authorization:"Bearer "+key,"Content-Type":"application/json","HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI 51"},body:JSON.stringify({model,messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],max_tokens:Math.min(Number(maxTokens)||5000,5000),temperature:0.2})});
     const raw=await r.text();
