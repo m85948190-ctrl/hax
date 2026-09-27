@@ -11,7 +11,7 @@
   async function prepare(){emit('haxbro:kai-local-ready',{profile:'kai12',engine:'KAI 12',downloadRequired:false,nodes:NODES});return true}
   async function respond(prompt){
     const text=clean(prompt); if(!text)return null;
-    if(/^(hi|hello|hey|yo)\b/i.test(text))return{response:'Hey! I’m KAI 51. What are we working on?',provider:'KAI 12 local controller',model:'no-model',profile:'light',local:true};
+    // No canned conversational responses here. The browser runtime may only answer deterministic local capabilities; normal conversation belongs to the server-side generative KAI 51 engine.
     if(/^have a good (day|time|one)$/i.test(text))return{response:'Thanks, bro! You too. Have a good one!',provider:'KAI 12 local controller',model:'no-model',profile:'light',local:true};
     const math=text.match(/^(?:what is|calculate|compute|solve)\s+([0-9+*%().\s-]+)\??$/i)||text.match(/^([0-9][0-9+*%().\s-]{0,80})$/);
     if(math){try{const v=Function('"use strict";return ('+math[1]+')')();if(Number.isFinite(v))return{response:String(v),provider:'KAI 12 local controller',model:'no-model',profile:'light',local:true}}catch{}}
