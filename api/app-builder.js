@@ -1,6 +1,5 @@
 import { buildNativeProduct } from 'lib/kai-native-builder';
 import { createKai51Plan } from 'lib/kai51-core';
-import { KAI_NATIVE_ONLY } from 'lib/kai-native-test-mode';
 
 export const access='public';
 export const methods=['POST'];
@@ -45,25 +44,17 @@ export default async function(req,res){
     const appName=requestedName(prompt)||cleanName(req.body?.appName);
     const kai51Plan=createKai51Plan({prompt,username:req.body?.username||'local-user',history:''});
     const origin=req.headers?.origin&&String(req.headers.origin).startsWith('http')?req.headers.origin:'https://haxbro.hatchable.site';
-    const webResearch=await kaiWebBuildResearch(prompt,origin);
-    const researchedPrompt=webResearch.ok&&webResearch.blueprint?prompt+'\n\n'+webResearch.blueprint:prompt;
-    /* API-first build compute. KAI remains the orchestrator; native compiler is the fallback. */
-    let result=null,computeSource='kai-fallback';
-    try{
-      if(KAI_NATIVE_ONLY) throw new Error('KAI_NATIVE_ONLY');
-      const origin=req.headers?.origin&&String(req.headers.origin).startsWith('http')?req.headers.origin:'https://haxbro.hatchable.site';
-      const br=await fetch(origin+'/api/kai/builder-agent',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({prompt:researchedPrompt,username:req.body?.username||'local-user'})});
-      const bd=await br.json().catch(()=>({}));
-      if(br.ok&&bd?.files?.length){result={name:bd.name,summary:bd.summary,files:bd.files,plan:bd.plan,testChecklist:bd.testChecklist,validation:bd.validation,steps:bd.steps};computeSource='api';}
-    }catch(e){console.warn('KAI Builder API compute unavailable; using native fallback',e?.message||e)}
-    if(!result)result=buildNativeProduct(researchedPrompt,{existing,appName});
+    /* KAI 51 LOCAL BUILD: no external search, provider API, judge or remote builder is used. */
+    const researchedPrompt=prompt;
+    const result=buildNativeProduct(researchedPrompt,{existing,appName});
+    const computeSource='local';
     result=harden(identity(result,appName));
     result.kai={
       engine:'KAI 51 App Maker',
-      mode:'api-first-with-kai-fallback',
-      provider:computeSource==='api'?'KAI Builder API':'KAI Native fallback',
+      mode:'local-only',
+      provider:'KAI 51 LOCAL',
       local:true,
-      pipeline:['intent','product-type detection','API build','validation','KAI fallback if needed','delivery'],
+      pipeline:['intent','product-type detection','local build','validation','delivery'],
       plan:kai51Plan,
       ownerSecretsExcluded:true
     };
