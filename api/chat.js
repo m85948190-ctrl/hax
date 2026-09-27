@@ -60,6 +60,11 @@ export default async function(req,res){
   const configuredAdminSecret=String(process.env.ADMIN69_PASSWORD||'');
   const adminAuthenticated=!!configuredAdminSecret && await verifyAdminCookie(req.headers?.cookie,configuredAdminSecret).catch(()=>false);
   const requestedMode=body.mode==='expert'||body.mode==='beast'||body.mode==='hacking'?'expert':body.mode==='work'||body.mode==='code'?'work':'normal';
+  // KAI local fast lane: acknowledgements and simple conversational turns never touch a remote synthesis engine.
+  if(/^(hi|hello|hey|yo|sup|hiya|yep|yes|yeah|yup|ok|okay|thanks|thank you|cool|great|got it|sure)[!. ]*$/i.test(prompt)){
+    const reply=/^(yep|yes|yeah|yup)$/i.test(prompt)?'Yep — KAI 51 is here and ready. What are we building?':/^(thanks|thank you)$/i.test(prompt)?'You’re welcome. KAI 51 is ready.':/^(ok|okay|cool|great|got it|sure)$/i.test(prompt)?'Got it. KAI 51 is ready.':'Hey! KAI 51 is ready. What are you working on?';
+    return res.json({response:reply,mode:requestedMode,provider:'KAI 51 local fast lane',model:'local-runtime',responseMs:0,status:'local-complete',kaiAgent:'KAI 51',kaiIdentity:'HAxBRO AI'});
+  }
   const username=typeof body.username==='string'?body.username.trim().slice(0,32):'';
   const history=typeof body.history==='string'?body.history.slice(-12000):'';
   const kaiId=typeof body.kaiId==='string'?body.kaiId.slice(0,80):'';

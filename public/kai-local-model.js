@@ -8,7 +8,12 @@
   const writeMemory=m=>{try{localStorage.setItem(memKey(),JSON.stringify({notes:(m.notes||[]).slice(-12),sources:(m.sources||[]).slice(-40)}))}catch{}};
   const emit=(name,detail={})=>window.dispatchEvent(new CustomEvent(name,{detail}));
   const complexityProfile=t=>{const s=String(t||'').toLowerCase();if(s.length>280||/\b(deep research|critical|complex|investigate|analy[sz]e|compare|verify|latest|current|today)\b/.test(s))return'heavy';return'light'};
-  async function prepare(){emit('haxbro:kai-local-ready',{profile:'kai12',engine:'KAI 12',downloadRequired:false,nodes:NODES});return true}
+  async function prepare(){
+    // Bootstrap the KAI runtime immediately; the browser caches the shell so later workspace opens are instant.
+    try{const urls=['/kai51-local.js?v=1','/kai-local-ui.js?v=1','/decoding-partner.js?v=2','/encryptor-machine.js?v=1','/deepx.js?v=1','/pro-mode.js?v=1','/workspace-bridge.js?v=1'];await Promise.all(urls.map(async u=>{try{const r=await fetch(u,{cache:'force-cache'});if(r.ok){const c=await caches.open('haxbro-kai-runtime-v1');await c.put(u,r.clone())}}catch{}}));}catch{}
+    emit('haxbro:kai-local-progress',{profile:'light',progress:100,status:'runtime cached'});
+    emit('haxbro:kai-local-ready',{profile:'kai12',engine:'KAI 51 LOCAL RUNTIME',downloadRequired:false,nodes:NODES});return true
+  }
   async function respond(prompt){
     const text=clean(prompt); if(!text)return null;
     // No canned conversational responses. The browser runtime handles only deterministic local capabilities; normal conversation belongs to KAI 51's generative engine.
