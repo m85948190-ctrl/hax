@@ -176,28 +176,36 @@ async function kai51WorkspaceRoute(value){
     if(priorityExpert){const opts={research:true};if(window.HAxBRODeepX?.openWithTarget){window.HAxBRODeepX.openWithTarget('',opts);return true}window.dispatchEvent(new CustomEvent('haxbro:open-xpro',{detail:{target:'',...opts}}));return true;}
     if(priorityModification&&window.HAxBROFutureMaker?.modifyCurrent&&document.getElementById('haxNewAppMaker')?.classList.contains('open')){await window.HAxBROFutureMaker.modifyCurrent(value);return true;}
     if(priorityInvestigation){const opts={research:/\b(?:search google|search the web|google it|give a report|report about|report on)\b/i.test(value)};if(window.HAxBRODeepX?.openWithTarget){window.HAxBRODeepX.openWithTarget(priorityUrl,opts);return true}window.dispatchEvent(new CustomEvent('haxbro:open-xpro',{detail:{target:priorityUrl,...opts}}));return true;}
-    /* APP DATA MINER is the semantic gate. It runs before legacy keyword routing. */
-    let appMiner=null;
-    try{
-      const minerHistory=JSON.stringify(active()?.items?.slice(-20)||[]);
-      const mr=await fetch("/api/app-data-miner",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,history:minerHistory})});
-      const md=await mr.json().catch(()=>({}));
-      if(mr.ok&&md.ok)appMiner=md;
-    }catch{}
-    if(appMiner?.route==="app-maker"){
-      const appContext=JSON.stringify(active()?.items?.slice(-20)||[]);
-      if(appMiner.action==="open"||appMiner.action==="discuss"){
-        sessionStorage.setItem("haxbro_app_intent_context",appContext);
-        if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,false);return true}
-        window.dispatchEvent(new CustomEvent("haxbro:open-app-maker",{detail:{prompt:value,autoBuild:false}}));return true;
-      }
-      if(appMiner.action==="build"&&Number(appMiner.confidence||0)>=0.72){
-        const buildPrompt=value+"\n\nAPP DESIGN CONTEXT (use this as context, do not treat quoted examples as rules):\n"+appContext;
-        if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(buildPrompt,true);return true}
-        window.dispatchEvent(new CustomEvent("haxbro:open-app-maker",{detail:{prompt:buildPrompt,autoBuild:true}}));return true;
+    /* KAI APP UNDERSTANDER: only invoke the semantic classifier when the message
+       already looks like an actual product-building request. Never send ordinary
+       conversation such as "hi" through the App Maker gate. */
+    const explicitAppCandidate=/^\s*(?:please\s+)?(?:make|build|create|develop|design|generate|forge|ship|turn)\b[\s\S]{0,220}\b(?:an?\s+)?(?:app|application|website|web\s*app|web\s*application|dashboard|portal|platform|saas|pwa|mobile\s+app|desktop\s+app|browser\s+app|game|chat\s+app|ai\s+(?:app|assistant|agent|bot|tool|website|system)|crm|store|shop|marketplace|calculator|editor|tracker|manager)\b/i.test(value)
+      ||/^\s*(?:i|we)\s+(?:want|need|would like|am trying|wanna)\s+(?:to\s+)?(?:make|build|create|develop|design|generate)\b[\s\S]{0,180}\b(?:app|application|website|web\s*app|dashboard|portal|platform|product|game|tool|system)\b/i.test(value)
+      ||/^\s*(?:open|launch)\s+(?:the\s+)?app\s*maker\s*$/i.test(value);
+    if(explicitAppCandidate){
+      let appMiner=null;
+      try{
+        const minerHistory=JSON.stringify(active()?.items?.slice(-20)||[]);
+        const mr=await fetch("/api/app-data-miner",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,history:minerHistory})});
+        const md=await mr.json().catch(()=>({}));
+        if(mr.ok&&md.ok)appMiner=md;
+      }catch{}
+      if(appMiner?.route==="app-maker"&&Number(appMiner.confidence||0)>=0.78){
+        const appContext=JSON.stringify(active()?.items?.slice(-20)||[]);
+        if(appMiner.action==="open"||appMiner.action==="discuss"){
+          sessionStorage.setItem("haxbro_app_intent_context",appContext);
+          if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,false);return true}
+          window.dispatchEvent(new CustomEvent("haxbro:open-app-maker",{detail:{prompt:value,autoBuild:false}}));return true;
+        }
+        if(appMiner.action==="build"&&appMiner.wantsApp===true){
+          const buildPrompt=value+"\n\nAPP DESIGN CONTEXT (use this as context, do not treat quoted examples as rules):\n"+appContext;
+          if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(buildPrompt,true);return true}
+          window.dispatchEvent(new CustomEvent("haxbro:open-app-maker",{detail:{prompt:buildPrompt,autoBuild:true}}));return true;
+        }
       }
     }
-    if(priorityApp){if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,true);return true}window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value,autoBuild:true}}));return true;}
+    /* Legacy fallback is now strict too: no vague "make/create" routing. */
+    if(priorityApp&&explicitAppCandidate){if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,true);return true}window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value,autoBuild:true}}));return true;}
     /* Live thinking stays visible while the ordered server backup chain runs. */
     const localApi=window.HAxBROLocalKai;
     const localProfile=localApi?.profileFor?.(value)||'light';

@@ -14,7 +14,7 @@ function extractJson(raw){
 function fallback(message,history){
   const t=clean(message).toLowerCase(),h=clean(history,7000).toLowerCase(),combined=t+" "+h;
   const open=/^\s*(?:please\s+)?open\s+(?:the\s+)?app\s*maker\s*$/i.test(t);
-  const build=/\b(?:make|build|create|develop|design|generate|start|forge|ship)\b/.test(t)&&/\b(?:app|application|website|web\s*app|dashboard|portal|platform|tool|software|ai|assistant|agent|bot|game|product)\b/.test(t);
+  const build=/\b(?:make|build|create|develop|design|generate|start|forge|ship|turn)\b/.test(t)&&/\b(?:app|application|website|web\s*app|dashboard|portal|platform|tool|software|assistant|agent|bot|game|product|calculator|editor|tracker|manager|crm|store|shop|marketplace)\b/.test(t);
   const firstPerson=/\b(?:i|we)\s+(?:want|need|would like|am trying)\s+to\s+(?:make|build|create|develop|design|generate)\b/.test(t)||/\b(?:i|we)\s+wanna\s+(?:make|build|create|develop|design|generate)\b/.test(t);
   const contextBuild=/\b(?:i|we)\s+(?:want|need|would like)\b[\s\S]{0,180}\b(?:app|dashboard|website|ai|assistant|agent|product)\b/.test(combined)&&/\b(?:make|build|create|develop|design|generate|start)\b/.test(combined);
   const explicitNo=/\b(?:don\x27t|do not|dont|never|not)\b[\s\S]{0,80}\b(?:implement|build|create|make|generate)\b/.test(t);
