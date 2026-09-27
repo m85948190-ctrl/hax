@@ -26,9 +26,15 @@
 <section id="result" class="result hidden">
   <div class="result-head"><div><div class="eyebrow">BUILD READY · LIVE APPLICATION</div><h2 id="resultName">Your app</h2><p id="resultSummary"></p></div><div class="publish-badge" id="publishBadge">● READY</div></div>
   <div class="live-workspace">
-    <div class="result-report"><div class="panel-title">KAI REPORT</div><div id="resultReport"></div></div>
     <div class="preview live-preview"><div class="preview-head"><span>LIVE PREVIEW</span><div><button id="openPreview">Open ↗</button><button id="publishExternal">Publish</button></div></div><iframe id="frame" sandbox="allow-scripts allow-forms allow-modals"></iframe><div class="live-link"><span>LIVE URL</span><a id="publicUrl" target="_blank" rel="noreferrer"></a><button id="copyUrl">Copy</button></div></div>
-    <aside class="modify-card modify-side"><div><div class="panel-title">MODIFY THIS APP</div><p>KAI can change the existing application: UI, layout, content, features, behavior, data, interactions, and styling.</p></div><div class="modify-row"><input id="modifyPrompt" placeholder="Change anything in the app…"><button id="modifyBuild">Apply ↗</button></div><div class="modify-note">Changes are applied to the current app, then tested and republished.</div></aside>
+    <aside class="maker-side-panel">
+      <div class="panel-title">KAI LIVE WORK</div>
+      <div id="resultReport" class="maker-side-log" aria-live="polite"></div>
+      <div class="maker-side-input">
+        <input id="modifyPrompt" placeholder="Modify this app or ask KAI to improve it…">
+        <button id="modifyBuild" aria-label="Apply modification">↗</button>
+      </div>
+    </aside>
   </div>
   <div class="artifact-row"><div class="files"><div class="panel-title">BUILD ARTIFACT</div><div id="files"></div><button id="copyAll">Copy source</button></div></div>
 </section>
