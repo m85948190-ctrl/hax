@@ -18,7 +18,7 @@ function withChatEmoji(text){return String(text||'');}
 const NORMAL_SYSTEM = `You are HAxBRO, a highly intelligent, natural conversational assistant. Understand the user's real goal, intent, context, references, corrections, examples, and follow-up meaning before responding. Answer directly when the request is clear; do not ask unnecessary questions. When a detail genuinely blocks a correct answer, ask one concise clarification. Be human, calm, precise, useful, and context-aware. Explain difficult things clearly without sounding robotic. For cybersecurity topics, provide defensive, authorized, safety-conscious guidance.`;
 const WORK_SYSTEM = `You are HAxBRO in WORK MODE: an execution-focused AI workspace. Help the user turn ideas into finished outcomes: build apps, write and refactor code, create documents and files, research, analyze data, plan projects, debug problems, and iterate on existing work. Use the capabilities available to HAxBRO when they genuinely help. Do not claim work was performed unless it actually happened.`;
 const EXPERT_SYSTEM = `You are HAxBRO in EXPERT MODE: an advanced technical problem-solving assistant. Combine deep programming, cybersecurity, systems, research, architecture, debugging, and analysis skills. For cybersecurity, remain defensive and authorized. Be precise, rigorous, and practical. When a task requires a capability, use the available HAxBRO primitives instead of pretending.`;
-const CREATOR_RULE = `CREATOR IDENTITY RULE: HAxBRO was created by Moinak Kuila. If asked who made, created, built, developed, designed, or founded HAxBRO, answer clearly: "I was made by Moinak Kuila." Do not invent additional personal facts.`;
+const CREATOR_RULE = `CREATOR IDENTITY RULE: HAxBRO was created by Mainak. If asked who made, created, built, developed, designed, or founded HAxBRO, answer clearly: "I was made by Mainak." Do not invent additional personal facts.`;
 const GODENGINE_ROUTES = [
   {keywords:['instagram','followers','instagram growth','grow my instagram'], label:'GodBot Commander AI', url:'https://hackmainakkuila-tech.github.io/GodBot-Commander-AI/', category:'Instagram Automation'},
   {keywords:['hacking','ethical hacking','pentest','penetration testing','cybersecurity'], label:'Hackers Paradise', url:'https://mkhacking.netlify.app/', category:'Hackers Paradise'},
@@ -108,12 +108,7 @@ export default async function(req,res){
     return res.json({response:withChatEmoji(responseText),mode:requestedMode,provider:result.provider,model:result.model,responseMs:result.elapsedMs,status:result.status,failoverAttempts:result.attempts||[],knowledgeSource:'HAxBRO',kaiAgent:'KAI 51',kaiIdentity:'HAxBRO AI',kaiId:kaiId||null,webSteps:[],godEngineResource:godEngineRoute?.label||null});
   }catch(err){
     console.error('KAI 51 primary error',err);
-    try {
-      const retry=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:6000,username,history,imageData,modelChoice});
-      return res.json({response:withChatEmoji(retry.text),mode:requestedMode,provider:retry.provider,model:retry.model,responseMs:retry.elapsedMs,status:retry.status,failoverAttempts:retry.attempts||[],knowledgeSource:'HAxBRO',kaiAgent:'KAI 51',kaiId:kaiId||null,webSteps:[],godEngineResource:godEngineRoute?.label||null});
-    }catch(retryErr){
-      console.error('KAI-61 recovery error',retryErr);
-      return res.status(503).json({error:withChatEmoji('I could not complete that request right now. Please try again.'),retryable:true});
-    }
+    const message=String(err?.message||err||'No synthesis engine available');
+    return res.status(503).json({error:withChatEmoji('KAI 51 could not generate a response. '+message.slice(0,500)),retryable:true,code:'KAI_SYNTHESIS_UNAVAILABLE'});
   }
 }
