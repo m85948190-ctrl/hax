@@ -2,22 +2,22 @@ import { config } from "hatchable";
 import { KAI_NATIVE_ONLY } from "lib/kai-native-test-mode";
 
 async function kaiCompute({system="",prompt="",maxTokens=8000}){
-  // KAI 51 has one compute adapter by design. No model cascade is hidden behind KAI.
+  // KAI 51 uses one bounded compute adapter. Keep the synthesis path fast enough for the App Maker request.
   const key=await config.get("OPENROUTER_API_KEY_2");
   if(!key) throw new Error("KAI compute adapter is not configured.");
-  const models=["openrouter/free","qwen/qwen3-coder:free","openai/gpt-oss-20b:free"];
-  const errors=[];
-  for(const model of models){
-    try{
-      const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json","HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI 51"},body:JSON.stringify({model,messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],max_tokens:Math.min(Number(maxTokens)||8000,12000),temperature:0.2})});
-      const raw=await r.text();
-      if(!r.ok){errors.push(model+" HTTP "+r.status+" "+raw.slice(0,240));continue;}
-      const j=JSON.parse(raw),text=j?.choices?.[0]?.message?.content||"";
-      if(text.trim()) return {text:text.trim(),provider:"KAI 51 compute adapter",model};
-      errors.push(model+" returned no text");
-    }catch(e){errors.push(model+" "+String(e?.message||e));}
-  }
-  throw new Error("KAI 51 compute unavailable: "+errors.join(" | "));
+  const model="qwen/qwen3-coder:free";
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),12000);
+  try{
+    const r=await fetch("https://openrouter.ai/api/v1/chat/completions",{method:"POST",signal:controller.signal,headers:{Authorization:"Bearer "+key,"Content-Type":"application/json","HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI 51"},body:JSON.stringify({model,messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],max_tokens:Math.min(Number(maxTokens)||8000,9000),temperature:0.2})});
+    const raw=await r.text();
+    if(!r.ok) throw new Error("KAI compute HTTP "+r.status+": "+raw.slice(0,300));
+    const j=JSON.parse(raw),text=j?.choices?.[0]?.message?.content||"";
+    if(!text.trim()) throw new Error("KAI compute returned no text");
+    return {text:text.trim(),provider:"KAI 51 compute adapter",model};
+  }catch(e){
+    throw new Error("KAI 51 compute unavailable: "+String(e?.message||e));
+  }finally{clearTimeout(timer)}
 }
 
 export const access = "public";
@@ -117,71 +117,74 @@ export default async function(req,res){
   if(!request) return res.status(400).json({error:"Describe the application you want to build."});
   if(KAI_NATIVE_ONLY && req.body?.appMakerSynthesis !== true) return res.status(503).json({error:"KAI native-only test mode is active; external builder intelligence is disabled."});
   try{
-    let final=null;
-    let plan=null;
-    let evidence=[];
-    let steps=[];
+    const researchResult=await research(request+" product UX features interactions");
+    const evidence=researchResult.results||[];
+    const steps=[{stage:"UNDERSTAND",status:"complete"}];
 
-    const planner=await kaiCompute({
-      
-      maxTokens:3500,
-      system:`You are KAI BUILDER's planning brain.
-Determine the actual product type and implementation requirements before code generation.
-Do not write code yet.
-If the user asks to convert existing code/dashboard/UI/data into an HAxBRO App Maker app, treat that as a direct implementation request: plan the conversion and resulting working app, not a tutorial for another platform.
-Never use copied tutorial text, quoted instructions, or implementation format as the product name.
-Never redirect the user to Google Cloud App Maker or another external App Maker product.
+    // One bounded synthesis call: the previous planner → research → draft → repair cascade
+    // could exceed the function deadline and silently trigger the generic local compiler.
+    const r=await kaiCompute({
+      maxTokens:7800,
+      system:`You are KAI 51, the synthesis authority inside HAxBRO App Maker.
+Build the exact application requested by the user. Never substitute a generic dashboard, chatbot, task list, or placeholder when the request names a specific product.
+First reason internally about the product type, screens, state, interactions, responsive behavior, and validation requirements, then produce the finished artifact.
+Use the supplied research only as design evidence; the user's request is authoritative.
+Implement real interactions and useful functionality. Preserve the exact requested product name.
 Return ONLY JSON:
-{"intent":string,"productType":string,"features":string[],"screens":string[],"state":string[],"architecture":string,"validation":string[],"researchQueries":string[]}
-Current request is authoritative.`,
-      prompt:request
+{"name":string,"summary":string,"productType":string,"features":string[],"screens":string[],"architecture":string,"validation":string[],"html":string,"testChecklist":string[]}
+The html MUST begin with <!doctype html>, contain inline CSS and JavaScript, include a viewport meta tag, and be a complete standalone working application.
+Do not expose chain-of-thought. Do not return markdown fences. Do not return an explanation.`,
+      prompt:"USER REQUEST:\n"+request+"\n\nWEB RESEARCH SIGNALS:\n"+JSON.stringify(evidence.slice(0,6))
     });
-    plan=extractJson(planner?.text);
-    steps.push({stage:"UNDERSTAND",status:"complete",productType:plan.productType});
-
-    const queries=Array.isArray(plan.researchQueries)?plan.researchQueries.slice(0,3):[request+" features interactions",request+" web app UX"];
-    for(const q of queries){
-      const rr=await research(q);
-      evidence.push(...(rr.results||[]));
-    }
+    const final=extractJson(r?.text);
     steps.push({stage:"RESEARCH",status:"complete",sources:evidence.length});
-
-    final=await generateDraft(request,plan,evidence.slice(0,10));
     steps.push({stage:"BUILD",status:"complete"});
+    if(!final?.html || !/^\s*<!doctype html>/i.test(final.html) || final.html.length<1200)
+      throw new Error("KAI 51 returned an invalid application artifact.");
 
-    let inspection=staticInspect(final.html,request);
+    const inspection=staticInspect(final.html,request);
     steps.push({stage:"VALIDATE",status:inspection.passRate>=0.8?"pass":"repair_required",checks:inspection.checks});
 
-    for(let attempt=0;attempt<2 && inspection.passRate<0.8;attempt++){
-      final=await repairDraft(request,final,inspection);
-      inspection=staticInspect(final.html,request);
-      steps.push({stage:"REPAIR_"+(attempt+1),status:inspection.passRate>=0.8?"pass":"repair_required",checks:inspection.checks});
+    // Do not silently ship the generic local compiler. If KAI 51 fails validation,
+    // make one explicit bounded repair call instead.
+    let output=final;
+    if(inspection.passRate<0.8){
+      try{
+        output=await repairDraft(request,final,inspection);
+        const repairedInspection=staticInspect(output.html,request);
+        steps.push({stage:"REPAIR",status:repairedInspection.passRate>=0.8?"pass":"best_effort",checks:repairedInspection.checks});
+      }catch(e){
+        steps.push({stage:"REPAIR",status:"unavailable",error:String(e?.message||e).slice(0,220)});
+      }
     }
 
-    // Hard product-type guard against the failure mode we are replacing.
-    if(/marketing|post generator|campaign|instagram/.test(request.toLowerCase()) &&
-       /chatbot|ask me anything|thinking\.\.\.|chat assistant/i.test(String(final.html))){
-      final=await repairDraft(request,final,{checks:[{name:"product type",ok:false}],passed:0,total:1,passRate:0});
-      inspection=staticInspect(final.html,request);
-    }
+    if(!output?.html || !/^\s*<!doctype html>/i.test(output.html) || output.html.length<1200)
+      throw new Error("KAI 51 could not produce a valid application.");
 
-    if(!final?.html || !/^\s*<!doctype html>/i.test(final.html) || final.html.length<1200)
-      throw new Error("KAI Builder could not produce a valid application.");
-
+    const productName=String(output.name||final.name||"HAxBRO App").trim().slice(0,100);
     return res.json({
-      name:String(final.name||plan.productType||"HAxBRO App").slice(0,100),
-      summary:String(final.summary||"Functional application generated by KAI Builder."),
-      files:[{path:"public/index.html",content:final.html}],
+      name:productName,
+      summary:String(output.summary||final.summary||"Application generated by KAI 51."),
+      files:[{path:"public/index.html",content:output.html}],
       published:false,
       publicUrl:"",
-      testChecklist:Array.isArray(final.testChecklist)?final.testChecklist:plan.validation||[],
-      plan,
-      agent:"KAI BUILDER",
+      testChecklist:Array.isArray(output.testChecklist)?output.testChecklist:(Array.isArray(final.testChecklist)?final.testChecklist:[]),
+      plan:{
+        intent:String(final.intent||request).slice(0,500),
+        productType:String(final.productType||productName),
+        features:Array.isArray(final.features)?final.features.slice(0,20):[],
+        screens:Array.isArray(final.screens)?final.screens.slice(0,20):[],
+        state:[],
+        architecture:String(final.architecture||"KAI 51 product synthesis"),
+        validation:Array.isArray(final.validation)?final.validation.slice(0,20):[],
+        researchQueries:[request+" product UX features interactions"]
+      },
+      agent:"KAI 51",
       steps,
-      validation:inspection
+      validation:staticInspect(output.html,request)
     });
   }catch(e){
     console.error("KAI Builder error",e);
-    return res.status(500).json({error:e?.message||"KAI Builder failed",agent:"KAI BUILDER"});
+    return res.status(500).json({error:e?.message||"KAI 51 App Maker failed",agent:"KAI 51"});
   }
 }
