@@ -9,7 +9,7 @@ async function kaiCompute({system="",prompt="",maxTokens=8000}){
     Authorization:"Bearer "+key,"Content-Type":"application/json",
     "HTTP-Referer":"https://haxbro.hatchable.site","X-Title":"HAxBRO KAI 2.0"
   },body:JSON.stringify({
-    model:"nex-agi/nex-n2.5-pro:free",
+    model:"openai/gpt-oss-20b:free",
     messages:[{role:"system",content:String(system)},{role:"user",content:String(prompt)}],
     max_tokens:Math.min(Number(maxTokens)||8000,12000),
     temperature:0.2
