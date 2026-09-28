@@ -198,7 +198,62 @@ async function kai51WorkspaceRoute(value){
     const chosenProfile=trivialLocal?'light':localProfile;
     setBusy(true,chosenProfile);
     let apiAnswered=false;
+    async function kaiRealtimeChat(){
+      const start=await fetch('/api/kai-start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});
+      if(!start.ok)return false;
+      const sd=await start.json().catch(()=>({})); if(!sd.jobId)return false;
+      let done=false,final=null,client=null;
+      const handle=ev=>{
+        if(ev.type==='connected') kaiActivityDeepX([{label:'KAI execution started',detail:'Live activity channel connected'}]);
+        else if(ev.type==='planning') kaiActivityDeepX([{label:ev.label||'KAI 51',detail:ev.detail}]);
+        else if(ev.type==='search-start') kaiActivityDeepX([{label:'Searching '+ev.source,detail:ev.query,url:ev.source==='Wikipedia'?'https://www.wikipedia.org':'https://www.bing.com'}]);
+        else if(ev.type==='knowledge-start') kaiActivityDeepX([{label:'Checking HAxBRO Knowledge',detail:'Knowledge base lookup'}]);
+        else if(ev.type==='source-found') kaiActivityDeepX([{label:'Reading '+(ev.title||ev.source),detail:ev.source,url:ev.url}]);
+        else if(ev.type==='context-ready') kaiActivityDeepX([{label:'Evidence ready',detail:(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items'}]);
+        else if(ev.type==='synthesis-start') kaiActivityDeepX([{label:'Organizing evidence',detail:ev.detail}]);
+        else if(ev.type==='complete'){final=ev.result;done=true;}
+        else if(ev.type==='error'){done=true;}
+      };
+      try{client=await window.haxbroLoadRealtime(sd.jobId,handle);}catch{return false;}
+      if(!client)return false;
+      const started=Date.now();
+      while(!done && Date.now()-started<90000)await new Promise(r=>setTimeout(r,80));
+      try{client.close?.();}catch{}
+      if(!final?.response&&!final?.text)return false;
+      kaiActivityFinish(final); addMessage(final.response||final.text,'bot'); return true;
+    }
+    async function kaiStreamChat(){
+      const rr=await fetch('/api/chat-stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});
+      if(!rr.ok||!rr.body)return false;
+      const reader=rr.body.getReader(); const decoder=new TextDecoder(); let buffer=''; let final=null;
+      const consume=chunk=>{
+        buffer+=decoder.decode(chunk,{stream:true});
+        const parts=buffer.split('\\n\\n'); buffer=parts.pop()||'';
+        for(const part of parts){
+          const line=part.split('\\n').find(x=>x.startsWith('data: ')); if(!line)continue;
+          try{
+            const ev=JSON.parse(line.slice(6));
+            if(ev.type==='connected') kaiActivityDeepX([{label:'Live KAI stream connected',detail:ev.detail}]);
+            else if(ev.type==='planning') kaiActivityDeepX([{label:ev.label||'KAI 51',detail:ev.detail}]);
+            else if(ev.type==='search-start') kaiActivityDeepX([{label:'Searching '+ev.source,detail:ev.query, url:ev.source==='Wikipedia'?'https://wikipedia.org':'https://www.bing.com'}]);
+            else if(ev.type==='knowledge-start') kaiActivityDeepX([{label:'Checking HAxBRO Knowledge',detail:'Knowledge base lookup'}]);
+            else if(ev.type==='source-found') kaiActivityDeepX([{label:'Reading '+(ev.title||ev.source),detail:ev.source,url:ev.url}]);
+            else if(ev.type==='context-ready') kaiActivityDeepX([{label:'Evidence ready',detail:(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items'}]);
+            else if(ev.type==='synthesis-start') kaiActivityDeepX([{label:'Organizing evidence',detail:ev.detail}]);
+            else if(ev.type==='complete') final=ev.result;
+            else if(ev.type==='error') throw new Error(ev.message||'KAI stream failed');
+          }catch(e){ if(e?.message==='KAI stream failed') throw e; }
+        }
+      };
+      while(true){const {value:chunk,done}=await reader.read();if(done)break;consume(chunk)}
+      if(!final?.response&&!final?.text)return false;
+      kaiActivityFinish(final);
+      addMessage(final.response||final.text,'bot');
+      return true;
+    }
     try{
+      if(window.haxbroLoadRealtime && await kaiRealtimeChat()) return true;
+      if(await kaiStreamChat()) return true;
       const chatController=new AbortController();const chatTimer=setTimeout(()=>chatController.abort(),30500);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
         kaiMode,
