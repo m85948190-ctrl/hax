@@ -253,8 +253,9 @@ async function kai51WorkspaceRoute(value){
       return true;
     }
     try{
-      if(window.haxbroLoadRealtime && await kaiRealtimeChat()) return true;
-      if(await kaiStreamChat()) return true;
+      /* Never send trivial chat through the background/realtime pipeline. */
+      if(!trivialLocal && window.haxbroLoadRealtime && await kaiRealtimeChat()) return true;
+      if(!trivialLocal && await kaiStreamChat()) return true;
       const chatController=new AbortController();const chatTimer=setTimeout(()=>chatController.abort(),30500);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
         kaiMode,
