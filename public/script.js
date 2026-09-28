@@ -44,7 +44,7 @@ function ensureChat(){if(!current||!active()){newChat()}}
 function getKaiMemory(){try{const a=JSON.parse(localStorage.getItem('haxbro_kai_memory_notes')||'[]');return Array.isArray(a)?a.slice(-12):[]}catch(e){return[]}}
 function updateKaiMemory(text){try{const a=getKaiMemory();a.push({text:String(text||'').slice(0,900),at:Date.now()});localStorage.setItem('haxbro_kai_memory_notes',JSON.stringify(a.slice(-12)))}catch(e){}}
 let thinkingBubble=null,thinkingTimer=null,thinkingStartedAt=0,thinkingEstimateSec=12;
-const KAI_ACTIVITY_STAGES=['Understanding your request','Deciding the best route','Searching for relevant information','Cross-checking what was found','Reasoning and synthesizing','Preparing the answer'];
+const KAI_ACTIVITY_STAGES=[];
 function kaiHostFromUrl(url){try{return new URL(url).hostname.replace(/^www\\./,'')}catch{return''}}
 function kaiFavicon(url){const host=kaiHostFromUrl(url);return host?'https://www.google.com/s2/favicons?domain='+encodeURIComponent(host)+'&sz=32':''}
 function kaiActivityRow(label,detail='',iconUrl=''){const row=document.createElement('div');row.className='kai-activity-row';const icon=document.createElement('span');icon.className='kai-activity-icon';if(iconUrl){const img=document.createElement('img');img.alt='';img.src=iconUrl;img.onerror=()=>{img.remove();icon.textContent='•'};icon.appendChild(img)}else{icon.textContent='•'}const copy=document.createElement('span');copy.className='kai-activity-copy';const main=document.createElement('span');main.textContent=label;copy.appendChild(main);if(detail){const sub=document.createElement('small');sub.textContent=detail;copy.appendChild(sub)}row.append(icon,copy);return row}
@@ -59,7 +59,7 @@ function kaiActivityStart(profile='heavy'){
  thinkingBubble.setAttribute('aria-label','KAI 51 is working');
  const label=profile==='light'?'KAI FAST · LIVE':'KAI 51 · LIVE';
  const estimate=profile==='light'?6:12; thinkingEstimateSec=estimate;
- thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span></span></div><div class="kai-timer"><span class="kai-timer-estimate">EST. <b>~'+estimate+'s</b></span><span class="kai-timer-live">LIVE <b class="kai-activity-time">0s</b></span></div></div><div class="kai-activity-list"></div>';
+ thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span></span></div><div class="kai-timer"><span class="kai-timer-estimate"><b>'+estimate+'</b></span><span class="kai-timer-live">LIVE <b class="kai-activity-time">0s</b></span></div></div><div class="kai-activity-list"></div>';
  messages.appendChild(thinkingBubble);
  const list=thinkingBubble.querySelector('.kai-activity-list');
  thinkingTimer=setInterval(()=>{
