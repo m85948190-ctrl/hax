@@ -1,4 +1,22 @@
-/* KAI 51 — clean live activity + timing */
+/* KAI 51 — revived animated workspace thinking surface */
+.kai-activity{filter:saturate(1.08)}
+.kai-activity:before{content:'';position:absolute;inset:-12px -18px auto;height:1px;background:linear-gradient(90deg,transparent,rgba(38,191,232,.55),rgba(121,92,255,.42),transparent);opacity:.8;animation:kaiTraceSweep 2.8s linear infinite;pointer-events:none}
+.kai-activity-head{animation:kaiActivityReveal .38s cubic-bezier(.2,.8,.2,1) both}
+.kai-thinking-pill{position:relative!important;box-shadow:0 8px 30px rgba(20,40,70,.10),0 0 24px rgba(38,191,232,.10)!important}
+.kai-thinking-pill:after{content:'';position:absolute;inset:0;width:42%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.65),transparent);transform:translateX(-140%);animation:kaiPillSweep 2.1s ease-in-out infinite;pointer-events:none}
+.kai-activity-list{border-left:1px solid rgba(38,191,232,.10);border-right:1px solid rgba(38,191,232,.06);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.06));box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 0 28px rgba(38,191,232,.035)}
+.kai-activity-row{position:relative!important;box-shadow:0 5px 18px rgba(17,35,52,.035)!important}
+.kai-activity-row.kai-activity-running:before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,#26bfe8,transparent);animation:kaiRunningBar 1.2s ease-in-out infinite}
+.kai-activity-row.kai-activity-done{animation:kaiResolved .34s ease both!important}
+.kai-activity-row.kai-activity-done .kai-activity-state{animation:kaiCheckPop .3s ease both}
+@keyframes kaiTraceSweep{0%{transform:translateX(-35%);opacity:.2}50%{opacity:1}100%{transform:translateX(35%);opacity:.2}}
+@keyframes kaiPillSweep{0%{transform:translateX(-140%);opacity:0}25%{opacity:.8}70%{opacity:.2}100%{transform:translateX(260%);opacity:0}}
+@keyframes kaiActivityReveal{from{opacity:0;transform:translateY(7px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes kaiRunningBar{0%,100%{opacity:.25;transform:scaleY(.45)}50%{opacity:1;transform:scaleY(1)}}
+@keyframes kaiResolved{from{opacity:.55;transform:translateX(-4px)}to{opacity:.96;transform:none}}
+@keyframes kaiCheckPop{0%{transform:scale(.6);opacity:.2}70%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+/* KAI normal mode never advertises a host/runtime provider. */
+.kai-activity .kai-hatchable,.kai-activity [data-provider="hatchable"]{display:none!important}
 .kai-activity{position:relative!important;display:block!important;overflow:visible!important;max-height:none!important;min-height:86px!important;width:min(620px,calc(100% - 28px))!important;box-sizing:border-box!important;padding:4px 0 8px!important}
 .kai-activity-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important;min-height:42px!important;position:relative!important;z-index:3!important}
 .kai-thinking-pill{display:flex!important;align-items:center!important;width:auto!important;min-width:168px!important;height:32px!important;padding:0 13px!important;border:1px solid rgba(38,191,232,.32)!important;border-radius:999px!important;background:rgba(247,250,252,.94)!important;box-shadow:0 6px 22px rgba(16,34,53,.08),0 0 0 1px rgba(38,191,232,.06)!important;overflow:hidden!important}

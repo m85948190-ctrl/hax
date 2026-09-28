@@ -260,10 +260,35 @@ async function kai51WorkspaceRoute(value){
       return true;
     }
     try{
-      /* Never send trivial chat through the background/realtime pipeline. */
+      /* Revived fast lane: greetings/simple math are answered immediately by deterministic KAI rules.
+         No runtime handoff, provider trace, or long model warm-up for normal conversation. */
+      if(trivialLocal){
+        const v=String(value||'').trim();
+        let instant='';
+        if(/^(hi|hello|hey|yo|sup|hiya)[!. ]*$/i.test(v)){
+          const hour=new Date().getHours();
+          instant='Hey! 👋 Good '+(hour<12?'morning':hour<18?'afternoon':'evening')+'. KAI 51 is ready — what are we working on?';
+        }else if(/^(thanks|thank you|thx|ty)[!. ]*$/i.test(v)) instant='Anytime, bro. ⚡';
+        else if(/^(ok|okay|cool|nice|great)[!. ]*$/i.test(v)) instant='Got it. ⚡';
+        else{
+          const m=v.match(/^what(?:'s| is)\s+(\d+)\s*(\+|-|\*|\/|%)\s*(\d+)\??$/i);
+          if(m){
+            const a=Number(m[1]),b=Number(m[3]),op=m[2];
+            const n=op==='+'?a+b:op==='-'?a-b:op==='*'?a*b:op==='/'?a/b:a%b;
+            instant=Number.isFinite(n)?String(n):'I can’t divide by zero.';
+          }
+        }
+        if(instant){
+          kaiActivityStep('instant','KAI 51 · instant response','Local rule path completed','','done');
+          kaiActivityFinish({sources:[]});
+          addMessage(instant,'bot');
+          return true;
+        }
+      }
+      /* Normal conversation stays local/fast first. Never route simple chat through a Hatchable activity trace. */
       if(!trivialLocal && window.haxbroLoadRealtime && await kaiRealtimeChat()) return true;
       if(!trivialLocal && await kaiStreamChat()) return true;
-      const chatController=new AbortController();const chatTimer=setTimeout(()=>chatController.abort(),30500);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
+      const chatController=new AbortController();const chatTimer=setTimeout(()=>chatController.abort(),14000);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
         kaiMode,
         prompt:'Answer the user naturally as HAxBRO. Keep internal orchestration and implementation details private.',
@@ -286,7 +311,7 @@ async function kai51WorkspaceRoute(value){
     if(localApi?.respond){
       try{
         const responsePromise=localApi.respond(value,chosenProfile==='heavy'?'deep':'light');
-        const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),9000));
+        const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),5000));
         const localResult=await Promise.race([responsePromise,timeout]);
         if(localResult?.response){
           kaiActivityFinish(localResult);
