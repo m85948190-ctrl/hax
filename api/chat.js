@@ -110,7 +110,7 @@ export default async function(req,res){
       await db.query('INSERT INTO haxbro_astra_usage (username, window_started_at, request_count, updated_at) VALUES ($1, $2, 1, NOW()) ON CONFLICT (username) DO UPDATE SET window_started_at = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.window_started_at ELSE EXCLUDED.window_started_at END, request_count = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.request_count + 1 ELSE 1 END, updated_at = NOW()',[username,astraWindowStarted]);
     }
     const responseText=godEngineRoute ? `GODENGINE RECOMMENDATION — ${godEngineRoute.category}: ${godEngineRoute.label}\n${godEngineRoute.url}\n\n${result.text}` : result.text;
-    return res.json({response:withChatEmoji(responseText),mode:requestedMode,provider:result.provider,model:result.model,responseMs:result.elapsedMs,status:result.status,failoverAttempts:result.attempts||[],knowledgeSource:'HAxBRO',kaiAgent:'KAI 51',kaiIdentity:'HAxBRO AI',kaiId:kaiId||null,webSteps:[],godEngineResource:godEngineRoute?.label||null});
+    return res.json({response:withChatEmoji(responseText),mode:requestedMode,provider:result.provider,model:result.model,responseMs:result.elapsedMs,status:result.status,failoverAttempts:result.attempts||[],knowledgeSource:'HAxBRO',kaiAgent:'KAI 51',kaiIdentity:'HAxBRO AI',kaiId:kaiId||null,webSteps:result.sources||[],sources:result.sources||[],knowledgeContext:result.knowledgeContext||null,toolResults:result.knowledgeContext?.toolResults||[],steps:result.steps||[],godEngineResource:godEngineRoute?.label||null});
   }catch(err){
     console.error('KAI 51 primary error',err);
     const t=String(prompt||'').trim();

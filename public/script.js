@@ -41,7 +41,7 @@ function renderRich(text){const raw=String(text??'');const parts=raw.split(/```(
 function bindRichControls(scope){scope.querySelectorAll('.hax-file-link').forEach(a=>{if(/^DOWNLOAD/i.test((a.textContent||'').trim()))a.onclick=e=>{e.preventDefault();openHaxbroFile(a.href)}});scope.querySelectorAll('[data-copy-code]').forEach(b=>b.onclick=async()=>{const c=document.getElementById(b.dataset.copyCode);if(c){await navigator.clipboard?.writeText(c.textContent||'');const old=b.textContent;b.textContent='COPIED ✓';setTimeout(()=>b.textContent=old,1200)}});scope.querySelectorAll('[data-preview-html]').forEach(b=>b.onclick=()=>{const id=b.dataset.previewHtml,c=document.getElementById(id),frame=document.getElementById('preview_'+id);if(!c||!frame)return;frame.hidden=!frame.hidden;if(!frame.hidden)frame.srcdoc=c.textContent||''})}
 function addMessage(text,who='bot',saveIt=true){if(!messages)return;const wrap=document.createElement('div');const isUser=who==='user';wrap.className='message '+(isUser?'user-msg':'bot-msg')+(overdrive?' admin-chat-msg':'');const avatar=isUser?'<span>U</span>':(overdrive?'<span class="kai-chat-avatar">K</span>':'<img src="/logo-symbol.svg?v=218" alt="HAxBRO">');wrap.innerHTML='<div class="avatar message-avatar">'+avatar+'</div><div class="message-body"><div class="bubble message-copy">'+(isUser?esc(text).replace(/\n/g,'<br>'):renderRich(text))+'</div></div>';messages.appendChild(wrap);if(!isUser)bindRichControls(wrap);if(saveIt){const c=active();if(c){c.items.push({who,text});c.updated=Date.now();save();renderHistory()}}messages.scrollTop=messages.scrollHeight}
 function ensureChat(){if(!current||!active()){newChat()}}
-let thinkingBubble=null,thinkingTimer=null,thinkingStartedAt=0;
+let thinkingBubble=null,thinkingTimer=null,thinkingStartedAt=0,thinkingEstimateSec=12;
 const KAI_ACTIVITY_STAGES=['Understanding your request','Deciding the best route','Searching for relevant information','Cross-checking what was found','Reasoning and synthesizing','Preparing the answer'];
 function kaiHostFromUrl(url){try{return new URL(url).hostname.replace(/^www\\./,'')}catch{return''}}
 function kaiFavicon(url){const host=kaiHostFromUrl(url);return host?'https://www.google.com/s2/favicons?domain='+encodeURIComponent(host)+'&sz=32':''}
@@ -55,32 +55,14 @@ function kaiActivityStart(profile='heavy'){
  thinkingBubble.className='haxbro-thinking kai-activity';
  thinkingBubble.setAttribute('role','status');
  thinkingBubble.setAttribute('aria-label','KAI 51 is working');
- const phrases=[
-  ['Reading your request','KAI is parsing intent and context'],
-  ['Mapping the task','Choosing the right HAxBRO capability'],
-  ['Connecting the pieces','Checking context, tools and available data'],
-  ['Working through it','Building the response step by step'],
-  ['Validating the result','Cross-checking before showing it'],
-  ['Finalizing','Turning the work into a clean answer']
- ];
- const label=profile==='light'?'KAI FAST · THINKING':'KAI 51 · THINKING';
- thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span><span class="kai-thinking-pill-time kai-activity-time">0s</span></span></div></div><div class="kai-activity-list"></div>';
+ const label=profile==='light'?'KAI FAST · LIVE':'KAI 51 · LIVE';
+ const estimate=profile==='light'?6:12; thinkingEstimateSec=estimate;
+ thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span></span></div><div class="kai-timer"><span class="kai-timer-estimate">EST. <b>~'+estimate+'s</b></span><span class="kai-timer-live">LIVE <b class="kai-activity-time">0s</b></span></div></div><div class="kai-activity-list"></div>';
  messages.appendChild(thinkingBubble);
- const currentLine=thinkingBubble.querySelector('.kai-activity-current');
- const setPhrase=(i)=>{if(!currentLine)return;const p=phrases[i%phrases.length];currentLine.querySelector('b').textContent=p[0];currentLine.querySelector('small').textContent=p[1];};
- setPhrase(0);
  const list=thinkingBubble.querySelector('.kai-activity-list');
- let stageIndex=0;
  thinkingTimer=setInterval(()=>{
    const elapsed=Math.floor((Date.now()-thinkingStartedAt)/1000);
    const clock=thinkingBubble?.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
-   const current=thinkingBubble?.querySelector('.kai-activity-list');
-   if(current&&stageIndex<phrases.length&&elapsed>=stageIndex*0.8){
-     const p=phrases[stageIndex];
-     current.appendChild(kaiActivityRow(p[0],p[1]));
-     stageIndex++;
-     requestAnimationFrame(()=>requestAnimationFrame(()=>current.scrollTo({top:current.scrollHeight,behavior:'smooth'})));
-   }
  },250);
  /* Keep the main conversation anchored; only the log viewport moves. */
 }
@@ -103,6 +85,7 @@ function kaiActivityFinish(data){
  kaiActivityResearch(data?.webSteps||data?.sources||[]);
  const elapsed=Math.floor((Date.now()-thinkingStartedAt)/1000);
  const clock=thinkingBubble.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
+ const timer=thinkingBubble.querySelector('.kai-timer');if(timer){timer.classList.add(elapsed>thinkingEstimateSec?'over-estimate':'under-estimate');const live=timer.querySelector('.kai-timer-live b');if(live)live.textContent=elapsed+'s';}
  const list=thinkingBubble.querySelector('.kai-activity-list');
  if(list){const final=kaiActivityRow('Answer ready','KAI 51 synthesized the result');final.classList.add('kai-activity-final');list.appendChild(final);requestAnimationFrame(()=>requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'})))}
  thinkingBubble.classList.add('is-complete');
