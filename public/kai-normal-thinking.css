@@ -21,7 +21,15 @@
 .kai-timer.under-estimate .kai-timer-live b{color:#267c6b!important}
 .kai-activity-list{height:132px!important;max-height:132px!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;display:flex!important;flex-direction:column!important;gap:5px!important;padding:7px 8px 6px 2px!important;scroll-behavior:smooth!important;scrollbar-width:none!important;overscroll-behavior:contain!important;mask-image:linear-gradient(to bottom,transparent 0,#000 9px,#000 calc(100% - 9px),transparent 100%)!important}
 .kai-activity-list::-webkit-scrollbar{display:none!important}
-.kai-activity-row{display:flex!important;align-items:center!important;gap:9px!important;flex:0 0 auto!important;min-width:0!important;padding:5px 8px!important;border:1px solid rgba(38,191,232,.10)!important;border-radius:10px!important;background:rgba(247,250,252,.56)!important;opacity:.96!important;animation:kaiRowLive .35s ease both!important}
+.kai-activity-row{display:flex!important;align-items:center!important;gap:9px!important;flex:0 0 auto!important;min-width:0!important;padding:5px 8px!important;border:1px solid rgba(38,191,232,.10)!important;border-radius:10px!important;background:rgba(247,250,252,.56)!important;opacity:.96!important;animation:kaiRowLive .35s ease both!important;transition:opacity .22s ease,border-color .22s ease,background .22s ease}
+.kai-activity-row.kai-activity-running{border-color:rgba(38,191,232,.28)!important;background:rgba(38,191,232,.07)!important}
+.kai-activity-row.kai-activity-running .kai-activity-icon{box-shadow:0 0 0 1px rgba(38,191,232,.12),0 0 12px rgba(38,191,232,.12)!important}
+.kai-activity-row.kai-activity-running .kai-activity-icon:after{content:'';width:7px;height:7px;border:1.5px solid rgba(38,191,232,.75);border-top-color:transparent;border-radius:50%;animation:kaiSpin .8s linear infinite}
+.kai-activity-row.kai-activity-running .kai-activity-icon img{display:none!important}
+.kai-activity-row.kai-activity-error{border-color:rgba(190,70,70,.28)!important;background:rgba(190,70,70,.05)!important}
+.kai-activity-state{margin-left:auto;flex:0 0 16px;width:16px;height:16px;display:grid;place-items:center;font-size:10px;font-weight:900;color:#2d8a73}
+.kai-activity-error .kai-activity-state{color:#b34c4c}
+@keyframes kaiSpin{to{transform:rotate(360deg)}}
 @keyframes kaiRowLive{from{opacity:0;transform:translateY(5px)}to{opacity:.96;transform:translateY(0)}}
 .kai-activity-icon{width:22px!important;height:22px!important;flex:0 0 22px!important;display:grid!important;place-items:center!important;border-radius:7px!important;background:rgba(38,191,232,.08)!important;overflow:hidden!important}
 .kai-activity-icon img{width:15px!important;height:15px!important;object-fit:contain!important}

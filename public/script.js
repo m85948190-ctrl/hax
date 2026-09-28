@@ -47,8 +47,11 @@ let thinkingBubble=null,thinkingTimer=null,thinkingStartedAt=0,thinkingEstimateS
 const KAI_ACTIVITY_STAGES=[];
 function kaiHostFromUrl(url){try{return new URL(url).hostname.replace(/^www\\./,'')}catch{return''}}
 function kaiFavicon(url){const host=kaiHostFromUrl(url);return host?'https://www.google.com/s2/favicons?domain='+encodeURIComponent(host)+'&sz=32':''}
-function kaiActivityRow(label,detail='',iconUrl=''){const row=document.createElement('div');row.className='kai-activity-row';const icon=document.createElement('span');icon.className='kai-activity-icon';if(iconUrl){const img=document.createElement('img');img.alt='';img.src=iconUrl;img.dataset.fallback='google';img.onerror=()=>{try{const host=new URL(img.src).searchParams.get('domain');if(img.dataset.fallback==='google'&&host){img.dataset.fallback='duck';img.src='https://icons.duckduckgo.com/ip3/'+encodeURIComponent(host)+'.ico';return}}catch{}img.remove();icon.textContent=(String(label||'•').trim()[0]||'•').toUpperCase()};icon.appendChild(img)}else{icon.textContent=(String(label||'•').trim()[0]||'•').toUpperCase()}const copy=document.createElement('span');copy.className='kai-activity-copy';const main=document.createElement('span');main.textContent=label;copy.appendChild(main);if(detail){const sub=document.createElement('small');sub.textContent=detail;copy.appendChild(sub)}row.append(icon,copy);return row}
-function kaiActivityDeepX(steps){if(!thinkingBubble||!Array.isArray(steps)||!steps.length)return;const list=thinkingBubble.querySelector('.kai-activity-list');if(!list)return;steps.forEach(s=>{const label=typeof s==='string'?s:(s?.label||s?.message||s?.title||'DEEPX step completed');const detail=typeof s==='string'?'':(s?.detail||s?.status||'');list.appendChild(kaiActivityRow(label,detail,s?.url?kaiFavicon(s.url):''));});messages.scrollTop=messages.scrollHeight}
+function kaiActivityRow(label,detail='',iconUrl='',state='done',key=''){const row=document.createElement('div');row.className='kai-activity-row kai-activity-'+state;if(key)row.dataset.activityKey=key;const icon=document.createElement('span');icon.className='kai-activity-icon';const hatch=/\\bhatchable\\b/i.test(String(label||'')+' '+String(detail||''));if(hatch&&!iconUrl)iconUrl='https://hatchable.com/favicon.ico';if(iconUrl){const img=document.createElement('img');img.alt='';img.src=iconUrl;img.dataset.fallback='google';img.onerror=()=>{try{const u=new URL(img.src);const host=u.hostname;if(img.dataset.fallback==='google'){img.dataset.fallback='duck';img.src='https://icons.duckduckgo.com/ip3/'+encodeURIComponent(host)+'.ico';return}}catch{}img.remove();icon.textContent=(String(label||'•').trim()[0]||'•').toUpperCase()};icon.appendChild(img)}else{icon.textContent=(String(label||'•').trim()[0]||'•').toUpperCase()}const copy=document.createElement('span');copy.className='kai-activity-copy';const main=document.createElement('span');main.textContent=label;copy.appendChild(main);if(detail){const sub=document.createElement('small');sub.textContent=detail;copy.appendChild(sub)}const mark=document.createElement('span');mark.className='kai-activity-state';mark.textContent=state==='running'?'':state==='error'?'!':'✓';row.append(icon,copy,mark);return row}
+function kaiActivityFind(key){return thinkingBubble?.querySelector('[data-activity-key="'+CSS.escape(key)+'"]')||null}
+function kaiActivitySet(key,state,detail){const row=kaiActivityFind(key);if(!row)return;row.classList.remove('kai-activity-running','kai-activity-done','kai-activity-error');row.classList.add('kai-activity-'+state);const mark=row.querySelector('.kai-activity-state');if(mark)mark.textContent=state==='running'?'':state==='error'?'!':'✓';if(detail){let sub=row.querySelector('small');if(!sub){sub=document.createElement('small');row.querySelector('.kai-activity-copy')?.appendChild(sub)}sub.textContent=detail}}
+function kaiActivityStep(key,label,detail='',iconUrl='',state='running'){if(!thinkingBubble)return null;const list=thinkingBubble.querySelector('.kai-activity-list');if(!list)return null;let row=kaiActivityFind(key);if(row){kaiActivitySet(key,state,detail);return row}row=kaiActivityRow(label,detail,iconUrl,state,key);list.appendChild(row);requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'}));return row}
+function kaiActivityDeepX(steps){if(!thinkingBubble||!Array.isArray(steps)||!steps.length)return;steps.forEach(s=>{const label=typeof s==='string'?s:(s?.label||s?.message||s?.title||'KAI step');const detail=typeof s==='string'?'':(s?.detail||s?.status||'');const key=typeof s==='string'?label.toLowerCase().replace(/[^a-z0-9]+/g,'-'):String(s?.key||label).toLowerCase().replace(/[^a-z0-9]+/g,'-');kaiActivityStep(key,label,detail,s?.url?kaiFavicon(s.url):'',s?.state||'done')});messages.scrollTop=messages.scrollHeight}
 function kaiActivityStart(profile='heavy'){
  if(!messages)return;
  if(thinkingBubble)thinkingBubble.remove();
@@ -205,15 +208,15 @@ async function kai51WorkspaceRoute(value){
       const sd=await start.json().catch(()=>({})); if(!sd.jobId)return false;
       let done=false,final=null,client=null;
       const handle=ev=>{
-        if(ev.type==='connected') kaiActivityDeepX([{label:'KAI execution started',detail:'Live activity channel connected'}]);
-        else if(ev.type==='planning') kaiActivityDeepX([{label:ev.label||'KAI 51',detail:ev.detail}]);
-        else if(ev.type==='search-start') kaiActivityDeepX([{label:'Searching '+ev.source,detail:ev.query,url:ev.source==='Wikipedia'?'https://www.wikipedia.org':'https://www.bing.com'}]);
-        else if(ev.type==='knowledge-start') kaiActivityDeepX([{label:'Checking HAxBRO Knowledge',detail:'Knowledge base lookup'}]);
-        else if(ev.type==='source-found') kaiActivityDeepX([{label:'Reading '+(ev.title||ev.source),detail:ev.source,url:ev.url}]);
-        else if(ev.type==='context-ready') kaiActivityDeepX([{label:'Evidence ready',detail:(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items'}]);
-        else if(ev.type==='synthesis-start') kaiActivityDeepX([{label:'Organizing evidence',detail:ev.detail}]);
-        else if(ev.type==='complete'){final=ev.result;done=true;}
-        else if(ev.type==='error'){done=true;}
+        if(ev.type==='connected') kaiActivityStep('execution','KAI 51 execution','Live activity channel connected','', 'done');
+        else if(ev.type==='planning'){kaiActivitySet('execution','done');kaiActivityStep('planning',ev.label||'Understanding request',ev.detail,'','running');}
+        else if(ev.type==='search-start'){kaiActivitySet('planning','done');kaiActivityStep('search-'+String(ev.source||'web').toLowerCase(),'Searching '+(ev.source||'the web'),ev.query,ev.source==='Wikipedia'?'https://www.wikipedia.org':'https://www.bing.com','running');}
+        else if(ev.type==='knowledge-start') kaiActivityStep('knowledge','Checking HAxBRO Knowledge','Knowledge base lookup','','running');
+        else if(ev.type==='source-found'){kaiActivitySet('search-'+String(ev.source||'web').toLowerCase(),'done');kaiActivityStep('source-'+String(ev.title||ev.source||'source').toLowerCase().replace(/[^a-z0-9]+/g,'-'),'Reading '+(ev.title||ev.source),ev.source,ev.url||'','done');}
+        else if(ev.type==='context-ready'){kaiActivitySet('knowledge','done',(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items');kaiActivityStep('evidence','Evidence ready',(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items','','done');}
+        else if(ev.type==='synthesis-start'){kaiActivitySet('planning','done');kaiActivityStep('synthesis','Organizing answer',ev.detail||'Synthesizing the retrieved context','','running');}
+        else if(ev.type==='complete'){kaiActivitySet('synthesis','done','Answer synthesis completed');final=ev.result;done=true;}
+        else if(ev.type==='error'){kaiActivitySet('synthesis','error',ev.message||'KAI execution failed');done=true;}
       };
       try{client=await window.haxbroLoadRealtime(sd.jobId,handle);}catch{return false;}
       if(!client)return false;
@@ -235,15 +238,15 @@ async function kai51WorkspaceRoute(value){
           const line=part.split('\\n').find(x=>x.startsWith('data: ')); if(!line)continue;
           try{
             const ev=JSON.parse(line.slice(6));
-            if(ev.type==='connected') kaiActivityDeepX([{label:'Live KAI stream connected',detail:ev.detail}]);
-            else if(ev.type==='planning') kaiActivityDeepX([{label:ev.label||'KAI 51',detail:ev.detail}]);
-            else if(ev.type==='search-start') kaiActivityDeepX([{label:'Searching '+ev.source,detail:ev.query, url:ev.source==='Wikipedia'?'https://wikipedia.org':'https://www.bing.com'}]);
-            else if(ev.type==='knowledge-start') kaiActivityDeepX([{label:'Checking HAxBRO Knowledge',detail:'Knowledge base lookup'}]);
-            else if(ev.type==='source-found') kaiActivityDeepX([{label:'Reading '+(ev.title||ev.source),detail:ev.source,url:ev.url}]);
-            else if(ev.type==='context-ready') kaiActivityDeepX([{label:'Evidence ready',detail:(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items'}]);
-            else if(ev.type==='synthesis-start') kaiActivityDeepX([{label:'Organizing evidence',detail:ev.detail}]);
-            else if(ev.type==='complete') final=ev.result;
-            else if(ev.type==='error') throw new Error(ev.message||'KAI stream failed');
+            if(ev.type==='connected') kaiActivityStep('stream','KAI 51 execution','Live stream connected','','done');
+            else if(ev.type==='planning') kaiActivityStep('planning',ev.label||'Understanding request',ev.detail,'','running');
+            else if(ev.type==='search-start') kaiActivityStep('search-'+String(ev.source||'web').toLowerCase(),'Searching '+(ev.source||'the web'),ev.query,ev.source==='Wikipedia'?'https://wikipedia.org':'https://www.bing.com','running');
+            else if(ev.type==='knowledge-start') kaiActivityStep('knowledge','Checking HAxBRO Knowledge','Knowledge base lookup','','running');
+            else if(ev.type==='source-found'){kaiActivitySet('search-'+String(ev.source||'web').toLowerCase(),'done');kaiActivityStep('source-'+String(ev.title||ev.source||'source').toLowerCase().replace(/[^a-z0-9]+/g,'-'),'Reading '+(ev.title||ev.source),ev.source,ev.url||'','done');}
+            else if(ev.type==='context-ready'){kaiActivitySet('knowledge','done',(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items');kaiActivityStep('evidence','Evidence ready',(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items','','done');}
+            else if(ev.type==='synthesis-start') kaiActivityStep('synthesis','Organizing answer',ev.detail||'Synthesizing retrieved context','','running');
+            else if(ev.type==='complete'){kaiActivitySet('synthesis','done','Answer synthesis completed');final=ev.result;}
+            else if(ev.type==='error'){kaiActivitySet('synthesis','error',ev.message||'KAI stream failed');throw new Error(ev.message||'KAI stream failed');}
           }catch(e){ if(e?.message==='KAI stream failed') throw e; }
         }
       };
