@@ -216,6 +216,7 @@ async function kai51WorkspaceRoute(value){
       };
       try{client=await window.haxbroLoadRealtime(sd.jobId,handle);}catch{return false;}
       if(!client)return false;
+      try{const rr=await fetch('/api/kai-run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:sd.jobId,message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});if(!rr.ok)return false;}catch{return false;}
       const started=Date.now();
       while(!done && Date.now()-started<90000)await new Promise(r=>setTimeout(r,80));
       try{client.close?.();}catch{}
