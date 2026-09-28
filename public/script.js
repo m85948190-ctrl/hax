@@ -203,9 +203,11 @@ async function kai51WorkspaceRoute(value){
     setBusy(true,chosenProfile);
     let apiAnswered=false;
     async function kaiRealtimeChat(){
+      kaiActivityStep('runtime','Running on Hatchable','KAI 51 realtime job is being started on the Hatchable runtime.','running','https://hatchable.com/favicon.ico');
       const start=await fetch('/api/kai-start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});
-      if(!start.ok)return false;
-      const sd=await start.json().catch(()=>({})); if(!sd.jobId)return false;
+      if(!start.ok){kaiActivitySet('runtime','error','Hatchable runtime job could not be started');return false;}
+      const sd=await start.json().catch(()=>({})); if(!sd.jobId){kaiActivitySet('runtime','error','No KAI job was created');return false;}
+      kaiActivitySet('runtime','done','Realtime KAI job created on Hatchable');
       let done=false,final=null,client=null;
       const handle=ev=>{
         if(ev.type==='connected') kaiActivityStep('execution','KAI 51 execution','Live activity channel connected','', 'done');
@@ -220,7 +222,8 @@ async function kai51WorkspaceRoute(value){
       };
       try{client=await window.haxbroLoadRealtime(sd.jobId,handle);}catch{return false;}
       if(!client)return false;
-      try{const rr=await fetch('/api/kai-run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:sd.jobId,message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});if(!rr.ok)return false;}catch{return false;}
+      kaiActivityStep('deploy','Executing on Hatchable','KAI worker is executing the live job.','running','https://hatchable.com/favicon.ico');
+      try{const rr=await fetch('/api/kai-run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:sd.jobId,message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});if(!rr.ok){kaiActivitySet('deploy','error','Hatchable execution request failed');return false;}kaiActivitySet('deploy','done','Hatchable worker accepted the job');}catch{kaiActivitySet('deploy','error','Hatchable execution request failed');return false;}
       const started=Date.now();
       while(!done && Date.now()-started<90000)await new Promise(r=>setTimeout(r,80));
       try{client.close?.();}catch{}

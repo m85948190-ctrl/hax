@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HAxBRO App Maker — KAI 2.0</title><link rel="stylesheet" href="/app-maker-original/style.css"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HAxBRO App Maker — KAI 2.0</title><link rel="stylesheet" href="/app-maker-original/style.css?v=2"></head><body>
 <div class="shell">
 <header class="top"><div class="brand"><span class="mark">HX</span><div><strong>HAxBRO APP MAKER</strong><small>I51 · KAI 2.0 BUILD ENGINE</small></div></div><div class="top-right"><span class="signal"><i></i> I51 ONLINE</span><a href="https://haxbro.hatchable.site" target="_blank" rel="noreferrer">Open HAxBRO ↗</a></div></header>
 <main class="workspace">
@@ -21,7 +21,11 @@
   </div>
 </div>
 <div class="live-build" id="liveBuild">
-  <div class="live-report"><div class="live-report-head"><span>LIVE REPORT</span><span id="reportState">IDLE</span></div><div class="report-stream" id="reportStream"></div></div>
+  <div class="live-report">
+    <div class="live-report-head"><span>KAI LIVE WORK</span><span id="reportState">IDLE</span></div>
+    <div id="kaiWorkStrip" class="kai-work-strip" aria-live="polite"></div>
+    <div class="report-stream" id="reportStream"></div>
+  </div>
 </div>
 <section id="result" class="result hidden">
   <div class="result-head"><div><div class="eyebrow">BUILD READY · LIVE APPLICATION</div><h2 id="resultName">Your app</h2><p id="resultSummary"></p></div><div class="publish-badge" id="publishBadge">● READY</div></div>
@@ -41,4 +45,4 @@
   </div>
   <div class="artifact-row"><div class="files"><div class="panel-title">BUILD ARTIFACT</div><div id="files"></div><button id="copyAll">Copy source</button></div></div>
 </section>
-</section></main></div><script src="/app-maker-original/app.js"></script><script>(()=>{const strip=()=>document.querySelectorAll('#hb-badge,[data-hatchable-badge],.hatchable-badge,[class*="hatchable-badge"],[id*="hatchable-badge"]').forEach(el=>el.remove());strip();new MutationObserver(strip).observe(document.documentElement,{childList:true,subtree:true})})();</script></body></html>
+</section></main></div><script src="/app-maker-original/app.js?v=2"></script><script>(()=>{const strip=()=>document.querySelectorAll('#hb-badge,[data-hatchable-badge],.hatchable-badge,[class*="hatchable-badge"],[id*="hatchable-badge"]').forEach(el=>el.remove());strip();new MutationObserver(strip).observe(document.documentElement,{childList:true,subtree:true})})();</script></body></html>
