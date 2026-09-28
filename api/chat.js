@@ -67,6 +67,7 @@ export default async function(req,res){
   }
   const username=typeof body.username==='string'?body.username.trim().slice(0,32):'';
   const history=typeof body.history==='string'?body.history.slice(-12000):'';
+  const kaiMemory=typeof body.kaiMemory==='string'?body.kaiMemory.slice(-7000):'';
   const kaiId=typeof body.kaiId==='string'?body.kaiId.slice(0,80):'';
   const imageData=typeof body.imageData==='string'&&/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(body.imageData)?body.imageData.slice(0,4200000):'';
   if(!prompt&&!imageData)return res.status(400).json({error:'prompt or image required.'});
@@ -105,7 +106,7 @@ export default async function(req,res){
   const modeSystem=requestedMode==='expert'?EXPERT_SYSTEM:requestedMode==='work'?WORK_SYSTEM:NORMAL_SYSTEM;
   const system=RESPONSE_RULES+'\n\n'+modeSystem+'\n\n'+CREATOR_RULE+identity+localAgent+godEngineContext;
   try{
-    const result=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:1200,username,history,imageData,modelChoice});
+    const result=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:1200,username,history,memory:kaiMemory,imageData,modelChoice});
     if(modelChoice==='astra'&&astraWindowStarted){
       await db.query('INSERT INTO haxbro_astra_usage (username, window_started_at, request_count, updated_at) VALUES ($1, $2, 1, NOW()) ON CONFLICT (username) DO UPDATE SET window_started_at = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.window_started_at ELSE EXCLUDED.window_started_at END, request_count = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.request_count + 1 ELSE 1 END, updated_at = NOW()',[username,astraWindowStarted]);
     }
