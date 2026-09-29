@@ -37,9 +37,16 @@
 .kai-timer-live b::after{content:''}
 .kai-timer.over-estimate .kai-timer-live b{color:#a34c36!important}
 .kai-timer.under-estimate .kai-timer-live b{color:#267c6b!important}
-.kai-activity-list{height:132px!important;max-height:132px!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;display:flex!important;flex-direction:column!important;gap:5px!important;padding:7px 8px 6px 2px!important;scroll-behavior:smooth!important;scrollbar-width:none!important;overscroll-behavior:contain!important;mask-image:linear-gradient(to bottom,transparent 0,#000 9px,#000 calc(100% - 9px),transparent 100%)!important}
+/* ChatGPT-like normal chat motion: compact, quiet, conversational — not a separate workspace. */
+.kai-activity-list{height:auto!important;max-height:150px!important;min-height:0!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:2px!important;padding:4px 2px 2px!important;scroll-behavior:smooth!important;scrollbar-width:none!important;overscroll-behavior:contain!important;mask-image:linear-gradient(to bottom,transparent 0,#000 6px,#000 calc(100% - 6px),transparent 100%)!important}
 .kai-activity-list::-webkit-scrollbar{display:none!important}
-.kai-activity-row{display:flex!important;align-items:center!important;gap:9px!important;flex:0 0 auto!important;min-width:0!important;padding:5px 8px!important;border:1px solid rgba(38,191,232,.10)!important;border-radius:10px!important;background:rgba(247,250,252,.56)!important;opacity:.96!important;animation:kaiRowLive .35s ease both!important;transition:opacity .22s ease,border-color .22s ease,background .22s ease}
+.kai-activity-list:after{content:'';height:1px;width:42%;margin:2px auto 0;background:linear-gradient(90deg,transparent,rgba(38,191,232,.18),transparent);animation:kaiQuietSweep 2.6s ease-in-out infinite}
+@keyframes kaiQuietSweep{0%,100%{opacity:.15;transform:translateX(-18px)}50%{opacity:.7;transform:translateX(18px)}}
+.kai-activity-list::-webkit-scrollbar{display:none!important}
+.kai-activity-row{display:flex!important;align-items:center!important;gap:8px!important;flex:0 0 auto!important;min-width:0!important;padding:4px 6px!important;border:0!important;border-radius:8px!important;background:transparent!important;opacity:.82!important;animation:kaiRowLive .32s cubic-bezier(.2,.8,.2,1) both!important;transition:opacity .22s ease,transform .22s ease,background .22s ease}
+.kai-activity-row:hover{background:rgba(38,191,232,.035)!important}
+.kai-activity-row.kai-activity-running{background:transparent!important;border:0!important;opacity:1!important}
+.kai-activity-row.kai-activity-done{opacity:.62!important}
 .kai-activity-row.kai-activity-running{border-color:rgba(38,191,232,.28)!important;background:rgba(38,191,232,.07)!important}
 .kai-activity-row.kai-activity-running .kai-activity-icon{box-shadow:0 0 0 1px rgba(38,191,232,.12),0 0 12px rgba(38,191,232,.12)!important}
 .kai-activity-row.kai-activity-running .kai-activity-icon:after{content:'';width:7px;height:7px;border:1.5px solid rgba(38,191,232,.75);border-top-color:transparent;border-radius:50%;animation:kaiSpin .8s linear infinite}
