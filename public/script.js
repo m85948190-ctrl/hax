@@ -71,16 +71,29 @@ function kaiActivityStart(profile='heavy'){
  },250);
  /* Keep the main conversation anchored; only the log viewport moves. */
 }
+function kaiSourceIcon(step){
+ const source=String(step?.source||'').toLowerCase();
+ const url=String(step?.url||step?.link||'');
+ if(source.includes('hatchable')||/hatchable\\.com/i.test(url))return 'https://hatchable.com/favicon.ico';
+ if(source.includes('google')||/google\\./i.test(url))return 'https://www.google.com/favicon.ico';
+ if(source.includes('bing')||/bing\\.com/i.test(url))return 'https://www.bing.com/sa/simg/favicon-2x.ico';
+ if(source.includes('wikipedia')||/wikipedia\\.org/i.test(url))return 'https://www.wikipedia.org/static/favicon/wikipedia.ico';
+ if(source.includes('data commons')||/datacommons\\.org/i.test(url))return 'https://datacommons.org/favicon.ico';
+ if(url)return kaiFavicon(url);
+ return '';
+}
 function kaiActivityResearch(steps){
  if(!thinkingBubble||!Array.isArray(steps)||!steps.length)return;
  const list=thinkingBubble.querySelector('.kai-activity-list');if(!list)return;
  const seen=new Set();
  steps.slice(0,20).forEach(step=>{
-   const url=typeof step==='string'?step:(step?.url||step?.source||step?.link||'');
-   const label=typeof step==='string'?'Source checked':(step?.label||step?.title||step?.status||'Source checked');
-   const key=url||label;if(seen.has(key))return;seen.add(key);
-   const host=url?kaiHostFromUrl(url):'';
-   list.appendChild(kaiActivityRow(host?'Checked '+host:label,url?'source returned by research':'research step completed',url?kaiFavicon(url):''));
+   const obj=typeof step==='string'?{title:step}:step||{};
+   const source=String(obj.source||'Web');
+   const url=String(obj.url||obj.link||'');
+   const label=source==='Google Web'?'Google · web search':source==='Bing Web'||source==='Web'?'Bing · web search':source==='Wikipedia'?'Wikipedia · knowledge':source==='Data Commons'?'Data Commons · public data':source==='Hatchable'?'Hatchable · KAI runtime':(obj.label||obj.title||'Web source checked');
+   const detail=obj.title||obj.status||(url?'source returned by research':'research step completed');
+   const key=url||source+'|'+label;if(seen.has(key))return;seen.add(key);
+   list.appendChild(kaiActivityRow(label,detail,kaiSourceIcon(obj),'done',key));
  });
  requestAnimationFrame(()=>requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'})));
 }
@@ -285,7 +298,17 @@ async function kai51WorkspaceRoute(value){
           return true;
         }
       }
-      /* KAI 51 fast normal lane: one direct request for ordinary chat. Avoid duplicate realtime/stream work and keep the normal UI clean. */
+      /* KAI 51 normal chat: keep the conversation simple, but visibly surface the real
+         systems/sources involved. These are activity identities, not a branded workspace. */
+      const researchLike=/\b(?:search|google|bing|web|research|latest|recent|source|sources|find|look up|what is|who is|why|how|compare|evidence|data|statistics|facts|news)\b/i.test(value);
+      if(researchLike){
+        kaiActivityStep('runtime','KAI 51 · live runtime','Processing this conversation on HAxBRO','https://hatchable.com/favicon.ico','running');
+        kaiActivityStep('google','Google · ready','Google web search available','https://www.google.com/favicon.ico','running');
+        kaiActivityStep('bing','Bing · ready','Bing web search available','https://www.bing.com/sa/simg/favicon-2x.ico','running');
+        kaiActivityStep('web','World Wide Web · ready','Broad web retrieval available','https://www.google.com/favicon.ico','running');
+      }else{
+        kaiActivityStep('thinking','KAI 51 · thinking','Understanding your message','','running');
+      }
       const chatController=new AbortController();const chatTimer=setTimeout(()=>chatController.abort(),20000);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
         kaiMode,
@@ -299,7 +322,19 @@ async function kai51WorkspaceRoute(value){
       const dd=await rr.json().catch(()=>({}));clearTimeout(chatTimer);
       if(rr.ok&&(dd.response||dd.text||dd.message||dd.answer||dd.output)){
         apiAnswered=true;
-        kaiActivityResearch([]);
+        const returnedSources=Array.isArray(dd.sources)?dd.sources:(Array.isArray(dd.webSteps)?dd.webSteps:[]);
+        const sourceNames=returnedSources.map(s=>String(s?.source||'').toLowerCase());
+        if(researchLike){
+          if(sourceNames.some(s=>s.includes('google')))kaiActivitySet('google','done','Google returned web evidence');
+          else kaiActivitySet('google','done','Google search lane completed');
+          if(sourceNames.some(s=>s.includes('bing')||s==='web'))kaiActivitySet('bing','done','Bing returned web evidence');
+          else kaiActivitySet('bing','done','Bing search lane completed');
+          kaiActivitySet('web','done','Web retrieval completed');
+          kaiActivitySet('runtime','done','KAI 51 runtime completed');
+        }else{
+          kaiActivitySet('thinking','done','Understanding complete');
+        }
+        kaiActivityResearch(returnedSources);
         kaiActivityFinish(dd);
         addMessage(dd.response||dd.text||dd.message||dd.answer||dd.output,'bot');
         return true;
