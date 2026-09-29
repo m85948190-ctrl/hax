@@ -285,10 +285,8 @@ async function kai51WorkspaceRoute(value){
           return true;
         }
       }
-      /* Normal conversation stays local/fast first. Never route simple chat through a Hatchable activity trace. */
-      if(!trivialLocal && window.haxbroLoadRealtime && await kaiRealtimeChat()) return true;
-      if(!trivialLocal && await kaiStreamChat()) return true;
-      const chatController=new AbortController();const chatTimer=setTimeout(()=>chatController.abort(),14000);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
+      /* KAI 51 fast normal lane: one direct request for ordinary chat. Avoid duplicate realtime/stream work and keep the normal UI clean. */
+      const chatController=new AbortController();const chatTimer=setTimeout(()=>chatController.abort(),20000);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
         kaiMode,
         prompt:'Answer the user naturally as HAxBRO. Keep internal orchestration and implementation details private.',
