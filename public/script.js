@@ -47,7 +47,7 @@ let thinkingBubble=null,thinkingTimer=null,thinkingStartedAt=0,thinkingEstimateS
 const KAI_ACTIVITY_STAGES=[];
 function kaiHostFromUrl(url){try{return new URL(url).hostname.replace(/^www\\./,'')}catch{return''}}
 function kaiFavicon(url){const host=kaiHostFromUrl(url);return host?'https://www.google.com/s2/favicons?domain='+encodeURIComponent(host)+'&sz=32':''}
-function kaiActivityRow(label,detail='',iconUrl='',state='done',key=''){const row=document.createElement('div');row.className='kai-activity-row kai-activity-'+state;if(key)row.dataset.activityKey=key;const icon=document.createElement('span');icon.className='kai-activity-icon';const hatch=/\\bhatchable\\b/i.test(String(label||'')+' '+String(detail||''));if(hatch&&!iconUrl)iconUrl='https://hatchable.com/favicon.ico';if(iconUrl){const img=document.createElement('img');img.alt='';img.src=iconUrl;img.dataset.fallback='google';img.onerror=()=>{try{const u=new URL(img.src);const host=u.hostname;if(img.dataset.fallback==='google'){img.dataset.fallback='duck';img.src='https://icons.duckduckgo.com/ip3/'+encodeURIComponent(host)+'.ico';return}}catch{}img.remove();icon.textContent=(String(label||'•').trim()[0]||'•').toUpperCase()};icon.appendChild(img)}else{icon.textContent=(String(label||'•').trim()[0]||'•').toUpperCase()}const copy=document.createElement('span');copy.className='kai-activity-copy';const main=document.createElement('span');main.textContent=label;copy.appendChild(main);if(detail){const sub=document.createElement('small');sub.textContent=detail;copy.appendChild(sub)}const mark=document.createElement('span');mark.className='kai-activity-state';mark.textContent=state==='running'?'':state==='error'?'!':'✓';row.append(icon,copy,mark);return row}
+function kaiActivityRow(label,detail='',iconUrl='',state='done',key=''){const row=document.createElement('div');row.className='kai-activity-row kai-activity-'+state;if(key)row.dataset.activityKey=key;const icon=document.createElement('span');icon.className='kai-activity-icon';const hatch=/\\bhatchable\\b/i.test(String(label||'')+' '+String(detail||''));if(hatch&&!iconUrl)iconUrl='about:blank';if(iconUrl){const img=document.createElement('img');img.alt='';img.src=iconUrl;img.dataset.fallback='google';img.onerror=()=>{try{const u=new URL(img.src);const host=u.hostname;if(img.dataset.fallback==='google'){img.dataset.fallback='duck';img.src='https://icons.duckduckgo.com/ip3/'+encodeURIComponent(host)+'.ico';return}}catch{}img.remove();icon.textContent=(String(label||'•').trim()[0]||'•').toUpperCase()};icon.appendChild(img)}else{icon.textContent=(String(label||'•').trim()[0]||'•').toUpperCase()}const copy=document.createElement('span');copy.className='kai-activity-copy';const main=document.createElement('span');main.textContent=label;copy.appendChild(main);if(detail){const sub=document.createElement('small');sub.textContent=detail;copy.appendChild(sub)}const mark=document.createElement('span');mark.className='kai-activity-state';mark.textContent=state==='running'?'':state==='error'?'!':'✓';row.append(icon,copy,mark);return row}
 function kaiActivityFind(key){return thinkingBubble?.querySelector('[data-activity-key="'+CSS.escape(key)+'"]')||null}
 function kaiActivitySet(key,state,detail){const row=kaiActivityFind(key);if(!row)return;row.classList.remove('kai-activity-running','kai-activity-done','kai-activity-error');row.classList.add('kai-activity-'+state);const mark=row.querySelector('.kai-activity-state');if(mark)mark.textContent=state==='running'?'':state==='error'?'!':'✓';if(detail){let sub=row.querySelector('small');if(!sub){sub=document.createElement('small');row.querySelector('.kai-activity-copy')?.appendChild(sub)}sub.textContent=detail}}
 function kaiActivityStep(key,label,detail='',iconUrl='',state='running'){if(!thinkingBubble)return null;const list=thinkingBubble.querySelector('.kai-activity-list');if(!list)return null;let row=kaiActivityFind(key);if(row){kaiActivitySet(key,state,detail);return row}row=kaiActivityRow(label,detail,iconUrl,state,key);list.appendChild(row);requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'}));return row}
@@ -90,7 +90,7 @@ function kaiActivityResearch(steps){
    const obj=typeof step==='string'?{title:step}:step||{};
    const source=String(obj.source||'Web');
    const url=String(obj.url||obj.link||'');
-   const label=source==='Google Web'?'Google · web search':source==='Bing Web'||source==='Web'?'Bing · web search':source==='Wikipedia'?'Wikipedia · knowledge':source==='Data Commons'?'Data Commons · public data':source==='Hatchable'?'Hatchable · KAI runtime':(obj.label||obj.title||'Web source checked');
+   const label=source==='Google Web'?'Google · web search':source==='Bing Web'||source==='Web'?'Bing · web search':source==='Wikipedia'?'Wikipedia · knowledge':source==='Data Commons'?'Data Commons · public data':(obj.label||obj.title||'Web source checked');
    const detail=obj.title||obj.status||(url?'source returned by research':'research step completed');
    const key=url||source+'|'+label;if(seen.has(key))return;seen.add(key);
    list.appendChild(kaiActivityRow(label,detail,kaiSourceIcon(obj),'done',key));
@@ -209,18 +209,14 @@ async function kai51WorkspaceRoute(value){
     /* Legacy fallback is now strict too: no vague "make/create" routing. */
     if(priorityApp&&explicitAppCandidate){if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,true);return true}window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value,autoBuild:true}}));return true;}
     /* Live thinking stays visible while the ordered server backup chain runs. */
-    const localApi=window.HAxBROLocalKai;
-    const localProfile=localApi?.profileFor?.(value)||'light';
-    const trivialLocal=/^\s*[0-9](?:[0-9+*%().\s-]{0,80})\s*$/.test(value)||localApi?.isTrivial?.(value);
-    const chosenProfile=trivialLocal?'light':localProfile;
-    setBusy(true,chosenProfile);
+    setBusy(true,'heavy');
     let apiAnswered=false;
     async function kaiRealtimeChat(){
-      kaiActivityStep('runtime','Running on Hatchable','KAI 51 realtime job is being started on the Hatchable runtime.','running','https://hatchable.com/favicon.ico');
+      kaiActivityStep('runtime','KAI 51 · execution','Starting the live conversation engine.','running');
       const start=await fetch('/api/kai-start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});
-      if(!start.ok){kaiActivitySet('runtime','error','Hatchable runtime job could not be started');return false;}
+      if(!start.ok){kaiActivitySet('runtime','error','KAI execution could not be started');return false;}
       const sd=await start.json().catch(()=>({})); if(!sd.jobId){kaiActivitySet('runtime','error','No KAI job was created');return false;}
-      kaiActivitySet('runtime','done','Realtime KAI job created on Hatchable');
+      kaiActivitySet('runtime','done','Live KAI execution started');
       let done=false,final=null,client=null;
       const handle=ev=>{
         if(ev.type==='connected') kaiActivityStep('execution','KAI 51 execution','Live activity channel connected','', 'done');
@@ -235,8 +231,8 @@ async function kai51WorkspaceRoute(value){
       };
       try{client=await window.haxbroLoadRealtime(sd.jobId,handle);}catch{return false;}
       if(!client)return false;
-      kaiActivityStep('deploy','Executing on Hatchable','KAI worker is executing the live job.','running','https://hatchable.com/favicon.ico');
-      try{const rr=await fetch('/api/kai-run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:sd.jobId,message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});if(!rr.ok){kaiActivitySet('deploy','error','Hatchable execution request failed');return false;}kaiActivitySet('deploy','done','Hatchable worker accepted the job');}catch{kaiActivitySet('deploy','error','Hatchable execution request failed');return false;}
+      kaiActivityStep('deploy','KAI 51 · executing','Live KAI execution is running.','running');
+      try{const rr=await fetch('/api/kai-run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId:sd.jobId,message:value,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[]),kaiMemory:JSON.stringify(getKaiMemory())})});if(!rr.ok){kaiActivitySet('deploy','error','KAI execution request failed');return false;}kaiActivitySet('deploy','done','Hatchable worker accepted the job');}catch{kaiActivitySet('deploy','error','Hatchable execution request failed');return false;}
       const started=Date.now();
       while(!done && Date.now()-started<90000)await new Promise(r=>setTimeout(r,80));
       try{client.close?.();}catch{}
@@ -273,45 +269,7 @@ async function kai51WorkspaceRoute(value){
       return true;
     }
     try{
-      /* Revived fast lane: greetings/simple math are answered immediately by deterministic KAI rules.
-         No runtime handoff, provider trace, or long model warm-up for normal conversation. */
-      if(trivialLocal){
-        const v=String(value||'').trim();
-        let instant='';
-        if(/^(hi|hello|hey|yo|sup|hiya)[!. ]*$/i.test(v)){
-          const hour=new Date().getHours();
-          instant='Hey! 👋 Good '+(hour<12?'morning':hour<18?'afternoon':'evening')+'. KAI 51 is ready — what are we working on?';
-        }else if(/^(thanks|thank you|thx|ty)[!. ]*$/i.test(v)) instant='Anytime, bro. ⚡';
-        else if(/^(ok|okay|cool|nice|great)[!. ]*$/i.test(v)) instant='Got it. ⚡';
-        else{
-          const m=v.match(/^what(?:'s| is)\s+(\d+)\s*(\+|-|\*|\/|%)\s*(\d+)\??$/i);
-          if(m){
-            const a=Number(m[1]),b=Number(m[3]),op=m[2];
-            const n=op==='+'?a+b:op==='-'?a-b:op==='*'?a*b:op==='/'?a/b:a%b;
-            instant=Number.isFinite(n)?String(n):'I can’t divide by zero.';
-          }
-        }
-        if(instant){
-          kaiActivityStep('instant','KAI 51 · instant response','Local rule path completed','','done');
-          kaiActivityFinish({sources:[]});
-          addMessage(instant,'bot');
-          return true;
-        }
-      }
-      /* KAI 51 normal chat: keep the conversation simple, but visibly surface the real
-         systems/sources involved. These are activity identities, not a branded workspace. */
-      const researchLike=/\b(?:search|google|bing|web|research|latest|recent|source|sources|find|look up|what is|who is|why|how|compare|evidence|data|statistics|facts|news)\b/i.test(value);
-      if(researchLike){
-        /* Show recognizable source identities only for the retrieval lanes KAI actually uses.
-           Hatchable is infrastructure, never a normal-chat source identity. */
-        kaiActivityStep('google','Google · searching','Web search','https://www.google.com/favicon.ico','running');
-        kaiActivityStep('bing','Bing · searching','Web search','https://www.bing.com/sa/simg/favicon-2x.ico','running');
-        kaiActivityStep('web','World Wide Web · searching','Broad web retrieval','','running');
-        kaiActivityStep('wikipedia','Wikipedia · checking','Knowledge source','https://www.wikipedia.org/static/favicon/wikipedia.ico','running');
-        kaiActivityStep('datacommons','Data Commons · checking','Public data source','https://datacommons.org/favicon.ico','running');
-      }else{
-        kaiActivityStep('thinking','KAI 51 · thinking','Understanding your message','','running');
-      }
+      kaiActivityStep('thinking','KAI 51 · thinking','Understanding your message','','running');
       const chatController=new AbortController();const chatTimer=setTimeout(()=>chatController.abort(),20000);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
         kaiMode,
@@ -326,37 +284,14 @@ async function kai51WorkspaceRoute(value){
       if(rr.ok&&(dd.response||dd.text||dd.message||dd.answer||dd.output)){
         apiAnswered=true;
         const returnedSources=Array.isArray(dd.sources)?dd.sources:(Array.isArray(dd.webSteps)?dd.webSteps:[]);
-        const sourceNames=returnedSources.map(s=>String(s?.source||'').toLowerCase());
-        if(researchLike){
-          if(sourceNames.some(s=>s.includes('google')))kaiActivitySet('google','done','Google returned web evidence');else kaiActivitySet('google','done','Google search completed');
-          if(sourceNames.some(s=>s.includes('bing')||s==='web'))kaiActivitySet('bing','done','Bing returned web evidence');else kaiActivitySet('bing','done','Bing search completed');
-          kaiActivitySet('web','done','Web retrieval completed');
-          if(sourceNames.some(s=>s.includes('wikipedia')))kaiActivitySet('wikipedia','done','Wikipedia returned knowledge');
-          else kaiActivitySet('wikipedia','done','Wikipedia lane completed');
-          if(sourceNames.some(s=>s.includes('data commons')))kaiActivitySet('datacommons','done','Data Commons returned public data');
-          else kaiActivitySet('datacommons','done','Data Commons lane completed');
-        }else{
-          kaiActivitySet('thinking','done','Understanding complete');
-        }
+        kaiActivitySet('thinking','done','Understanding complete');
         kaiActivityResearch(returnedSources);
         kaiActivityFinish(dd);
         addMessage(dd.response||dd.text||dd.message||dd.answer||dd.output,'bot');
         return true;
       }
     }catch{}
-    /* If the server chain is unavailable, keep HAxBRO alive with the browser-local KAI 51 runtime. */
-    if(localApi?.respond){
-      try{
-        const responsePromise=localApi.respond(value,chosenProfile==='heavy'?'deep':'light');
-        const timeout=new Promise(resolve=>setTimeout(()=>resolve(null),5000));
-        const localResult=await Promise.race([responsePromise,timeout]);
-        if(localResult?.response){
-          kaiActivityFinish(localResult);
-          addMessage(localResult.response,'bot');
-          return true;
-        }
-      }catch{}
-    }
+    /* No browser-local canned fallback: failures stay visible instead of becoming rule-based replies. */
     if(!apiAnswered){
       kaiActivityFinish({sources:[]});
       addMessage("KAI could not complete the request right now. Please try again.",'bot');
