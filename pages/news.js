@@ -1,6 +1,46 @@
 export const access = "public";
 
 const ARTICLES = {
+  "stork-ai-haxbro-ai": {
+    title: "HAxBRO AI on Stork AI",
+    description: "An independent Stork AI profile covering HAxBRO AI as an intelligent workspace for chat, coding, App Maker, cybersecurity, files and knowledge.",
+    externalUrl: "https://www.stork.ai/en/haxbro-ai",
+    sections: [
+      ["About the profile", "Stork AI's HAxBRO AI listing presents the product as an intelligent workspace bringing multiple AI capabilities together in one browser-based experience."],
+      ["What it covers", "The profile describes HAxBRO AI across AI chat, coding, App Maker, cybersecurity, files and knowledge or study workflows."],
+      ["Read the full article", "The complete independent profile is hosted on Stork AI."],
+    ]
+  },
+  "legit-show-haxbro-ai": {
+    title: "HAxBRO AI on Legit.Show",
+    description: "An independent profile describing HAxBRO AI as a browser-based gateway combining AI chat, coding, app building and security tools.",
+    externalUrl: "https://legit.show/s/haxbro-hatchable-site",
+    sections: [
+      ["The profile", "Legit.Show describes HAxBRO AI as a browser-based AI gateway and platform combining conversation, coding, app building and security-oriented tools."],
+      ["Why it matters", "The listing gives another independent public reference for the HAxBRO AI product and its broader workspace direction."],
+      ["Read the full article", "The complete profile is hosted on Legit.Show."],
+    ]
+  },
+  "aitoolnavio-haxbro-ai": {
+    title: "HAxBRO AI on AItoolnavio",
+    description: "HAxBRO AI is also represented in the AI-tool discovery ecosystem as an independent AI workspace and application-building platform.",
+    externalUrl: "https://aitoolnavio.com/all-ai-tools",
+    sections: [
+      ["The directory", "AItoolnavio includes HAxBRO AI in its broader AI-tools discovery directory."],
+      ["HAxBRO's position", "The listing context reflects HAxBRO AI's direction as a multi-capability workspace rather than a single-purpose chatbot."],
+      ["Read the directory", "The full AItoolnavio directory is hosted on AItoolnavio."],
+    ]
+  },
+  "stork-ai-alternatives-haxbro-ai": {
+    title: "HAxBRO AI Alternatives on Stork AI",
+    description: "A Stork AI alternatives page connected to the HAxBRO AI listing and its place in the AI workspace landscape.",
+    externalUrl: "https://www.stork.ai/alternatives/haxbro-ai",
+    sections: [
+      ["The alternatives page", "Stork AI also maintains an alternatives page associated with HAxBRO AI."],
+      ["Explore the comparison context", "The page provides broader discovery context around HAxBRO AI and other AI products."],
+      ["Read the full page", "The complete alternatives page is hosted on Stork AI."],
+    ]
+  },
   "kai-51-the-intelligence-layer-behind-haxbro-ai": {
     title: "KAI 51: The Intelligence Layer Behind HAxBRO AI",
     description: "An inside look at KAI 51, the intelligence architecture coordinating memory, context, reasoning, research, tools and verification.",
@@ -43,11 +83,16 @@ export default async function(req,res) {
 
   if (article) {
     const sections = article.sections.map(([h,p],i) => `<section class="section"><div class="idx">0${i+1}</div><div><h2>${esc(h)}</h2><p>${esc(p)}</p></div></section>`).join("");
-    const body = `<main><div class="kicker">HAXBRO AI · NEWS · KAI 51</div><header class="hero"><h1>${esc(article.title)}</h1><p class="dek">${esc(article.description)}</p></header><article class="article">${sections}</article><footer class="footer">Published by HAxBRO AI · Independent AI technology brand</footer></main>`;
+    const external = article.externalUrl ? `<p style="margin-top:28px"><a class="read" href="${esc(article.externalUrl)}" target="_blank" rel="noopener noreferrer">Open the original article →</a></p>` : "";
+    const body = `<main><div class="kicker">HAXBRO AI · NEWS · KAI 51</div><header class="hero"><h1>${esc(article.title)}</h1><p class="dek">${esc(article.description)}</p></header><article class="article">${sections}${external}</article><footer class="footer">Published by HAxBRO AI · Independent AI technology brand</footer></main>`;
     res.status(200); res.setHeader("content-type","text/html; charset=utf-8"); res.setHeader("cache-control","public, max-age=60, s-maxage=60"); res.send(pageShell(article.title,body,article.description)); return;
   }
 
   const cards = [
+    ["HAxBRO AI on Stork AI","stork-ai-haxbro-ai","Independent profile covering HAxBRO AI as an intelligent workspace."],
+    ["HAxBRO AI on Legit.Show","legit-show-haxbro-ai","Independent profile covering AI chat, coding, app building and security."],
+    ["HAxBRO AI on AItoolnavio","aitoolnavio-haxbro-ai","HAxBRO AI in the AI-tool discovery ecosystem."],
+    ["HAxBRO AI Alternatives on Stork AI","stork-ai-alternatives-haxbro-ai","The Stork AI alternatives page associated with HAxBRO AI."],
     ["KAI 51: The Intelligence Layer Behind HAxBRO AI","kai-51-the-intelligence-layer-behind-haxbro-ai","An inside look at KAI 51 and the intelligence architecture behind HAxBRO AI."],
     ["Inside KAI 51: How HAxBRO's Own Intelligence Architecture Works","inside-kai-51-how-haxbro-own-intelligence-architecture-works","A technical tour of KAI 51's nodes, routing, memory, research, tools, verification and recovery layers."]
   ].map((a,i)=>`<article class="card"><div class="idx">0${i+1}</div><h2>${esc(a[0])}</h2><p>${esc(a[2])}</p><a class="read" href="/news?article=${a[1]}">Read article →</a></article>`).join("");
