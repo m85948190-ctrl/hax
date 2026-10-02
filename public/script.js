@@ -407,7 +407,8 @@ if(workspaceFollowup){
 const localEngine=window.HAxBROKai51Engine;
 if(!overdrive&&!opts.fromChoice&&localEngine?.isReady?.()){
   const localHistory=active()?.items?.slice(-12)||[];
-  addMessage(value,'user');updateKaiMemory(value);if(input)input.value='';resize();
+  /* The user message was already rendered and saved at the top of sendChat().
+     Do not append it again when the local KAI runtime handles the turn. */
   kaiActivityStart('light');kaiActivityStep('local','KAI 51 · local','Running directly in this browser','','running');
   try{
     const localResult=await localEngine.generate(value,localHistory);
