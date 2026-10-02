@@ -325,7 +325,7 @@ async function kai51WorkspaceRoute(value){
       kaiActivityStep('thinking','KAI 51 · thinking','Understanding your message','','running');
       const chatController=new AbortController();const chatLimit=opts.searchMode==='quick'?15000:opts.searchMode==='deep'?90000:30000;const chatTimer=setTimeout(()=>chatController.abort(),chatLimit);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
-        searchMode:opts.searchMode||'quick',
+        searchMode:opts.searchMode||'normal',
         kaiMode,
         prompt:'Answer the user naturally as HAxBRO. Keep internal orchestration and implementation details private.',
         mode,
