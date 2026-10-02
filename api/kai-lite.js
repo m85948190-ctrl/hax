@@ -34,40 +34,33 @@ function decodeBingUrl(href){
   return raw;
 }
 async function webRetrieve(query){
-  /* Google/DDG increasingly return bot challenges from managed browser sessions.
-     Bing's public HTML SERP is stable here, so Kai Lite scrapes the live SERP
-     itself and uses the result snippets as grounded web material. */
-  const url="https://www.bing.com/search?q="+encodeURIComponent(query);
-  const results=await browser.session(async page=>{
-    await page.goto(url,{waitUntil:'domcontentloaded'});
-    return await page.evaluate(()=>{
-      return Array.from(document.querySelectorAll('li.b_algo')).slice(0,8).map(li=>{
-        const a=li.querySelector('h2 a');
-        const p=li.querySelector('.b_caption p');
-        return {
-          title:(a?.innerHTML||'').replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim(),
-          url:a?.href||'',
-          text:(p?.innerHTML||'').replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').trim()
-        };
-      }).filter(x=>x.title&&x.url);
-    });
-  });
-  for(const item of results){
-    item.title=htmlDecode(item.title);
-    item.text=htmlDecode(item.text||item.title);
-    item.url=decodeBingUrl(item.url);
+  /* Bing's public RSS search feed is fast and stable in managed Chromium.
+     Kai Lite scrapes live result titles, URLs and descriptions, then optionally
+     reads one real public source without blocking the chat turn on a slow page. */
+  const url="https://www.bing.com/search?format=rss&q="+encodeURIComponent(query);
+  const html=String(await browser.html(url));
+  const items=html.split('<item>').slice(1).map(block=>{
+    const readTag=name=>{
+      const a=block.indexOf('<'+name+'>');if(a<0)return'';
+      const b=block.indexOf('</'+name+'>',a);if(b<0)return'';
+      return htmlDecode(block.slice(a+name.length+2,b).trim());
+    };
+    return {title:readTag('title'),url:readTag('link'),text:readTag('description')};
+  }).filter(x=>x.title&&/^https?:\/\//i.test(x.url)).slice(0,8);
+  const results=[];
+  for(const item of items){
+    if(results.some(x=>x.url===item.url))continue;
+    results.push(item);
   }
-  /* Try one real source page when it is fast enough; search snippets remain the
-     guaranteed fast path so Kai Lite never blocks chat on a slow publisher. */
-  const first=results.find(x=>!/(google\.com|bing\.com)$/i.test(new URL(x.url).hostname));
+  const first=results[0];
   if(first){
     try{
       const page=await Promise.race([
         browser.html(first.url),
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error('source timeout')),3500))
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('source timeout')),3000))
       ]);
       const body=pageText(page);
-      if(body)first.text=body.slice(0,9000);
+      if(body&&body.length>300)first.text=body.slice(0,9000);
     }catch{}
   }
   return results.slice(0,6);
