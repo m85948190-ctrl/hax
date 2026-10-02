@@ -13,28 +13,60 @@ function pageText(html){
     .replace(/<[^>]+>/g," "),7000);
 }
 
+function htmlDecode(v){
+  return String(v||'')
+    .replace(/&amp;/g,'&').replace(/&quot;/g,'\"').replace(/&#39;/g,"'")
+    .replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+}
+function decodeBingUrl(href){
+  const raw=htmlDecode(href);
+  try{
+    const u=new URL(raw);
+    const encoded=u.searchParams.get('u');
+    if(encoded){
+      const b=encoded.replace(/^a1/i,'').replace(/-/g,'+').replace(/_/g,'/');
+      const padded=b+'='.repeat((4-b.length%4)%4);
+      const bin=atob(padded);
+      const decoded=decodeURIComponent(Array.from(bin,c=>String.fromCharCode(c.charCodeAt(0))).join(''));
+      if(/^https?:\/\//i.test(decoded))return decoded;
+    }
+  }catch{}
+  return raw;
+}
 async function webRetrieve(query){
-  const url="https://www.google.com/search?gbv=1&hl=en&q="+encodeURIComponent(query);
-  const links=await browser.session(async page=>{
-    await page.goto(url,{waitUntil:"domcontentloaded"});
-    return await page.evaluate(()=>{
-      const out=[],seen=new Set();
-      for(const a of Array.from(document.querySelectorAll("a"))){
-        const href=a.href||"",title=(a.innerText||a.textContent||"").replace(/\s+/g," ").trim();
-        if(!/^https?:\/\//i.test(href)||!title)continue;
-        let host="";try{host=new URL(href).hostname}catch{continue}
-        if(/google\./i.test(host)||seen.has(href))continue;
-        seen.add(href);out.push({title,url:href});
-        if(out.length>=6)break;
-      }
-      return out;
-    });
-  });
-  const pages=[];
-  for(const link of links.slice(0,4)){
-    try{const html=await browser.html(link.url);const text=pageText(html);if(text)pages.push({...link,text});}catch{}
+  /* Google/DDG increasingly return bot challenges from managed browser sessions.
+     Bing's public HTML SERP is stable here, so Kai Lite scrapes the live SERP
+     itself and uses the result snippets as grounded web material. */
+  const url="https://www.bing.com/search?q="+encodeURIComponent(query);
+  const html=String(await browser.html(url));
+  const results=[];
+  const blocks=html.match(/<li[^>]*class=["']b_algo["'][\s\S]*?<\/li>/gi)||[];
+  for(const block of blocks.slice(0,8)){
+    const link=block.match(/<h2[^>]*>\s*<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/i);
+    const snippet=block.match(/<p[^>]*class=["'][^"']*b_(?:lineclamp2|caption)[^"']*["'][^>]*>([\s\S]*?)<\/p>/i)
+      ||block.match(/<div[^>]*class=["']b_caption["'][^>]*>[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/i);
+    if(!link)continue;
+    const title=htmlDecode(link[2].replace(/<[^>]+>/g,' ')).replace(/\s+/g,' ').trim();
+    const text=htmlDecode(String(snippet?.[1]||'').replace(/<[^>]+>/g,' ')).replace(/\s+/g,' ').trim();
+    const target=decodeBingUrl(link[1]);
+    if(!title||!/^https?:\/\//i.test(target))continue;
+    if(results.some(x=>x.url===target))continue;
+    results.push({title,url:target,text:text||title});
   }
-  return pages;
+  /* Try one real source page when it is fast enough; search snippets remain the
+     guaranteed fast path so Kai Lite never blocks chat on a slow publisher. */
+  const first=results.find(x=>!/(google\.com|bing\.com)$/i.test(new URL(x.url).hostname));
+  if(first){
+    try{
+      const page=await Promise.race([
+        browser.html(first.url),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('source timeout')),3500))
+      ]);
+      const body=pageText(page);
+      if(body)first.text=body.slice(0,9000);
+    }catch{}
+  }
+  return results.slice(0,6);
 }
 
 function extractiveAnswer(query,sources){
