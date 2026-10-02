@@ -259,7 +259,9 @@ async function kai51WorkspaceRoute(value){
        No App Data Miner, duplicate regex gate, or platform-choice detour is used. */
     let kaiRoute=null;
     try{
-      const rr=await fetch('/api/kai-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value})});
+      /* Dedicated local App Intent Intelligence runs before the general router.
+         It decides only whether the user is entering/building/modifying App Maker. */
+      const rr=await fetch('/api/kai/app-intent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value})});
       kaiRoute=await rr.json().catch(()=>null);
     }catch{}
     if(kaiRoute?.ok&&kaiRoute.destination==='app-maker'&&kaiRoute.wantsApp===true&&Number(kaiRoute.confidence||0)>=0.72){
