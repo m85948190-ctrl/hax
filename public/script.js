@@ -39,7 +39,34 @@ function resize(){if(!input)return;input.style.height='auto';input.style.height=
 function esc(v){const d=document.createElement('div');d.textContent=String(v??'');return d.innerHTML}
 function renderRich(text){const raw=String(text??'');const parts=raw.split(/```([a-zA-Z0-9_+-]*)\n([\s\S]*?)```/g);let html='';for(let i=0;i<parts.length;i+=3){let plain=esc(parts[i]).replace(/\n/g,'<br>');plain=plain.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener" class="hax-file-link">$1 ↗</a>');plain=plain.replace(/(^|[\s>])(https?:\/\/[^\s<]+)/g,'$1<a href="$2" target="_blank" rel="noopener" class="hax-file-link">$2 ↗</a>');plain=plain.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');html+=plain;if(i+2<parts.length){const lang=(parts[i+1]||'text').toLowerCase();const code=parts[i+2];const id='code_'+uid();html+='<div class="hax-code-wrap"><div class="hax-code-bar"><span>'+esc(lang)+'</span><button type="button" data-copy-code="'+id+'">COPY</button>'+(lang==='html'||lang==='htm'?' <button type="button" data-preview-html="'+id+'">PREVIEW</button>':'')+'</div><pre class="hax-code"><code id="'+id+'">'+esc(code)+'</code></pre>'+(lang==='html'||lang==='htm'?'<iframe class="hax-html-preview" id="preview_'+id+'" sandbox="allow-scripts" hidden></iframe>':'')+'</div>'}}return html}
 function bindRichControls(scope){scope.querySelectorAll('.hax-file-link').forEach(a=>{if(/^DOWNLOAD/i.test((a.textContent||'').trim()))a.onclick=e=>{e.preventDefault();openHaxbroFile(a.href)}});scope.querySelectorAll('[data-copy-code]').forEach(b=>b.onclick=async()=>{const c=document.getElementById(b.dataset.copyCode);if(c){await navigator.clipboard?.writeText(c.textContent||'');const old=b.textContent;b.textContent='COPIED ✓';setTimeout(()=>b.textContent=old,1200)}});scope.querySelectorAll('[data-preview-html]').forEach(b=>b.onclick=()=>{const id=b.dataset.previewHtml,c=document.getElementById(id),frame=document.getElementById('preview_'+id);if(!c||!frame)return;frame.hidden=!frame.hidden;if(!frame.hidden)frame.srcdoc=c.textContent||''})}
-function addMessage(text,who='bot',saveIt=true){if(!messages)return;const wrap=document.createElement('div');const isUser=who==='user';wrap.className='message '+(isUser?'user-msg':'bot-msg')+(overdrive?' admin-chat-msg':'');const avatar=isUser?'<span>U</span>':(overdrive?'<span class="kai-chat-avatar">K</span>':'<img src="/logo-symbol.svg?v=218" alt="HAxBRO">');wrap.innerHTML='<div class="avatar message-avatar">'+avatar+'</div><div class="message-body"><div class="bubble message-copy">'+(isUser?esc(text).replace(/\n/g,'<br>'):renderRich(text))+'</div></div>';messages.appendChild(wrap);if(!isUser)bindRichControls(wrap);if(saveIt){const c=active();if(c){c.items.push({who,text});c.updated=Date.now();save();renderHistory()}}messages.scrollTop=messages.scrollHeight}
+function kaiSpeechLocale(text){
+ const s=String(text||'');
+ if(/[\u0980-\u09FF]/.test(s))return 'bn-IN';
+ if(/[\u0900-\u097F]/.test(s))return 'hi-IN';
+ if(/[\u0B80-\u0BFF]/.test(s))return 'ta-IN';
+ if(/[\u0C00-\u0C7F]/.test(s))return 'te-IN';
+ if(/[\u0C80-\u0CFF]/.test(s))return 'kn-IN';
+ if(/[\u0D00-\u0D7F]/.test(s))return 'ml-IN';
+ if(/[\u0A80-\u0AFF]/.test(s))return 'gu-IN';
+ if(/[\u0A00-\u0A7F]/.test(s))return 'pa-IN';
+ if(/[\u0600-\u06FF]/.test(s))return 'ar-SA';
+ if(/[\u0590-\u05FF]/.test(s))return 'he-IL';
+ if(/[\u0400-\u04FF]/.test(s))return 'ru-RU';
+ if(/[\u0370-\u03FF]/.test(s))return 'el-GR';
+ if(/[\u3040-\u30FF]/.test(s))return 'ja-JP';
+ if(/[\uAC00-\uD7AF]/.test(s))return 'ko-KR';
+ if(/[\u3400-\u9FFF]/.test(s))return 'zh-CN';
+ return 'en-US';
+}
+function speakHaxbroText(text,button){
+ if(!('speechSynthesis' in window)){if(button)button.textContent='VOICE N/A';return}
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(String(text||'').slice(0,5000));
+ u.lang=kaiSpeechLocale(text);
+ if(button){button.textContent='STOP';u.onend=()=>button.textContent='SPEAK';u.onerror=()=>button.textContent='SPEAK'}
+ window.speechSynthesis.speak(u);
+}
+function addMessage(text,who='bot',saveIt=true){if(!messages)return;const wrap=document.createElement('div');const isUser=who==='user';wrap.className='message '+(isUser?'user-msg':'bot-msg')+(overdrive?' admin-chat-msg':'');const avatar=isUser?'<span>U</span>':(overdrive?'<span class="kai-chat-avatar">K</span>':'<img src="/logo-symbol.svg?v=218" alt="HAxBRO">');wrap.innerHTML='<div class="avatar message-avatar">'+avatar+'</div><div class="message-body"><div class="bubble message-copy">'+(isUser?esc(text).replace(/\n/g,'<br>'):renderRich(text))+'</div></div>';messages.appendChild(wrap);if(!isUser){bindRichControls(wrap);const speak=document.createElement('button');speak.type='button';speak.className='kai-speak-btn';speak.textContent='SPEAK';speak.setAttribute('aria-label','Speak this answer');speak.onclick=()=>speakHaxbroText(text,speak);wrap.querySelector('.message-body')?.appendChild(speak)}if(saveIt){const c=active();if(c){c.items.push({who,text});c.updated=Date.now();save();renderHistory()}}messages.scrollTop=messages.scrollHeight}
 function ensureChat(){if(!current||!active()){newChat()}}
 function getKaiMemory(){try{const a=JSON.parse(localStorage.getItem('haxbro_kai_memory_notes')||'[]');return Array.isArray(a)?a.slice(-12):[]}catch(e){return[]}}
 function updateKaiMemory(text){try{const a=getKaiMemory();a.push({text:String(text||'').slice(0,900),at:Date.now()});localStorage.setItem('haxbro_kai_memory_notes',JSON.stringify(a.slice(-12)))}catch(e){}}
@@ -305,7 +332,7 @@ async function kai51WorkspaceRoute(value){
       return true;
     }
     try{
-      kaiActivityStep('thinking','KAI 51 · thinking','Understanding your message','','running');
+      kaiActivityStep('thinking','KAI 51 · thinking','Understanding your message','','running');kaiActivityStep('language','Language layer','Detecting language and communication mode locally','','done');
       const chatController=new AbortController();const chatLimit=opts.searchMode==='quick'?15000:opts.searchMode==='deep'?90000:30000;const chatTimer=setTimeout(()=>chatController.abort(),chatLimit);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
         searchMode:opts.searchMode||'normal',
