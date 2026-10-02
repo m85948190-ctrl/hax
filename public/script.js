@@ -145,7 +145,7 @@ function showKaiChoice(title,options,onCancel){
     const name=document.createElement('b');name.textContent=opt.label;
     const desc=document.createElement('small');desc.textContent=opt.detail;
     copy.append(name,desc);b.append(icon,copy);
-    b.onclick=()=>{removeKaiChoices();opt.onClick?.();};row.appendChild(b);
+    b.onclick=async()=>{if(b.disabled)return;row.querySelectorAll('.kai-choice-card').forEach(x=>{x.disabled=true;x.classList.remove('is-working')});b.classList.add('is-working');b.setAttribute('aria-busy','true');name.textContent='Starting KAI…';heading.textContent='KAI is starting the selected workflow';await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));removeKaiChoices();try{await opt.onClick?.();}catch(e){console.error('HAxBRO choice action failed',e);showKaiChoice(title,options,onCancel);}};row.appendChild(b);
   });
   wrap.appendChild(row);messages.appendChild(wrap);messages.scrollTop=messages.scrollHeight;
 }
