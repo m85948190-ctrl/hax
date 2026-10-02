@@ -7,9 +7,12 @@
   function render(d={}){
     const incoming=Math.max(0,Math.min(100,Math.round(Number(d.progress)||0)));
     const current=Number(document.getElementById('kai51BootPercent')?.textContent?.replace('%',''))||0;
-    const pct=Math.max(current,incoming);
+    const nativeState=window.HAxBROKai51Bootstrap?.state?.();
+    const verifiedReady=!!nativeState?.ready||window.HAxBRO_KAI51_LOCAL_READY===true;
+    if(window.HAxBRO_KAI51_LOCAL_READY===true && incoming<100)return;
+    const pct=verifiedReady?100:Math.max(current,incoming);
     const box=mount();
-    const ready=pct>=100||d.status==='ready'||d.status==='KAI 51 implemented';
+    const ready=verifiedReady||(pct>=100&&d.status!=='KAI 51 verification failed — retry required');
     document.getElementById('kai51BootTitle').textContent=ready?'KAI 51 · REAL INTELLIGENCE MODEL READY':'KAI 51 · REAL INTELLIGENCE MODEL IS LOADING';
     document.getElementById('kai51BootText').textContent=ready?'KAI 51 advanced intelligence is ready.':'Kai Lite is chatting with you while the real KAI 51 intelligence model loads in the background.';
     document.getElementById('kai51BootFill').style.width=pct+'%';
@@ -17,10 +20,19 @@
     document.getElementById('kai51BootStatus').textContent=String(d.status||'Preparing KAI 51');
   }
   mount();
-  /* The native KAI 51 conversation lane is available immediately. Do not present a browser-model download as a prerequisite. */
-  render({progress:100,status:'KAI 51 native intelligence ready'});
-  window.HAxBRO_KAI51_NATIVE_READY = true;
+  /* This card is status, not theatre: start at the real persisted state and let
+     the actual browser-model downloader move it forward. */
+  const initial=window.HAxBROKai51Bootstrap?.state?.();
+  if(initial?.ready){
+    window.HAxBRO_KAI51_LOCAL_READY=true;
+    render({progress:100,status:'ready'});
+  }else{
+    render({progress:0,status:initial?.status==='installing'?'KAI 51 download starting…':'KAI LITE IS ACTIVE · real KAI 51 download will run in the background'});
+  }
   window.addEventListener('haxbro:kai-local-progress',e=>render(e.detail||{}));
   window.addEventListener('haxbro:kai51-bootstrap',e=>render(e.detail||{}));
-  window.addEventListener('haxbro:kai51-ready',()=>render({progress:100,status:'ready'}));
+  window.addEventListener('haxbro:kai51-ready',e=>{
+    window.HAxBRO_KAI51_LOCAL_READY=true;
+    render({progress:100,status:'ready'});
+  });
 })();

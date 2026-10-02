@@ -206,18 +206,52 @@ if(!opts.fromChoice&&!overdrive&&value.length>0&&!kaiChoiceSearchLike(value)&&/\
 let launchFromPending=false;if(overdrive){const pendingKey='haxbro_kai_pending_target';if(/^abort all$/i.test(value))sessionStorage.removeItem(pendingKey)}applyContextTheme(value);if(!launchFromPending&&opts.fromChoice===true){updateKaiMemory(value)}
 else if(!launchFromPending){addMessage(value,'user');updateKaiMemory(value)}
 if(input)input.value='';resize();try{if(!overdrive){
-      if(!opts.fromChoice&&window.HAxBROKaiLite?.respond&&/\b(?:latest|recent|today|news|search|find|look\s*(?:up|for)|research|source|sources|web|internet|price|cost|weather|version|release|update|who is|what is|when is|where is|how much|compare|comparison)\b/i.test(value)){
+      const kai51LocalReady=!!window.HAxBROKai51Bootstrap?.state?.().ready;
+      /* Before the real KAI 51 browser model is installed, KAI Lite is the actual
+         first-response engine for EVERY chat turn. It is web-grounded, not a
+         canned/rule-based responder. Once KAI 51 is genuinely verified ready,
+         this branch is skipped and the downloaded local model owns the turn. */
+      if(!kai51LocalReady&&!opts.fromChoice&&window.HAxBROKaiLite?.respond){
         try{
+          kaiActivityStart('light');
+          kaiActivityStep('lite','KAI Lite · web scraper','Searching public web context','','running');
           const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
           if(lite?.response){
-            kaiActivityStart('light');
-            kaiActivityStep('lite','KAI Lite · web','Reading public web context','','running');
             kaiActivitySet('lite','done',(lite.sources?.length||0)+' public sources');
             kaiActivityFinish(lite);
             addMessage(lite.response,'bot');
             return true;
           }
-        }catch(e){console.warn('Kai Lite unavailable; escalating to advanced KAI',e)}
+          throw new Error('Kai Lite returned no response');
+        }catch(e){
+          kaiActivitySet('lite','error',e?.message||'web retrieval unavailable');
+          kaiActivityFinish({sources:[]});
+          console.warn('Kai Lite web lane unavailable; escalating to managed KAI 51',e);
+        }
+      }
+      if(kai51LocalReady&&window.HAxBROKai51Bootstrap?.generate){
+        setBusy(true,'heavy');
+        try{
+          const local=await window.HAxBROKai51Bootstrap.generate(value,active()?.items?.slice(-12)||[]);
+          if(local?.response){
+            kaiActivityStep('thinking','KAI 51 · local model','Using the downloaded KAI 51 model on this device','','running');
+            kaiActivitySet('thinking','done','Local inference complete');
+            kaiActivityFinish({sources:[]});
+            addMessage(local.response,'bot');
+            return true;
+          }
+          throw new Error('KAI 51 local model returned no response');
+        }catch(e){
+          kaiActivityFinish({sources:[]});
+          console.warn('Verified local KAI 51 failed; falling back to web-grounded recovery',e);
+          if(window.HAxBROKaiLite?.respond){
+            try{
+              kaiActivityStart('light');
+              const recovery=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
+              if(recovery?.response){kaiActivityFinish(recovery);addMessage(recovery.response,'bot');return true}
+            }catch{}
+          }
+        }
       }
       setBusy(true,opts.searchMode==='quick'?'light':'heavy');
 /* KAI 51 UNIFIED LOCAL ROUTER: one natural-language command can invoke any HAxBRO workspace before chat. */

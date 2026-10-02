@@ -58,8 +58,10 @@
   }
 
   async function maybeInstall() {
+    state = read();
     if (state.status === 'ready') return window.HAxBROKai51Engine || loadEngine();
-    if (state.successes < TARGET || state.status === 'installing') return null;
+    /* KAI 51 downloads immediately in the background. KAI Lite owns chat until
+       this real browser model reports verified readiness. */
     return loadEngine();
   }
 
@@ -73,7 +75,12 @@
       progress: Math.round((successes/TARGET)*100),
       status: successes >= TARGET ? 'bootstrap threshold reached — preparing KAI 51 locally' : ('bootstrap conversation '+successes+'/'+TARGET)
     });
-    /* Do not auto-download a browser model after a few chats. KAI 51's native HAxBRO lane is already available instantly; the browser model remains an explicit local-runtime path. */
+    /* The sixth successful KAI Lite/web turn is the handoff point: start the
+       REAL browser model download in the background. Chat remains on KAI Lite
+       until the engine reports verified readiness. */
+    if(successes>=TARGET){
+      queueMicrotask(()=>loadEngine().catch(()=>{}));
+    }
     return state;
   }
 
@@ -114,6 +121,7 @@
     }
   };
 
-  // A browser-local runtime is optional. Never auto-start a large model download on page load.
-  // Main chat uses the native HAxBRO KAI 51 lane immediately.
+  // Start the real local KAI 51 download without blocking the chat UI.
+  // KAI Lite remains the live chat engine until onReady() verifies the model.
+  setTimeout(()=>maybeInstall().catch(()=>{}),250);
 })();
