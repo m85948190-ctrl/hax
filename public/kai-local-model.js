@@ -16,9 +16,8 @@
   }
   async function respond(prompt){
     const text=clean(prompt); if(!text)return null;
-    // No canned conversational responses. The browser runtime handles only deterministic local capabilities; normal conversation belongs to KAI 51's generative engine.
-    const math=text.match(/^(?:what is|calculate|compute|solve)\s+([0-9+*%().\s-]+)\??$/i)||text.match(/^([0-9][0-9+*%().\s-]{0,80})$/);
-    if(math){try{const v=Function('"use strict";return ('+math[1]+')')();if(Number.isFinite(v))return{response:String(v),provider:'KAI 12 local controller',model:'no-model',profile:'light',local:true}}catch{}}
+    // The browser controller never writes a conversational answer.
+    // Normal chat is synthesized by KAI 51 after knowledge retrieval.
     return {response:null,provider:'KAI 12 local controller',model:'no-model',profile:complexityProfile(text),local:true,nodes:NODES};
   }
   const apiStatus=async()=>{try{const r=await fetch('/api/model-status');return r.ok?await r.json():null}catch{return null}};

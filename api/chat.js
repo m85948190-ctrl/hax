@@ -109,20 +109,13 @@ export default async function(req,res){
     return res.json({response:withChatEmoji(responseText),mode:requestedMode,provider:result.provider,model:result.model,responseMs:result.elapsedMs,status:result.status,failoverAttempts:result.attempts||[],knowledgeSource:'HAxBRO',kaiAgent:'KAI 51',kaiIdentity:'HAxBRO AI',kaiId:kaiId||null,webSteps:result.sources||[],sources:result.sources||[],knowledgeContext:result.knowledgeContext||null,toolResults:result.knowledgeContext?.toolResults||[],steps:result.steps||[],godEngineResource:godEngineRoute?.label||null});
   }catch(err){
     console.error('KAI 51 primary error',err);
-    const t=String(prompt||'').trim();
-    const lower=t.toLowerCase();
-    let response='';
-    if(/^(what the hell|wtf|what the fuck|why the hell|damn|this is broken|it is broken)/i.test(t)){
-      response='Yeah — I see the problem. That request hit a KAI execution glitch, not a problem with what you asked. I’m keeping the failure inside KAI instead of pretending it worked. Send the same task again and KAI will route it through the correct local capability.';
-    }else if(/^(ok good|okay good|good|great|cool|nice|awesome)/i.test(t)){
-      response='Good 😄 KAI 51 is here. Keep going — you can talk normally, or give me the next thing you want built, decoded, analyzed, or changed.';
-    }else if(/^(eu|uh|um|hmm|huh|yo|hey)/i.test(t)){
-      response='I’m here. Say it however you want — even roughly. KAI 51 will work out what you mean and choose the right HAxBRO capability.';
-    }else if(/\b(?:thank|thanks)\b/i.test(lower)){
-      response='Anytime. KAI 51 is ready for the next one.';
-    }else{
-      response='I’m still here. KAI 51 hit a local synthesis limit on that turn, so I won’t fake an answer. Try rephrasing the same request once; workspace commands such as build, decode, encrypt, analyze, or code are routed locally before chat.';
-    }
-    return res.json({response:withChatEmoji(response),mode:requestedMode,provider:'KAI 51 LOCAL RECOVERY',model:'local-runtime',responseMs:0,status:'local-recovery',kaiAgent:'KAI 51',kaiIdentity:'HAxBRO AI',local:true,retryable:true});
+    return res.status(503).json({
+      error:'KAI 51 synthesis unavailable for this turn.',
+      mode:requestedMode,
+      provider:'KAI 51',
+      model:'KAI 51',
+      status:'synthesis-unavailable',
+      retryable:true
+    });
   }
 }
