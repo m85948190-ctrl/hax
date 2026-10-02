@@ -1,7 +1,7 @@
 [ai]
 required = true
 providers = ["openai", "google"]
-description = "HAxBRO chat compute uses the four Groq keys; native KAI remains the local fallback."
+description = "KAI 51 remains the HAxBRO identity and orchestration layer; managed language inference supplies natural-language generation without exposing a provider identity to users."
 
 # Authentication is intentionally disabled; HAxBRO uses browser-local username identity.
 
