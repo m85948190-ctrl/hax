@@ -7,9 +7,11 @@
   const status=()=>window.HAxBROKai51Bootstrap?.state?.()||{status:'bootstrap',successes:0,target:6,ready:false};
   const prepare=()=>window.HAxBROKai51Bootstrap?.prepare?.();
   const respond=async(prompt,history=[])=>{
-    const engine=window.HAxBROKai51Engine;
-    if(!engine?.generate)return null;
-    return engine.generate(prompt,history);
+    const lite=window.HAxBROKaiLite?.respond?.(prompt);
+    if(lite?.response)return lite;
+    // Never force the heavy local KAI 51 model to download during an emergency
+    // fallback. Advanced intelligence remains a background capability.
+    return null;
   };
   window.HAxBROLocalKai={
     start:prepare,prepare,generate:respond,respond,
