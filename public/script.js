@@ -205,7 +205,21 @@ if(!opts.fromChoice&&!overdrive&&value.length>0&&!kaiChoiceSearchLike(value)&&/\
 }
 let launchFromPending=false;if(overdrive){const pendingKey='haxbro_kai_pending_target';if(/^abort all$/i.test(value))sessionStorage.removeItem(pendingKey)}applyContextTheme(value);if(!launchFromPending&&opts.fromChoice===true){updateKaiMemory(value)}
 else if(!launchFromPending){addMessage(value,'user');updateKaiMemory(value)}
-if(input)input.value='';resize();try{if(!overdrive){setBusy(true,opts.searchMode==='quick'?'light':'heavy');
+if(input)input.value='';resize();try{if(!overdrive){
+      if(!opts.fromChoice&&window.HAxBROKaiLite?.respond){
+        try{
+          const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
+          if(lite?.response){
+            kaiActivityStart('light');
+            kaiActivityStep('lite','KAI Lite · web','Reading public web context','','running');
+            kaiActivitySet('lite','done',(lite.sources?.length||0)+' public sources');
+            kaiActivityFinish(lite);
+            addMessage(lite.response,'bot');
+            return true;
+          }
+        }catch(e){console.warn('Kai Lite unavailable; escalating to advanced KAI',e)}
+      }
+      setBusy(true,opts.searchMode==='quick'?'light':'heavy');
 /* KAI 51 UNIFIED LOCAL ROUTER: one natural-language command can invoke any HAxBRO workspace before chat. */
 async function kai51WorkspaceRoute(value){
   const t=String(value||'').trim();
@@ -460,7 +474,7 @@ function wire(){
     requestAnimationFrame(()=>$('#messages')?.lastElementChild?.scrollIntoView({behavior:'smooth',block:'end'}));
   });
   bind('#chatForm','submit',e=>{e.preventDefault();sendChat(input?.value||'')});
-  bind('#sendBtn','click',()=>sendChat(input?.value||''));
+  bind('#sendBtn','click',e=>{e?.preventDefault?.();sendChat(input?.value||'')});
   bind('#promptInput','input',resize);
   bind('#promptInput','keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(input.value)}});
   bind('#promptClearBtn','click',()=>{input.value='';resize();input.focus()});
