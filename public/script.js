@@ -196,7 +196,7 @@ function showAppPlatformChoices(value){
     {icon:'📱',label:'Mobile App',detail:'Mobile-first application experience',onClick:async()=>{if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value+'\n\nSELECTED PLATFORM: Mobile App',true)}else window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value+'\n\nSELECTED PLATFORM: Mobile App',autoBuild:true}}));}}
   ]);
 }
-async function sendChat(text,opts={}){let value=String(text||'').trim();if(!value)return false;const now=Date.now();if(value===lastSendValue&&now-lastSendAt<1200)return true;lastSendValue=value;lastSendAt=now;if(await checkAdmin69(value))return true;ensureChat();/* Normal chat stays model-driven. Roast requests, jokes, explanations, and casual conversation are handled by KAI 51 naturally rather than a hard-coded response table. */
+async function sendChat(text,opts={}){let value=String(text||'').trim();if(!value)return false;const now=Date.now();if(value===lastSendValue&&now-lastSendAt<5000)return true;lastSendValue=value;lastSendAt=now;if(await checkAdmin69(value))return true;ensureChat();/* Normal chat stays model-driven. Roast requests, jokes, explanations, and casual conversation are handled by KAI 51 naturally rather than a hard-coded response table. */
 if(!opts.fromChoice&&!overdrive&&kaiChoiceSearchLike(value)){
   addMessage(value,'user');updateKaiMemory(value);if(input)input.value='';resize();showSearchChoices(value);return true;
 }
