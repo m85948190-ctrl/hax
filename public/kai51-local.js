@@ -73,7 +73,7 @@
       progress: Math.round((successes/TARGET)*100),
       status: successes >= TARGET ? 'bootstrap threshold reached — preparing KAI 51 locally' : ('bootstrap conversation '+successes+'/'+TARGET)
     });
-    if (successes >= TARGET) setTimeout(()=>maybeInstall().catch(()=>{}),50);
+    /* Do not auto-download a browser model after a few chats. KAI 51's native HAxBRO lane is already available instantly; the browser model remains an explicit local-runtime path. */
     return state;
   }
 
@@ -114,6 +114,6 @@
     }
   };
 
-  // Returning visitors with a completed local runtime should resume directly.
-  if (state.status === 'ready') setTimeout(()=>loadEngine().catch(()=>{}),0);
+  // A browser-local runtime is optional. Never auto-start a large model download on page load.
+  // Main chat uses the native HAxBRO KAI 51 lane immediately.
 })();

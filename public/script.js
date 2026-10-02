@@ -206,7 +206,7 @@ if(!opts.fromChoice&&!overdrive&&value.length>0&&!kaiChoiceSearchLike(value)&&/\
 let launchFromPending=false;if(overdrive){const pendingKey='haxbro_kai_pending_target';if(/^abort all$/i.test(value))sessionStorage.removeItem(pendingKey)}applyContextTheme(value);if(!launchFromPending&&opts.fromChoice===true){updateKaiMemory(value)}
 else if(!launchFromPending){addMessage(value,'user');updateKaiMemory(value)}
 if(input)input.value='';resize();try{if(!overdrive){
-      if(!opts.fromChoice&&window.HAxBROKaiLite?.respond){
+      if(!opts.fromChoice&&window.HAxBROKaiLite?.respond&&/\b(?:latest|recent|today|news|search|find|look\s*(?:up|for)|research|source|sources|web|internet|price|cost|weather|version|release|update|who is|what is|when is|where is|how much|compare|comparison)\b/i.test(value)){
         try{
           const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
           if(lite?.response){
