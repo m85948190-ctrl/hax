@@ -341,6 +341,9 @@ async function kai51WorkspaceRoute(value){
     /* No browser-local canned fallback: failures stay visible instead of becoming rule-based replies. */
     if(!apiAnswered){
       kaiActivityFinish({sources:[]});
+      if(opts.searchMode==='quick'||opts.searchMode==='deep'){
+        return await sendChat(value,{skipUser:true,fromChoice:true,searchMode:'normal'});
+      }
       addMessage("KAI could not complete the request right now. Please try again.",'bot');
     }
     return true;
