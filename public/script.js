@@ -323,7 +323,7 @@ async function kai51WorkspaceRoute(value){
     }
     try{
       kaiActivityStep('thinking','KAI 51 · thinking','Understanding your message','','running');
-      const chatController=new AbortController();const chatLimit=opts.searchMode==='quick'?6000:opts.searchMode==='deep'?65000:20000;const chatTimer=setTimeout(()=>chatController.abort(),chatLimit);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
+      const chatController=new AbortController();const chatLimit=opts.searchMode==='quick'?15000:opts.searchMode==='deep'?90000:30000;const chatTimer=setTimeout(()=>chatController.abort(),chatLimit);const rr=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},signal:chatController.signal,body:JSON.stringify({
         message:value,
         searchMode:opts.searchMode||'quick',
         kaiMode,
