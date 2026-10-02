@@ -7,11 +7,14 @@
   const status=()=>window.HAxBROKai51Bootstrap?.state?.()||{status:'bootstrap',successes:0,target:6,ready:false};
   const prepare=()=>window.HAxBROKai51Bootstrap?.prepare?.();
   const respond=async(prompt,history=[])=>{
-    const lite=window.HAxBROKaiLite?.respond?.(prompt);
-    if(lite?.response)return lite;
-    // Never force the heavy local KAI 51 model to download during an emergency
-    // fallback. Advanced intelligence remains a background capability.
-    return null;
+    const st=status();
+    /* Once the real browser model is verified ready, this helper must use it
+       directly. KAI Lite is only the pre-install/recovery lane. */
+    if(st.ready&&window.HAxBROKai51Bootstrap?.generate){
+      return window.HAxBROKai51Bootstrap.generate(prompt,history);
+    }
+    const lite=await window.HAxBROKaiLite?.respond?.(prompt,history);
+    return lite?.response?lite:null;
   };
   window.HAxBROLocalKai={
     start:prepare,prepare,generate:respond,respond,
