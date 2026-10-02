@@ -1,26 +1,21 @@
 (() => {
-  // KAI 12 is embedded controller code. It never downloads a model/package.
-  const NODES=['Analyze','Optimize','Understand','Research','Evidence','Context','Reason','Verify','Compare','Synthesize','Security','Memory'];
-  const clean=(v,n=5000)=>String(v??'').replace(/\u0000/g,'').slice(0,n).trim();
   const username=()=>localStorage.getItem('haxbro_username')||'anonymous-device';
-  const memKey=()=>`haxbro:kai12:${username().replace(/[^a-zA-Z0-9_-]/g,'_')}:memory`;
-  const readMemory=()=>{try{return JSON.parse(localStorage.getItem(memKey())||'{"notes":[],"sources":[]}')}catch{return{notes:[],sources:[]}}};
-  const writeMemory=m=>{try{localStorage.setItem(memKey(),JSON.stringify({notes:(m.notes||[]).slice(-12),sources:(m.sources||[]).slice(-40)}))}catch{}};
-  const emit=(name,detail={})=>window.dispatchEvent(new CustomEvent(name,{detail}));
-  const complexityProfile=t=>{const s=String(t||'').toLowerCase();if(s.length>280||/\b(deep research|critical|complex|investigate|analy[sz]e|compare|verify|latest|current|today)\b/.test(s))return'heavy';return'light'};
-  async function prepare(){
-    // Bootstrap the KAI runtime immediately; the browser caches the shell so later workspace opens are instant.
-    try{const urls=['/kai51-local.js?v=1','/kai-local-ui.js?v=1','/decoding-partner.js?v=2','/encryptor-machine.js?v=1','/deepx.js?v=1','/pro-mode.js?v=1','/workspace-bridge.js?v=1'];await Promise.all(urls.map(async u=>{try{const r=await fetch(u,{cache:'force-cache'});if(r.ok){const c=await caches.open('haxbro-kai-runtime-v1');await c.put(u,r.clone())}}catch{}}));}catch{}
-    emit('haxbro:kai-local-progress',{profile:'light',progress:100,status:'runtime cached'});
-    emit('haxbro:kai-local-ready',{profile:'kai12',engine:'KAI 51 LOCAL RUNTIME',downloadRequired:false,nodes:NODES});return true
-  }
-  async function respond(prompt){
-    const text=clean(prompt); if(!text)return null;
-    // The browser controller never writes a conversational answer.
-    // Normal chat is synthesized by KAI 51 after knowledge retrieval.
-    return {response:null,provider:'KAI 12 local controller',model:'no-model',profile:complexityProfile(text),local:true,nodes:NODES};
-  }
-  const apiStatus=async()=>{try{const r=await fetch('/api/model-status');return r.ok?await r.json():null}catch{return null}};
-  window.HAxBROLocalKai={start:prepare,prepare,generate:async()=>null,respond,profileFor:complexityProfile,isTrivial:t=>/^(hi|hello|hey|yo|thanks|okay|ok)$/i.test(String(t||'').trim()),readMemory,addMemory(note){const m=readMemory();m.notes.push({text:clean(note,500),at:Date.now()});writeMemory(m)},status:()=>({ready:true,loading:false,profile:'kai12',downloadRequired:false,nodes:NODES,models:{none:true}}),apiStatus};
-  prepare();
+  const memKey=()=>`haxbro:kai51:${username().replace(/[^a-zA-Z0-9_-]/g,'_')}:memory`;
+  const readMemory=()=>{try{return JSON.parse(localStorage.getItem(memKey())||'{"notes":[]}')}catch{return{notes:[]}}};
+  const writeMemory=m=>{try{localStorage.setItem(memKey(),JSON.stringify({notes:(m.notes||[]).slice(-12)}))}catch{}};
+  const addMemory=note=>{const m=readMemory();m.notes.push({text:String(note||'').slice(0,500),at:Date.now()});writeMemory(m)};
+  const status=()=>window.HAxBROKai51Bootstrap?.state?.()||{status:'bootstrap',successes:0,target:6,ready:false};
+  const prepare=()=>window.HAxBROKai51Bootstrap?.prepare?.();
+  const respond=async(prompt,history=[])=>{
+    const engine=window.HAxBROKai51Engine;
+    if(!engine?.generate)return null;
+    return engine.generate(prompt,history);
+  };
+  window.HAxBROLocalKai={
+    start:prepare,prepare,generate:respond,respond,
+    profileFor:()=> 'heavy',
+    isTrivial:t=>/^(hi|hello|hey|yo|thanks|thank you|okay|ok)$/i.test(String(t||'').trim()),
+    readMemory,addMemory,status,
+    apiStatus:async()=>status()
+  };
 })();
