@@ -223,6 +223,8 @@ if(input)input.value='';resize();try{if(!overdrive){
 /* KAI 51 UNIFIED LOCAL ROUTER: one natural-language command can invoke any HAxBRO workspace before chat. */
 async function kai51WorkspaceRoute(value){
   const t=String(value||'').trim();
+  /* Casual chat must never wait on workspace intent detection. Only inspect app/developer/workspace commands. */
+  if(!/\b(?:make|build|create|develop|design|generate|forge|ship|open|launch|show|decode|decrypt|decipher|encode|encrypt|expert|investigate|inspect|scan|security|analy[sz]e|code|program|script|app\s*maker|decoding)\b/i.test(t)) return false;
   const build=/\b(?:make|build|create|develop|design|generate|forge|ship)\b/i.test(t);
   const app=build&&/\b(?:app|application|website|web\s*app|web\s*application|dashboard|portal|platform|saas|pwa|mobile\s+app|desktop\s+app|tool|game|assistant|agent|bot|analyzer|analyser|tracker|calculator|converter|monitor|generator)\b/i.test(t);
   const openApp=/\b(?:open|launch|show)\b[\s,]*(?:the\s+)?app\s*maker\b/i.test(t)||(/\bapp\s*maker\b/i.test(t)&&!/^(what|why|how|tell|explain)\b/i.test(t));
@@ -275,7 +277,7 @@ async function kai51WorkspaceRoute(value){
     try{
       /* Dedicated local App Intent Intelligence runs before the general router.
          It decides only whether the user is entering/building/modifying App Maker. */
-      const rr=await fetch('/api/kai/app-intent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value})});
+      const rr=await fetch('/api/kai/app-intent',{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(3500),body:JSON.stringify({message:value})});
       kaiRoute=await rr.json().catch(()=>null);
     }catch{}
     if(kaiRoute?.ok&&kaiRoute.destination==='app-maker'&&kaiRoute.wantsApp===true&&Number(kaiRoute.confidence||0)>=0.72){

@@ -5,7 +5,10 @@
   let el=null;
   function mount(){if(el)return el;el=document.createElement('aside');el.id='kai51BootStamp';el.className='kai51-boot-stamp';el.setAttribute('aria-live','polite');el.innerHTML='<div class="kai51-boot-kicker"><span class="kai51-boot-dot"></span><span>HAxBRO AI</span></div><div id="kai51BootTitle" class="kai51-boot-title">KAI 51 · REAL INTELLIGENCE MODEL IS LOADING</div><div id="kai51BootText" class="kai51-boot-text">Kai Lite is chatting with you while the real KAI 51 intelligence model loads in the background.</div><div class="kai51-boot-bar"><i id="kai51BootFill"></i></div><div class="kai51-boot-meta"><b id="kai51BootPercent">0%</b><span id="kai51BootStatus">Preparing KAI 51</span></div>';document.body.appendChild(el);return el}
   function render(d={}){
-    const pct=Math.max(0,Math.min(100,Math.round(Number(d.progress)||0))),box=mount();
+    const incoming=Math.max(0,Math.min(100,Math.round(Number(d.progress)||0)));
+    const current=Number(document.getElementById('kai51BootPercent')?.textContent?.replace('%',''))||0;
+    const pct=Math.max(current,incoming);
+    const box=mount();
     const ready=pct>=100||d.status==='ready'||d.status==='KAI 51 implemented';
     document.getElementById('kai51BootTitle').textContent=ready?'KAI 51 · REAL INTELLIGENCE MODEL READY':'KAI 51 · REAL INTELLIGENCE MODEL IS LOADING';
     document.getElementById('kai51BootText').textContent=ready?'KAI 51 advanced intelligence is ready.':'Kai Lite is chatting with you while the real KAI 51 intelligence model loads in the background.';
@@ -16,6 +19,7 @@
   mount();
   /* The native KAI 51 conversation lane is available immediately. Do not present a browser-model download as a prerequisite. */
   render({progress:100,status:'KAI 51 native intelligence ready'});
+  window.HAxBRO_KAI51_NATIVE_READY = true;
   window.addEventListener('haxbro:kai-local-progress',e=>render(e.detail||{}));
   window.addEventListener('haxbro:kai51-bootstrap',e=>render(e.detail||{}));
   window.addEventListener('haxbro:kai51-ready',()=>render({progress:100,status:'ready'}));
