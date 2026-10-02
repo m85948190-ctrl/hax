@@ -58,13 +58,18 @@ function kaiSpeechLocale(text){
  if(/[\u3400-\u9FFF]/.test(s))return 'zh-CN';
  return 'en-US';
 }
+function kaiSpeechClean(text){
+ return String(text||'').replace(/https?:\/\/\S+/gi,' ').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\uFE0F\u200D]/gu,' ').replace(/[\\*_#~>|]/g,' ').replace(/\s{2,}/g,' ').trim().slice(0,5000);
+}
+function pickKaiFemaleVoice(locale){
+ const voices=window.speechSynthesis?.getVoices?.()||[]; const lang=String(locale||'en').toLowerCase(); const base=lang.split('-')[0]; const femaleHints=/female|woman|zira|samantha|victoria|karen|moira|ava|susan|heera|veena|raveena|tessa|aria|jenny/i;
+ return voices.find(v=>v.lang?.toLowerCase()===lang&&femaleHints.test(v.name))||voices.find(v=>v.lang?.toLowerCase().startsWith(base+'-')&&femaleHints.test(v.name))||voices.find(v=>v.lang?.toLowerCase().startsWith(base+'-'))||voices.find(v=>femaleHints.test(v.name))||voices[0]||null;
+}
 function speakHaxbroText(text,button){
  if(!('speechSynthesis' in window)){if(button)button.textContent='VOICE N/A';return}
- window.speechSynthesis.cancel();
- const u=new SpeechSynthesisUtterance(String(text||'').slice(0,5000));
- u.lang=kaiSpeechLocale(text);
- if(button){button.textContent='STOP';u.onend=()=>button.textContent='SPEAK';u.onerror=()=>button.textContent='SPEAK'}
- window.speechSynthesis.speak(u);
+ const cleanText=kaiSpeechClean(text); if(!cleanText){if(button)button.textContent='NO TEXT';return}
+ window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(cleanText); u.lang=kaiSpeechLocale(cleanText); const voice=pickKaiFemaleVoice(u.lang); if(voice)u.voice=voice; u.rate=0.96; u.pitch=1.08; u.volume=1;
+ if(button){button.textContent='STOP';u.onend=()=>button.textContent='SPEAK';u.onerror=()=>button.textContent='SPEAK'} window.speechSynthesis.speak(u);
 }
 function addMessage(text,who='bot',saveIt=true){if(!messages)return;const wrap=document.createElement('div');const isUser=who==='user';wrap.className='message '+(isUser?'user-msg':'bot-msg')+(overdrive?' admin-chat-msg':'');const avatar=isUser?'<span>U</span>':(overdrive?'<span class="kai-chat-avatar">K</span>':'<img src="/logo-symbol.svg?v=218" alt="HAxBRO">');wrap.innerHTML='<div class="avatar message-avatar">'+avatar+'</div><div class="message-body"><div class="bubble message-copy">'+(isUser?esc(text).replace(/\n/g,'<br>'):renderRich(text))+'</div></div>';messages.appendChild(wrap);if(!isUser){bindRichControls(wrap);const speak=document.createElement('button');speak.type='button';speak.className='kai-speak-btn';speak.textContent='SPEAK';speak.setAttribute('aria-label','Speak this answer');speak.onclick=()=>speakHaxbroText(text,speak);wrap.querySelector('.message-body')?.appendChild(speak)}if(saveIt){const c=active();if(c){c.items.push({who,text});c.updated=Date.now();save();renderHistory()}}messages.scrollTop=messages.scrollHeight}
 function ensureChat(){if(!current||!active()){newChat()}}
