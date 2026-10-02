@@ -50,7 +50,7 @@
       return engine;
     })().catch(err => {
       state = write({...state,status:'error',error:safe(err?.message||err,500)});
-      emit({profile:'heavy',progress:0,status:'local runtime failed',error:state.error});
+      emit({profile:'heavy',progress:99,status:'KAI 51 local runtime failed — retry required',error:state.error});
       enginePromise = null;
       throw err;
     });

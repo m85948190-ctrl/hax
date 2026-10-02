@@ -36,13 +36,24 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         }
       };
       generator = await pipeline('text-generation',MODEL,options);
+      // 99% means the model files are present; the final 1% is the real
+      // inference self-test. Keep this phase monotonic so a failed test does
+      // not look like a download restarting from zero.
       progress(99,'verifying local KAI 51 generation');
-      const test = await generator([{role:'user',content:'Reply with exactly: KAI 51 READY'}],{max_new_tokens:8});
+      const test = await generator('KAI 51 READY',{max_new_tokens:8});
       const text = extract(test).trim();
       if (!text) throw new Error('Local model self-test returned no text');
+      onProgress({progress:100,status:'KAI 51 local runtime ready',file:''});
       onReady({model:MODEL,device,verified:true});
       return {ok:true,model:MODEL,device};
-    })().catch(e=>{loading=null;throw e;});
+    })().catch(e=>{
+      // Do not emit 0% on failure. A 0% reset was the visual cause of the
+      // 98% → 0% → 98% loop. Leave the UI at the last completed phase and
+      // require an explicit retry instead of silently restarting.
+      onProgress({progress:99,status:'KAI 51 verification failed — retry required',file:''});
+      loading=null;
+      throw e;
+    });
     return loading;
   }
 
