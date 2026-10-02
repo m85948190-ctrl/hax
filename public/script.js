@@ -222,45 +222,28 @@ async function kai51WorkspaceRoute(value){
     const priorityExpert=/\b(?:expert workspace|expert mode|expert analysis|deep analysis|advanced analysis|expert)\b/i.test(value);
     const priorityInvestigation=!!priorityUrl&&['investigate','inspect','analyze','scan','check','verify','validate','review','look into','how this link works','how this website works','x-ray','xray','source code','search google','search the web','google it','give a report','report about','report on','without adding https','without https'].some(x=>priorityLower.includes(x));
     const priorityModification=/\b(?:modify|change|update|edit|adjust|make|add|remove|fix|improve|redesign|restyle|rename)\b/i.test(value)&&/\b(?:app|application|ui|interface|button|color|red|blue|green|spacing|layout|theme|title|name|feature|screen|page|existing|current)\b/i.test(value);
-    const priorityApp=/\b(?:make|build|create|develop|design|generate)\s+(?:me\s+)?(?:an?\s+)?(?:.{0,100}\s+)?(?:app|application|web\s*app|web\s*application|website|site|dashboard|portal|platform|tool|system|saas|pwa|mobile\s+app|desktop\s+app|game|chat\s+app|ai\s+(?:app|assistant|agent|bot|tool|website|system))\b/i.test(value)||/^\s*(?:please\s+)?make\s+ai\s*$/i.test(value)||/^\s*(?:i['’]?m|i am)\s+(?:a|an)\s+.{1,80}\b(?:ai|bot|assistant|agent)\b/i.test(value);
-    if(priorityApp&&!/\b(?:web\s*app|website|mobile\s+app|android|ios|iphone|ipad|flutter|react\s*native)\b/i.test(value)&&!opts.fromChoice){
-      addMessage(value,'user');updateKaiMemory(value);if(input)input.value='';resize();showAppPlatformChoices(value);return true;
+    /* KAI 51 SINGLE INTENT ROUTER: one semantic gate for App Maker handoff.
+       The original prompt is preserved verbatim and passed directly into App Maker.
+       No App Data Miner, duplicate regex gate, or platform-choice detour is used. */
+    let kaiRoute=null;
+    try{
+      const rr=await fetch('/api/kai-router',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value})});
+      kaiRoute=await rr.json().catch(()=>null);
+    }catch{}
+    if(kaiRoute?.ok&&kaiRoute.destination==='app-maker'&&kaiRoute.wantsApp===true&&Number(kaiRoute.confidence||0)>=0.72){
+      const appContext=JSON.stringify(active()?.items?.slice(-20)||[]);
+      sessionStorage.setItem('haxbro_app_intent_context',appContext);
+      const handoffPrompt=String(kaiRoute.prompt||value);
+      if(kaiRoute.autoBuild&&window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(handoffPrompt,true);return true}
+      if(!kaiRoute.autoBuild&&window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(handoffPrompt,false);return true}
+      window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:handoffPrompt,autoBuild:!!kaiRoute.autoBuild}}));
+      return true;
     }
     if(priorityDecode){const payload=value.replace(/^.*?\b(?:decode|decoding|decrypt)\b[:\s-]*/i,'').trim().replace(/^(?:this|this\s+text|this\s+code)[:\s-]*/i,'').trim()||value;if(window.HAxBRODecodingPartner?.openWithInput){await window.HAxBRODecodingPartner.openWithInput(payload);return true}window.dispatchEvent(new CustomEvent('haxbro:open-decoder',{detail:{input:payload}}));return true;}
     if(priorityEncode){if(window.HAxBRODecodingPartner?.open){await window.HAxBRODecodingPartner.open();return true}window.dispatchEvent(new CustomEvent('haxbro:open-decoder',{detail:{input:'',mode:'encrypt'}}));return true;}
     if(priorityExpert){const opts={research:true};if(window.HAxBRODeepX?.openWithTarget){window.HAxBRODeepX.openWithTarget('',opts);return true}window.dispatchEvent(new CustomEvent('haxbro:open-xpro',{detail:{target:'',...opts}}));return true;}
     if(priorityModification&&window.HAxBROFutureMaker?.modifyCurrent&&document.getElementById('haxNewAppMaker')?.classList.contains('open')){await window.HAxBROFutureMaker.modifyCurrent(value);return true;}
     if(priorityInvestigation){const opts={research:/\b(?:search google|search the web|google it|give a report|report about|report on)\b/i.test(value)};if(window.HAxBRODeepX?.openWithTarget){window.HAxBRODeepX.openWithTarget(priorityUrl,opts);return true}window.dispatchEvent(new CustomEvent('haxbro:open-xpro',{detail:{target:priorityUrl,...opts}}));return true;}
-    /* KAI APP UNDERSTANDER: only invoke the semantic classifier when the message
-       already looks like an actual product-building request. Never send ordinary
-       conversation such as "hi" through the App Maker gate. */
-    const explicitAppCandidate=/^\s*(?:please\s+)?(?:make|build|create|develop|design|generate|forge|ship|turn)\b[\s\S]{0,220}\b(?:an?\s+)?(?:app|application|website|web\s*app|web\s*application|dashboard|portal|platform|saas|pwa|mobile\s+app|desktop\s+app|browser\s+app|game|chat\s+app|ai\s+(?:app|assistant|agent|bot|tool|website|system)|crm|store|shop|marketplace|calculator|editor|tracker|manager)\b/i.test(value)
-      ||/^\s*(?:i|we)\s+(?:want|need|would like|am trying|wanna)\s+(?:to\s+)?(?:make|build|create|develop|design|generate)\b[\s\S]{0,180}\b(?:app|application|website|web\s*app|dashboard|portal|platform|product|game|tool|system)\b/i.test(value)
-      ||/^\s*(?:open|launch)\s+(?:the\s+)?app\s*maker\s*$/i.test(value);
-    if(explicitAppCandidate){
-      let appMiner=null;
-      try{
-        const minerHistory=JSON.stringify(active()?.items?.slice(-20)||[]);
-        const mr=await fetch("/api/app-data-miner",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:value,history:minerHistory})});
-        const md=await mr.json().catch(()=>({}));
-        if(mr.ok&&md.ok)appMiner=md;
-      }catch{}
-      if(appMiner?.route==="app-maker"&&Number(appMiner.confidence||0)>=0.78){
-        const appContext=JSON.stringify(active()?.items?.slice(-20)||[]);
-        if(appMiner.action==="open"||appMiner.action==="discuss"){
-          sessionStorage.setItem("haxbro_app_intent_context",appContext);
-          if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,false);return true}
-          window.dispatchEvent(new CustomEvent("haxbro:open-app-maker",{detail:{prompt:value,autoBuild:false}}));return true;
-        }
-        if(appMiner.action==="build"&&appMiner.wantsApp===true){
-          const buildPrompt=value+"\n\nAPP DESIGN CONTEXT (use this as context, do not treat quoted examples as rules):\n"+appContext;
-          if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(buildPrompt,true);return true}
-          window.dispatchEvent(new CustomEvent("haxbro:open-app-maker",{detail:{prompt:buildPrompt,autoBuild:true}}));return true;
-        }
-      }
-    }
-    /* Legacy fallback is now strict too: no vague "make/create" routing. */
-    if(priorityApp&&explicitAppCandidate){if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value,true);return true}window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value,autoBuild:true}}));return true;}
     /* Live thinking stays visible while the ordered server backup chain runs. */
     setBusy(true,'heavy');
     let apiAnswered=false;
