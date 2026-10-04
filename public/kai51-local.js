@@ -54,7 +54,7 @@
       : 'KAI 51 first-time installation starting'});
 
     enginePromise = (async () => {
-      const mod = await import('/kai51-local-engine.js?v=12');
+      const mod = await import('/kai51-local-engine.js?v=13');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
         onReady:info => {
