@@ -1,7 +1,6 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
-  const MODEL = 'haxbro-ai-model';
-  const MODEL_HOST = 'https://github.com/m85948190-ctrl/haxbro/releases/download/kai51-model-latest';
-  const MODEL_CACHE = 'haxbro-kai51-v5';
+  const MODEL = 'onnx-community/SmolLM2-360M-ONNX';
+  const MODEL_CACHE = 'haxbro-kai51-v6';
   const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
   let generator = null;
   let loading = null;
@@ -22,16 +21,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.allowRemoteModels = true;
       env.useBrowserCache = true;
       env.cacheKey = MODEL_CACHE;
-      env.remoteHost = MODEL_HOST;
-      env.remotePathTemplate = '{model}/{file}';
-      env.fetch = (input,init)=>{
-        const raw = typeof input === 'string' ? input : (input && input.url) || String(input);
-        if (raw.startsWith(MODEL_HOST + '/')) {
-          const file = raw.slice(raw.lastIndexOf(MODEL_HOST + '/') + (MODEL_HOST + '/').length).replace(/^%7Bfile%7D\//,'').replace(/^haxbro-ai-model\//,'').replace(/^onnx\//,'');
-          return fetch(MODEL_HOST + '/' + file, init);
-        }
-        return fetch(input,init);
-      };
+      // Hugging Face is the canonical browser distribution; Transformers.js resolves the model files and uses its browser cache.
       try { if (navigator.storage?.persist) await navigator.storage.persist(); } catch {}
       let useWebGPU = !!navigator.gpu;
       if (useWebGPU) {
