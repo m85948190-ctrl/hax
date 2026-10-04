@@ -1,5 +1,5 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
-  const MODEL='HAxBRO/KAI-51-SMOLLM2-360M';
+  const MODEL='onnx-community/SmolLM2-360M-Instruct-ONNX';
   const VERSION='kai51-real-model-v3-local-webgpu-q4';
   /* v2 uses the Q4 ONNX asset because the Q4F16 release asset was intermittently
      returning 502 from the same-origin model proxy. Q4 is larger, but it is the
@@ -16,8 +16,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       const {env,pipeline}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
-      env.remoteHost=location.origin+'/api/kai-model';
-      env.remotePathTemplate='?file={file}';
+      env.remoteHost='https://huggingface.co/';
+      env.remotePathTemplate='{model}/resolve/main/{file}';
       env.useBrowserCache=true;
       env.cacheKey='haxbro-kai51-real-model-v3-local-webgpu-q4';
       progress(15,'Loading KAI 51 local Q4 model');
