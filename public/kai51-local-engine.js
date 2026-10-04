@@ -1,6 +1,6 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL='onnx-community/SmolLM2-135M-Instruct-ONNX';
-  const VERSION='kai51-real-model-v7-adaptive-local';
+  const VERSION='kai51-real-model-v8-adaptive-local';
   /* v2 uses the Q4 ONNX asset because the Q4F16 release asset was intermittently
      returning 502 from the same-origin model proxy. Q4 is larger, but it is the
      verified 386 MB asset and does not require external-data shards. */
@@ -10,7 +10,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   async function resolveRuntime(){
     try{
       if(typeof navigator!=='undefined' && navigator.gpu){
-        const adapter=await navigator.gpu.requestAdapter();
+        const adapter=await Promise.race([
+          navigator.gpu.requestAdapter(),
+          new Promise(resolve=>setTimeout(()=>resolve(null),1200))
+        ]);
         if(adapter){DEVICE='webgpu';DTYPE='q4f16';}
       }
     }catch{}
@@ -28,7 +31,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.remoteHost='https://huggingface.co/';
       env.remotePathTemplate='{model}/resolve/main/';
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-real-model-v7-adaptive-local';
+      env.cacheKey='haxbro-kai51-real-model-v8-adaptive-local';
       await resolveRuntime();
       progress(15,'Loading KAI 51 local neural model');
       pipe=await pipeline('text-generation',MODEL,{
