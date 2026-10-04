@@ -1,11 +1,20 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL='onnx-community/SmolLM2-135M-Instruct-ONNX';
-  const VERSION='kai51-real-model-v6-local-135m-q4';
+  const VERSION='kai51-real-model-v7-adaptive-local';
   /* v2 uses the Q4 ONNX asset because the Q4F16 release asset was intermittently
      returning 502 from the same-origin model proxy. Q4 is larger, but it is the
      verified 386 MB asset and does not require external-data shards. */
-  const DEVICE='wasm';
+  let DEVICE='wasm';
+  let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve();
+  async function resolveRuntime(){
+    try{
+      if(typeof navigator!=='undefined' && navigator.gpu){
+        const adapter=await navigator.gpu.requestAdapter();
+        if(adapter){DEVICE='webgpu';DTYPE='q4f16';}
+      }
+    }catch{}
+  }
   const progress=(progress,status)=>onProgress({profile:'heavy',progress,status,file:''});
 
   async function prepare(){
@@ -19,20 +28,21 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.remoteHost='https://huggingface.co/';
       env.remotePathTemplate='{model}/resolve/main/';
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-real-model-v6-local-135m-q4';
-      progress(15,'Loading KAI 51 local Q4 model');
+      env.cacheKey='haxbro-kai51-real-model-v7-adaptive-local';
+      await resolveRuntime();
+      progress(15,'Loading KAI 51 local neural model');
       pipe=await pipeline('text-generation',MODEL,{
-        dtype:'q4',
+        dtype:DTYPE,
         device:DEVICE,
         model_file_name:'model'
       });
       progress(95,'Running KAI 51 neural self-test');
-      const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{max_new_tokens:8,do_sample:false,return_full_text:false});
+      const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{max_new_tokens:DEVICE==='webgpu'?64:8,do_sample:false,return_full_text:false});
       const text=String(test?.[0]?.generated_text||test?.[0]?.text||'').trim();
       if(!text) throw new Error('KAI 51 neural model returned no output');
       progress(100,'KAI 51 neural model ready');
-      onReady({model:MODEL,device:'browser-wasm',verified:true,realModel:true,localModel:true});
-      return {ok:true,model:MODEL,device:'browser-wasm',realModel:true,localModel:true};
+      onReady({model:MODEL,device:DEVICE,verified:true,realModel:true,localModel:true});
+      return {ok:true,model:MODEL,device:DEVICE,realModel:true,localModel:true};
     })().catch(e=>{pipe=null;loading=null;progress(99,'KAI 51 neural runtime failed');throw e});
     return loading;
   }
@@ -74,12 +84,12 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
     const result=await job;
     const response=String(result?.[0]?.generated_text||result?.[0]?.text||'').trim();
     if(!response) throw new Error('KAI 51 neural model returned an empty response');
-    return {response,provider:'KAI 51 LOCAL NEURAL MODEL',model:MODEL,local:true,localModel:true,device:'browser-wasm',realModel:true};
+    return {response,provider:'KAI 51 LOCAL NEURAL MODEL',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true};
   }
 
   return {
     model:MODEL,prepare,generate,chat:generate,
     isReady:()=>!!pipe,
-    status:()=>({ready:!!pipe,model:MODEL,device:'browser-wasm',local:true,realModel:true,externalChatProviders:false,cache:VERSION})
+    status:()=>({ready:!!pipe,model:MODEL,device:DEVICE,local:true,realModel:true,externalChatProviders:false,cache:VERSION})
   };
 }
