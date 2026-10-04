@@ -27,7 +27,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.fetch = (input,init)=>{
         const raw = typeof input === 'string' ? input : (input && input.url) || String(input);
         if (raw.startsWith(MODEL_HOST + '/')) {
-          const file = raw.slice(raw.lastIndexOf(MODEL_HOST + '/') + (MODEL_HOST + '/').length).replace(/^haxbro-ai-model\//,'').replace(/^onnx\//,'');
+          const file = raw.slice(raw.lastIndexOf(MODEL_HOST + '/') + (MODEL_HOST + '/').length).replace(/^%7Bfile%7D\//,'').replace(/^haxbro-ai-model\//,'').replace(/^onnx\//,'');
           return fetch(MODEL_HOST + '/' + file, init);
         }
         return fetch(input,init);
