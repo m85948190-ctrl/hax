@@ -253,8 +253,21 @@ if(input)input.value='';resize();try{if(!overdrive){
           throw new Error('KAI 51 local model returned no response');
         }catch(e){
           kaiActivityFinish({sources:[]});
-          console.warn('KAI 51 verified local runtime failed; no KAI Lite substitution after takeover',e);
-          addMessage('KAI 51 is ready, but its local runtime hit an error on this turn. I did not switch back to KAI Lite. Please retry once.','bot');
+          console.warn('KAI 51 runtime failed after takeover; using KAI Lite as emergency fallback',e);
+          if(window.HAxBROKaiLite?.respond){
+            try{
+              kaiActivityStart('light');
+              kaiActivityStep('lite','KAI Lite · fallback','KAI 51 hit a runtime error; using the lightweight recovery lane','','running');
+              const recovery=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
+              if(recovery?.response){
+                kaiActivitySet('lite','done','Fallback response delivered');
+                kaiActivityFinish(recovery);
+                addMessage(recovery.response,'bot');
+                return true;
+              }
+            }catch(fallbackError){ console.warn('KAI Lite fallback also failed',fallbackError); }
+          }
+          addMessage('KAI 51 hit a local runtime error and the fallback lane was unavailable. Please retry once.','bot');
           return true;
         }
       }
