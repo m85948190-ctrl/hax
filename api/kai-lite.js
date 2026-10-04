@@ -6,7 +6,7 @@ export const methods = ["POST"];
 const clean = (v, n = 5000) =>
   String(v ?? "").replace(/\u0000/g, "").replace(/\s+/g, " ").trim().slice(0, n);
 
-const casual = /^(?:hi|hi hello|hello|hello hi|hey|hey bro|yo|yo bro|what\??|what's up\??|whats up\??|sup\??|good morning|good evening|good night|thanks|thank you|thx|fuck|damn|ok|okay|cool|nice|great)[.!\s]*$/i;
+const casual = /^(?:hi|hi hello|hello|hello bro|hello bro hi|hello hi|hey|hey bro|yo|yo bro|what\??|what's up\??|whats up\??|sup\??|good morning|good evening|good night|thanks|thank you|thx|fuck|damn|ok|okay|cool|nice|great)[.!\s]*$/i;
 
 function strip(html) {
   return clean(
