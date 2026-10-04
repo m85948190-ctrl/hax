@@ -1,6 +1,6 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL='onnx-community/SmolLM2-135M-Instruct-ONNX';
-  const VERSION='kai51-real-model-v5-local-135m-q4f16';
+  const VERSION='kai51-real-model-v6-local-135m-q4';
   /* v2 uses the Q4 ONNX asset because the Q4F16 release asset was intermittently
      returning 502 from the same-origin model proxy. Q4 is larger, but it is the
      verified 386 MB asset and does not require external-data shards. */
@@ -19,10 +19,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.remoteHost='https://huggingface.co/';
       env.remotePathTemplate='{model}/resolve/main/';
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-real-model-v5-local-135m-q4f16';
+      env.cacheKey='haxbro-kai51-real-model-v6-local-135m-q4';
       progress(15,'Loading KAI 51 local Q4 model');
       pipe=await pipeline('text-generation',MODEL,{
-        dtype:'q4f16',
+        dtype:'q4',
         device:DEVICE,
         model_file_name:'model'
       });

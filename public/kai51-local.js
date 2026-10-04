@@ -1,7 +1,7 @@
 (() => {
   const VERSION = 'kai51-local-controller-v9';
-  const KEY = 'haxbro:kai51:installation:v8';
-  const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
+  const KEY = 'haxbro:kai51:installation:v9';
+  const MODEL = 'onnx-community/SmolLM2-135M-Instruct-ONNX';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
 
   const defaultState = () => ({
@@ -54,7 +54,7 @@
       : 'KAI 51 first-time installation starting'});
 
     enginePromise = (async () => {
-      const mod = await import('/kai51-local-engine.js?v=17');
+      const mod = await import('/kai51-local-engine.js?v=18');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
         onReady:info => {
