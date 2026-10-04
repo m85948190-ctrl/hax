@@ -4,7 +4,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   /* v2 uses the Q4 ONNX asset because the Q4F16 release asset was intermittently
      returning 502 from the same-origin model proxy. Q4 is larger, but it is the
      verified 386 MB asset and does not require external-data shards. */
-  const DEVICE=(typeof navigator!=='undefined' && navigator.gpu) ? 'webgpu' : 'wasm';
+  const DEVICE='wasm';
   let pipe=null, loading=null, generationChain=Promise.resolve();
   const progress=(progress,status)=>onProgress({profile:'heavy',progress,status,file:''});
 
