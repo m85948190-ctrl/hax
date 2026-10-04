@@ -1,7 +1,7 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL = 'haxbro-ai-model';
   const MODEL_HOST = 'https://github.com/m85948190-ctrl/haxbro/releases/download/kai51-model-latest';
-  const MODEL_CACHE = 'haxbro-kai51-v3';
+  const MODEL_CACHE = 'haxbro-kai51-v4';
   const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
   let generator = null;
   let loading = null;
@@ -37,17 +37,35 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       if (useWebGPU) {
         try { useWebGPU = !!(await navigator.gpu.requestAdapter()); } catch { useWebGPU = false; }
       }
-      device = useWebGPU ? 'webgpu' : 'wasm';
-      progress(8,device==='webgpu'?'restoring KAI 51 on WebGPU':'restoring KAI 51 on WASM');
-      const options = {
-        device,
-        dtype: device==='webgpu' ? 'q4f16' : 'q4',
+
+      const makeOptions = (targetDevice) => ({
+        device: targetDevice,
+        dtype: targetDevice==='webgpu' ? 'q4f16' : 'q4',
         progress_callback: p => {
           const loaded = Number(p?.progress);
           if (Number.isFinite(loaded)) progress(10 + loaded*0.88,'loading/restoring KAI 51 model');
         }
-      };
-      generator = await pipeline('text-generation',MODEL,options);
+      });
+
+      // WebGPU can be exposed by the browser while its driver still rejects
+      // the quantized ONNX graph during session creation. Retry the exact same
+      // model on the stable WASM/q4 runtime instead of leaving the user at 99%.
+      if (useWebGPU) {
+        try {
+          device = 'webgpu';
+          progress(8,'restoring KAI 51 on WebGPU');
+          generator = await pipeline('text-generation',MODEL,makeOptions('webgpu'));
+        } catch (webgpuError) {
+          generator = null;
+          device = 'wasm';
+          progress(8,'WebGPU initialization failed · switching to stable WASM runtime');
+          generator = await pipeline('text-generation',MODEL,makeOptions('wasm'));
+        }
+      } else {
+        device = 'wasm';
+        progress(8,'restoring KAI 51 on WASM');
+        generator = await pipeline('text-generation',MODEL,makeOptions('wasm'));
+      }
       onProgress({progress:100,status:'KAI 51 runtime ready',file:''});
       onReady({model:MODEL,device,verified:true});
       return {ok:true,model:MODEL,device};
