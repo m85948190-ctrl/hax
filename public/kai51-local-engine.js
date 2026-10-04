@@ -1,7 +1,7 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL = 'haxbro-ai-model';
   const MODEL_HOST = 'https://github.com/m85948190-ctrl/haxbro/releases/download/kai51-model-latest';
-  const MODEL_CACHE = 'haxbro-kai51-v2';
+  const MODEL_CACHE = 'haxbro-kai51-v3';
   const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
   let generator = null;
   let loading = null;
@@ -23,7 +23,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.useBrowserCache = true;
       env.cacheKey = MODEL_CACHE;
       env.remoteHost = MODEL_HOST;
-      env.remotePathTemplate = '{model}/{file}';
+      env.remotePathTemplate = '{file}';
       env.fetch = (input,init)=>{
         const raw = typeof input === 'string' ? input : (input && input.url) || String(input);
         if (raw.startsWith(MODEL_HOST + '/')) {
