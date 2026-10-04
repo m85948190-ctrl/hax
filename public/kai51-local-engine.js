@@ -83,15 +83,23 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
 
   async function generate(message,history=[]) {
     await prepare();
-    const recent = Array.isArray(history) ? history.slice(-8).map(x=>({
+    const prompt=String(message||'').trim();
+    const recent = Array.isArray(history) ? history.slice(-6).map(x=>({
       role:x?.who==='user'?'user':'assistant',
-      content:String(x?.text||'').slice(0,3000)
+      content:String(x?.text||'').slice(0,1800)
     })) : [];
-    recent.push({role:'user',content:String(message||'').slice(0,6000)});
+    recent.push({role:'user',content:prompt.slice(0,5000)});
+
+    // Conversation must feel immediate. Reserve long generation for real work.
+    const casual=/^(hi|hello|hey|yo|sup|what'?s up|what|who are you|good morning|good evening|good night|thanks|thank you|ok|okay|cool|nice|great)([.!?\s]|$)/i.test(prompt);
+    const complex=prompt.length>500 || /\b(code|build|debug|research|analy[sz]e|compare|investigate|write|design|app|project|security|cyber|explain in detail)\b/i.test(prompt);
+    const max_new_tokens=casual?48:(complex?192:96);
+
     const result = await generator(recent,{
-      max_new_tokens:256,
-      temperature:0.7,
-      do_sample:true
+      max_new_tokens,
+      temperature:0.65,
+      do_sample:true,
+      return_full_text:false
     });
     const text = extract(result).trim();
     if (!text) throw new Error('KAI 51 local generation returned no text');
