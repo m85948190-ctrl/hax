@@ -1,0 +1,13 @@
+/* KAI 51 voice intelligence HUD */
+.kai-voice-hud{position:fixed;left:50%;bottom:116px;transform:translateX(-50%) translateY(8px);z-index:4900;width:min(560px,calc(100vw - 28px));padding:10px 12px;border:1px solid rgba(38,191,232,.18);border-radius:16px;background:rgba(255,255,255,.82);backdrop-filter:blur(16px);box-shadow:0 12px 36px rgba(18,35,52,.10);opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+.kai-voice-hud.is-live{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.kai-voice-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+.kai-voice-label{font:800 9px/1 Inter,system-ui,sans-serif;letter-spacing:.13em;color:#657887}
+.kai-voice-metrics{display:flex;gap:10px;align-items:center;font:700 10px/1 Inter,system-ui,sans-serif;color:#4a6273}
+.kai-voice-metrics b{color:#263f52;font-variant-numeric:tabular-nums}
+.kai-voice-state{font-size:9px;color:#6f7f8b}
+.kai-voice-bars{height:38px;display:flex;align-items:center;justify-content:center;gap:2px;overflow:hidden;border-radius:10px;background:linear-gradient(180deg,rgba(38,191,232,.035),rgba(38,191,232,.01))}
+.kai-voice-bars i{width:3px;height:8px;border-radius:999px;background:#26bfe8;opacity:.28;transform:scaleY(.4);transition:height .08s linear,transform .08s linear,opacity .08s linear}
+.kai-voice-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;font:600 8px/1.2 Inter,system-ui,sans-serif;color:#83919d}
+.kai-voice-foot strong{color:#536a79}
+@media(max-width:700px){.kai-voice-hud{bottom:105px}.kai-voice-bars{height:32px}}

@@ -75,7 +75,7 @@ function addMessage(text,who='bot',saveIt=true){if(!messages)return;const wrap=d
 function ensureChat(){if(!current||!active()){newChat()}}
 function getKaiMemory(){try{const a=JSON.parse(localStorage.getItem('haxbro_kai_memory_notes')||'[]');return Array.isArray(a)?a.slice(-12):[]}catch(e){return[]}}
 function updateKaiMemory(text){try{const a=getKaiMemory();a.push({text:String(text||'').slice(0,900),at:Date.now()});localStorage.setItem('haxbro_kai_memory_notes',JSON.stringify(a.slice(-12)))}catch(e){}}
-let thinkingBubble=null,thinkingTimer=null,thinkingStartedAt=0,thinkingEstimateSec=12;
+let thinkingBubble=null,thinkingTimer=null,thinkingStartedAt=0,thinkingEstimateSec=12,thinkingSeq=0;
 const KAI_ACTIVITY_STAGES=[];
 function kaiHostFromUrl(url){try{return new URL(url).hostname.replace(/^www\\./,'')}catch{return''}}
 function kaiFavicon(url){const host=kaiHostFromUrl(url);return host?'https://www.google.com/s2/favicons?domain='+encodeURIComponent(host)+'&sz=32':''}
@@ -86,9 +86,12 @@ function kaiActivityStep(key,label,detail='',iconUrl='',state='running'){if(!thi
 function kaiActivityDeepX(steps){if(!thinkingBubble||!Array.isArray(steps)||!steps.length)return;steps.forEach(s=>{const label=typeof s==='string'?s:(s?.label||s?.message||s?.title||'KAI step');const detail=typeof s==='string'?'':(s?.detail||s?.status||'');const key=typeof s==='string'?label.toLowerCase().replace(/[^a-z0-9]+/g,'-'):String(s?.key||label).toLowerCase().replace(/[^a-z0-9]+/g,'-');kaiActivityStep(key,label,detail,s?.url?kaiFavicon(s.url):'',s?.state||'done')});messages.scrollTop=messages.scrollHeight}
 function kaiActivityStart(profile='heavy'){
  if(!messages)return;
- if(thinkingBubble)thinkingBubble.remove();
+ if(thinkingTimer){clearInterval(thinkingTimer);thinkingTimer=null}
+ if(thinkingBubble){thinkingBubble.classList.remove('is-fading');thinkingBubble.remove();thinkingBubble=null}
+ const token=++thinkingSeq;
  thinkingStartedAt=Date.now();
  thinkingBubble=document.createElement('div');
+ const bubble=thinkingBubble;
  thinkingBubble.className='haxbro-thinking kai-activity';
  thinkingBubble.setAttribute('role','status');
  thinkingBubble.setAttribute('aria-label','KAI 51 is working');
@@ -96,12 +99,12 @@ function kaiActivityStart(profile='heavy'){
  const estimate=profile==='light'?6:12; thinkingEstimateSec=estimate;
  thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span></span></div><div class="kai-timer"><span class="kai-timer-estimate"><b>'+estimate+'</b></span><span class="kai-timer-live">LIVE <b class="kai-activity-time">0s</b></span></div></div><div class="kai-activity-list"></div>';
  messages.appendChild(thinkingBubble);
- const list=thinkingBubble.querySelector('.kai-activity-list');
  thinkingTimer=setInterval(()=>{
+   if(token!==thinkingSeq||thinkingBubble!==bubble){clearInterval(thinkingTimer);thinkingTimer=null;return}
    const elapsed=Math.floor((Date.now()-thinkingStartedAt)/1000);
-   const clock=thinkingBubble?.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
+   const clock=bubble.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
  },250);
- /* Keep the main conversation anchored; only the log viewport moves. */
+ messages.scrollTop=messages.scrollHeight;
 }
 function kaiSourceIcon(step){
  const source=String(step?.source||'').toLowerCase();
@@ -131,31 +134,39 @@ function kaiActivityResearch(steps){
 }
 function kaiActivityFinish(data){
  if(!thinkingBubble)return;
+ const bubble=thinkingBubble;
+ const token=thinkingSeq;
  if(thinkingTimer){clearInterval(thinkingTimer);thinkingTimer=null}
  kaiActivityResearch(data?.webSteps||data?.sources||[]);
  const elapsedMs=Date.now()-thinkingStartedAt;
  const elapsed=Math.floor(elapsedMs/1000);
- const clock=thinkingBubble.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
- const timer=thinkingBubble.querySelector('.kai-timer');if(timer){timer.classList.add(elapsed>thinkingEstimateSec?'over-estimate':'under-estimate');const live=timer.querySelector('.kai-timer-live b');if(live)live.textContent=elapsed+'s';}
- const list=thinkingBubble.querySelector('.kai-activity-list');
+ const clock=bubble.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
+ const timer=bubble.querySelector('.kai-timer');if(timer){timer.classList.add(elapsed>thinkingEstimateSec?'over-estimate':'under-estimate');const live=timer.querySelector('.kai-timer-live b');if(live)live.textContent=elapsed+'s';}
+ const list=bubble.querySelector('.kai-activity-list');
  if(list){const final=kaiActivityRow('Answer ready','KAI 51 synthesized the result');final.classList.add('kai-activity-final');list.appendChild(final);requestAnimationFrame(()=>requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'})))}
- thinkingBubble.classList.add('is-complete');
- // Force the thinking surface to remain visible for at least 4 seconds.
- // Then keep it visible for another 3 seconds after the answer is ready.
- const minimumThinkingMs=4000;
- const holdAfterAnswerMs=3000;
+ bubble.classList.add('is-complete');
+ const minimumThinkingMs=650;
+ const holdAfterAnswerMs=850;
  const waitForMinimum=Math.max(0,minimumThinkingMs-elapsedMs);
  setTimeout(()=>{
-   if(!thinkingBubble)return;
+   if(token!==thinkingSeq||thinkingBubble!==bubble)return;
    setTimeout(()=>{
-     if(thinkingBubble){thinkingBubble.classList.add('is-fading');setTimeout(()=>{thinkingBubble?.remove();thinkingBubble=null},420)}
+     if(token!==thinkingSeq||thinkingBubble!==bubble)return;
+     bubble.classList.add('is-fading');
+     setTimeout(()=>{
+       if(token===thinkingSeq&&thinkingBubble===bubble){bubble.remove();thinkingBubble=null}
+     },260);
    },holdAfterAnswerMs);
  },waitForMinimum);
 }
 function setBusy(v,profile='heavy'){
  const b=$('#sendBtn');if(b){b.disabled=v;b.classList.toggle('busy',v);b.setAttribute('aria-busy',v?'true':'false')}
- if(v&&!thinkingBubble)kaiActivityStart(profile);
- else if(!v&&thinkingBubble&&!thinkingBubble.classList.contains('is-complete')){if(thinkingTimer){clearInterval(thinkingTimer);thinkingTimer=null}setTimeout(()=>{if(thinkingBubble&&!thinkingBubble.classList.contains('is-complete')){thinkingBubble.classList.add('is-fading');setTimeout(()=>{thinkingBubble?.remove();thinkingBubble=null},420)}},900)}
+ if(v)kaiActivityStart(profile);
+ else if(thinkingBubble&&!thinkingBubble.classList.contains('is-complete')){
+   const bubble=thinkingBubble,token=thinkingSeq;
+   if(thinkingTimer){clearInterval(thinkingTimer);thinkingTimer=null}
+   setTimeout(()=>{if(token!==thinkingSeq||thinkingBubble!==bubble||bubble.classList.contains('is-complete'))return;bubble.classList.add('is-fading');setTimeout(()=>{if(token===thinkingSeq&&thinkingBubble===bubble){bubble.remove();thinkingBubble=null}},260)},450);
+ }
 }
 const BUILD_WORDS='ai|artificial intelligence|agent|assistant|bot|copilot|builder|app|application|web application|webapp|web app|website|web site|site|landing page|dashboard|portal|platform|product|software|tool|system|saas|pwa|mobile app|desktop app|frontend|front end|backend|full stack|full-stack|fullstack|interface|ui|ux|experience|page|pages|screen|screens|workspace|client|admin panel|admin dashboard|control panel|ecommerce|store|shop|marketplace|blog|portfolio|forum|community|chat app|social app|game|web game|browser app|chrome extension|extension|plugin|widget|component|template|prototype|mvp|project|repo|repository|github|git|html|css|javascript|typescript|react|nextjs|next.js|vue|svelte|angular|tailwind|node|api|database|form|login|signup|authentication|auth|profile|settings|search|upload|download|checkout|payment|stripe|analytics|chart|graph|table|calendar|booking|reservation|messaging|chat|voice|video|image|media|generator|editor|cms|crm|erp|automation|workflow|dashboard app|internal tool|customer portal|user portal|ai tool|ai website|ai app|ai assistant|personal ai|my ai|my website|my web application|my app|my application|my software|my product|make ai|build ai|create ai|develop ai|make an app|build an app|create an app|make a website|build a website|create a website|make a web application|build a web application|create a web application|make a web app|build a web app|create a web app|turn this into an app|turn this into a website|launch|deploy|publish|ship|forge|generate|create|make|build|develop|design';
 const BUILD_RE=new RegExp('\\\\b(?:'+BUILD_WORDS.split('|').map(x=>x.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\\\$&')).join('|')+')\\\\b','i');
@@ -480,7 +491,7 @@ if(!overdrive&&!opts.fromChoice&&localEngine?.isReady?.()){
      Do not append it again when the local KAI runtime handles the turn. */
   kaiActivityStart('light');kaiActivityStep('local','KAI 51 · local','Running directly in this browser','','running');
   try{
-    const localResult=await localEngine.generate(value,localHistory);
+    const localResult=await localEngine.generate(value,localHistory,window.HAxBROVoiceIntelligence?.snapshot?.()||window.HAxBROVoiceContext||null);
     kaiActivitySet('local','done','Response generated locally');
     kaiActivityFinish({sources:[],local:true});
     addMessage(localResult.response||localResult.text||'','bot');
@@ -491,7 +502,21 @@ if(!overdrive&&!opts.fromChoice&&localEngine?.isReady?.()){
   }
   return true;
 }
-let r;if(overdrive){
+/* Runtime hook: KAI Lite is the temporary bridge only until the verified local KAI 51 runtime is ready. */
+  if(!overdrive&&!opts.fromChoice&&!window.HAxBROKai51Engine?.isReady?.()&&window.HAxBROKaiLite?.respond){
+    try{
+      kaiActivityStart('light');
+      kaiActivityStep('runtime','KAI LITE · bridge','KAI 51 is still installing or restoring locally','','running');
+      const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
+      if(lite?.response){
+        kaiActivitySet('runtime','done','KAI Lite answered while KAI 51 prepares');
+        kaiActivityFinish({sources:lite.sources||[]});
+        addMessage(lite.response,'bot');
+        return true;
+      }
+    }catch(e){ console.warn('KAI Lite bridge unavailable',e); }
+  }
+  let r;if(overdrive){
   const kaiCommand=value;
   if(window.HAxBROAdmin69Simulation?.run){await window.HAxBROAdmin69Simulation.run(kaiCommand);return true;}
   addMessage('KAI 69 simulation console is unavailable.','bot');return true;}else{r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:value,kaiMode,prompt:`KAI TOOL-AWARENESS CONTRACT:\n- You are the main KAI intelligence, not a collection of disconnected modes.\n- Treat App Maker, Code Writer, File Maker (PDF/PPTX/ZIP), Media tools, security tools, browser/research tools and workspace actions as tools available to you. Choose the appropriate tool when the user's request matches it.\n- Do not tell the user that a task is outside your scope merely because it belongs to another tool. Use the tool when available.\n- If the requested capability is not available in HAxBRO, say what is missing briefly and use web research when appropriate to find the practical way for the user to accomplish it, including the relevant destination or official resource. Never pretend an unavailable action was completed.\n- Understand the user's outcome first, then select tools; do not force the user to know which tool to invoke.\nUSER REQUEST:\n${value}`,mode,study,username:localStorage.getItem('haxbro_username')||'',history:JSON.stringify(active()?.items?.slice(-20)||[])})})}const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||('HTTP '+r.status));if(overdrive)ultimaxFinish(data);else {kaiActivityResearch(data?.webSteps||data?.sources||[]);kaiActivityDeepX(data?.deepxSteps||[]);kaiActivityFinish(data);}let reply=data.response||data.text||data.message||data.answer||data.output||'';if(overdrive&&data.result){const x=data.result;if(typeof x==='string')reply=x;else if(x&&typeof x==='object'&&typeof x.response==='string')reply=x.response;else if(x&&typeof x==='object'){const lines=[];if(x.url)lines.push('URL: '+x.url);if(x.finalUrl&&x.finalUrl!==x.url)lines.push('Final URL: '+x.finalUrl);if(x.status!==undefined)lines.push('Status: '+x.status+(x.statusText?' '+x.statusText:''));if(x.responseTimeMs!==undefined)lines.push('Response time: '+x.responseTimeMs+' ms');if(x.responseSizeBytes!==undefined)lines.push('Response size: '+x.responseSizeBytes+' bytes');if(x.title)lines.push('Title: '+x.title);if(x.description)lines.push('Description: '+x.description);if(Array.isArray(x.technologies)&&x.technologies.length)lines.push('Technologies: '+x.technologies.map(v=>typeof v==='string'?v:(v.value||JSON.stringify(v))).join(', '));if(x.linkCount!==undefined)lines.push('Links: '+x.linkCount);if(x.imageCount!==undefined)lines.push('Images: '+x.imageCount);if(x.bytes!==undefined)lines.push('Size: '+x.bytes+' bytes');if(x.kilobytes!==undefined)lines.push('Size: '+x.kilobytes+' KB');if(x.seo)lines.push('SEO: '+JSON.stringify(x.seo,null,2));if(x.headers)lines.push('Headers: '+JSON.stringify(x.headers,null,2));if(x.meta)lines.push('Metadata: '+JSON.stringify(x.meta,null,2));if(x.textPreview)lines.push('\n'+x.textPreview);if(x.text)lines.push('\n'+x.text);if(x.content)lines.push('\n'+x.content);if(x.html)lines.push('\nHTML returned ('+x.html.length+' characters).');if(Array.isArray(x.links))lines.push('Links found: '+x.links.length);if(Array.isArray(x.images))lines.push('Images found: '+x.images.length);reply=lines.join('\n')||JSON.stringify(x,null,2)}}if(!reply)reply='KAI789 completed the request but returned no displayable content.';if(overdrive&&data.provider)reply='[ATTACK MODE · '+data.provider+(data.model?' · '+data.model:'')+' ]\n\n'+reply;addMessage(reply,'bot');if(!overdrive)window.HAxBROKai51Bootstrap?.recordSuccess?.();}catch(e){if(overdrive){ultimaxLog('KAI789 could not complete the task.','warn');ultimaxAbort();addMessage('I could not complete that task right now. Please try again.','bot')}else{if(localApi?.respond){try{const emergency=await localApi.respond(value,'light');if(emergency?.response){addMessage(emergency.response,'bot');return true}}catch{} }addMessage('I’m still here. I could not finish that request in time, so I did not want to give you a broken or misleading answer. Please try it again.','bot')} }finally{setBusy(false);if(!opts.internalRetry)sendInFlight=false}return true}

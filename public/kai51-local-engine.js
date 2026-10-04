@@ -90,13 +90,17 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
     } catch { return ''; }
   }
 
-  async function generate(message,history=[]) {
+  async function generate(message,history=[],voiceContext=null) {
     await prepare();
     const prompt=String(message||'').trim();
     const recent = Array.isArray(history) ? history.slice(-3).map(x=>({
       role:x?.who==='user'?'user':'assistant',
       content:String(x?.text||'').slice(0,900)
     })) : [];
+    const vc=voiceContext&&typeof voiceContext==='object'?voiceContext:null;
+    if(vc&&Number(vc.db)>0){
+      recent.unshift({role:'system',content:'Voice context is auxiliary and must not be mentioned unless relevant. Estimated microphone level: '+Math.round(Number(vc.db)||0)+' dB. Voice state signal: '+String(vc.label||'CALM')+'. Frustration signal: '+Math.round((Number(vc.frustration)||0)*100)+'%. Use this only to adjust tone: if elevated/high, be calmer, direct and solution-focused.'});
+    }
     recent.push({role:'user',content:prompt.slice(0,2500)});
     const result = await generator(recent,{
       max_new_tokens:64,
