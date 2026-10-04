@@ -17,7 +17,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
       env.remoteHost='https://huggingface.co/';
-      env.remotePathTemplate='{model}/resolve/main/{file}';
+      env.remotePathTemplate='{model}/resolve/main/';
       env.useBrowserCache=true;
       env.cacheKey='haxbro-kai51-real-model-v3-local-webgpu-q4';
       progress(15,'Loading KAI 51 local Q4 model');
