@@ -23,7 +23,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.useBrowserCache = true;
       env.cacheKey = MODEL_CACHE;
       env.remoteHost = MODEL_HOST;
-      env.remotePathTemplate = '{file}';
+      env.remotePathTemplate = '{model}/{file}';
       env.fetch = (input,init)=>{
         const raw = typeof input === 'string' ? input : (input && input.url) || String(input);
         if (raw.startsWith(MODEL_HOST + '/')) {
