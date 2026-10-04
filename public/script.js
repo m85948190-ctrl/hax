@@ -206,7 +206,7 @@ if(!opts.fromChoice&&!overdrive&&value.length>0&&!kaiChoiceSearchLike(value)&&/\
 let launchFromPending=false;if(overdrive){const pendingKey='haxbro_kai_pending_target';if(/^abort all$/i.test(value))sessionStorage.removeItem(pendingKey)}applyContextTheme(value);if(!launchFromPending&&opts.fromChoice===true){updateKaiMemory(value)}
 else if(!launchFromPending){addMessage(value,'user');updateKaiMemory(value)}
 if(input)input.value='';resize();try{if(!overdrive){
-      const kai51LocalReady=!!window.HAxBROKai51Bootstrap?.state?.().ready;
+      const kai51LocalReady=!!window.HAxBROKai51Bootstrap?.state?.().runtimeReady;
       /* Before the real KAI 51 browser model is installed, KAI Lite is the actual
          first-response engine for EVERY chat turn. It is web-grounded, not a
          canned/rule-based responder. Once KAI 51 is genuinely verified ready,
