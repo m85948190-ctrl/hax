@@ -18,9 +18,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.cacheKey='haxbro-kai51-real-model-v1';
       progress(15,'Loading KAI 51 model files');
       pipe=await pipeline('text-generation',MODEL,{
-        dtype:'q4',
+        dtype:'q4f16',
         device:'wasm',
-        model_file_name:'model_q4'
+        model_file_name:'model_q4f16'
       });
       progress(95,'Running KAI 51 neural self-test');
       const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{max_new_tokens:12,do_sample:false});
