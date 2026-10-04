@@ -1,10 +1,10 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL='HAxBRO/KAI-51-SMOLLM2-360M';
-  const VERSION='kai51-real-model-v2-q4';
+  const VERSION='kai51-real-model-v3-local-webgpu-q4';
   /* v2 uses the Q4 ONNX asset because the Q4F16 release asset was intermittently
      returning 502 from the same-origin model proxy. Q4 is larger, but it is the
      verified 386 MB asset and does not require external-data shards. */
-  const DEVICE='wasm';
+  const DEVICE=(typeof navigator!=='undefined' && navigator.gpu) ? 'webgpu' : 'wasm';
   let pipe=null, loading=null, generationChain=Promise.resolve();
   const progress=(progress,status)=>onProgress({profile:'heavy',progress,status,file:''});
 
@@ -19,7 +19,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.remoteHost=location.origin+'/api/kai-model';
       env.remotePathTemplate='?file={file}';
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-real-model-v2-q4';
+      env.cacheKey='haxbro-kai51-real-model-v3-local-webgpu-q4';
       progress(15,'Loading KAI 51 local Q4 model');
       pipe=await pipeline('text-generation',MODEL,{
         dtype:'q4',
