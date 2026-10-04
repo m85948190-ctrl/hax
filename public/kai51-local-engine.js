@@ -41,9 +41,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
     await prepare();
     return pipe(full,{
       max_new_tokens:32,
-      do_sample:true,
-      temperature:0.7,
-      top_p:0.9,
+      do_sample:false,
       return_full_text:false
     });
   }
