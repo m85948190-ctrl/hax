@@ -1,12 +1,13 @@
-(()=>{const $=s=>document.querySelector(s);let type='auto',plan=null;
+(()=>{const $=s=>document.querySelector(s);let type='auto';
 function mount(){
   if($('#haxbroCreative'))return;
   const el=document.createElement('section');el.id='haxbroCreative';el.innerHTML=`
     <div class="hcb-shell">
       <aside class="hcb-side">
         <div class="hcb-brand"><img src="/logo-symbol.svg?v=218" alt=""><div><b>HAxBRO AI</b><small>CREATIVE BEAST</small></div></div>
-        <div class="hcb-kicker">PIPELINE ENGINE</div><h2>One prompt.<br>Full production.</h2>
-        <p>KAI coordinates intent, story, assets, motion, composition and QA. It uses existing generation infrastructure rather than pretending one model does everything.</p>
+        <div class="hcb-kicker">OPENMONTAGE BRIDGE · PIPELINE ENGINE</div>
+        <h2>One prompt.<br>Full production.</h2>
+        <p>KAI plans the production as a real pipeline: research, proposal, script, scene plan, assets, motion, compose and QA.</p>
         <div class="hcb-pipeline" id="hcbPipeline"></div>
       </aside>
       <main class="hcb-main">
@@ -19,7 +20,7 @@ function mount(){
           </section>
           <section class="hcb-card"><div class="hcb-kicker">OUTPUT</div><div id="hcbResult" class="hcb-result">Your production result will appear here.</div></section>
         </div>
-        <div class="hcb-bottom"><span>KAI · INTENT → STORY → ASSETS → MOTION → COMPOSE → QA</span><span>HAxBRO · OPEN PIPELINE ARCHITECTURE</span></div>
+        <div class="hcb-bottom"><span>KAI · RESEARCH → PROPOSAL → SCRIPT → SCENE PLAN → ASSETS → MOTION → COMPOSE → QA</span><span>HAxBRO · OPEN PIPELINE ARCHITECTURE</span></div>
       </main>
     </div>`;
   document.body.appendChild(el);
@@ -30,26 +31,23 @@ function mount(){
 function close(){const e=$('#haxbroCreative');if(e)e.classList.remove('open');document.body.style.overflow='';}
 function open(){mount();$('#haxbroCreative').classList.add('open');document.body.style.overflow='hidden';$('#hcbPrompt')?.focus();}
 function renderPlan(p){
-  plan=p;
   $('#hcbPipeline').innerHTML=p.stages.map(s=>`<div class="hcb-stage ${s.status}"><i></i><span>${s.name}</span></div>`).join('');
-  $('#hcbPlan').innerHTML=p.stages.map(s=>`<div class="hcb-plan-row"><b>${s.name}</b><span>${s.detail}</span></div>`).join('');
+  $('#hcbPlan').innerHTML=p.stages.map(s=>`<div class="hcb-plan-row"><b>${s.name}</b><span>${s.detail}</span></div>`).join('')+
+    `<div class="hcb-plan-meta"><b>${p.pipeline.label}</b><span>${p.output.toUpperCase()} · ${p.duration||0}s · ${p.render.runtime}</span></div>`;
 }
 async function run(){
   const prompt=$('#hcbPrompt')?.value.trim();if(!prompt){$('#hcbResult').textContent='Describe the production first.';return}
-  const btn=$('#hcbGenerate');btn.disabled=true;$('#hcbResult').textContent='KAI is building the production plan…';
+  const btn=$('#hcbGenerate');btn.disabled=true;$('#hcbResult').textContent='KAI is building the production pipeline…';
   try{
-    const r=await fetch('/api/haxbro-creative',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'plan',prompt,type})});
+    const r=await fetch('/api/haxbro-creative',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'prepare',prompt,type})});
     const p=await r.json();if(!r.ok||!p.ok)throw Error(p.error||'Planning failed');renderPlan(p);
-    $('#hcbResult').textContent='Plan ready. Sending the primary visual task to HAxBRO generation infrastructure…';
+    $('#hcbResult').textContent='Pipeline ready. Sending the primary task to HAxBRO generation infrastructure…';
     const output=p.output==='video'?'video':'image';
     const provider=output==='video'?'video1':'image2';
-    const g=await fetch('/api/art-generate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({type:output,provider,prompt,ratio:p.recommendations.aspect})});
+    const g=await fetch('/api/art-generate',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({type:output,provider,prompt,ratio:p.output==='video'?(p.pipeline.id==='cinematic'?'16:9':'16:9'):'1:1'})});
     const d=await g.json();if(!g.ok||!d.ok)throw Error(d.error||'Generation provider failed');
-    if(d.url){
-      $('#hcbResult').innerHTML=output==='video'?'<video controls playsinline src="'+d.url+'"></video>':'<img src="'+d.url+'" alt="HAxBRO generated visual">';
-    }else{
-      $('#hcbResult').innerHTML='<div><b>Generation job started.</b><br><small>'+String(d.provider||'Provider')+' · '+String(d.taskId||'processing')+'</small></div>';
-    }
+    if(d.url)$('#hcbResult').innerHTML=output==='video'?'<video controls playsinline src="'+d.url+'"></video>':'<img src="'+d.url+'" alt="HAxBRO generated visual">';
+    else $('#hcbResult').innerHTML='<div><b>Generation job started.</b><br><small>'+String(d.provider||'Provider')+' · '+String(d.taskId||'processing')+'</small></div>';
   }catch(e){$('#hcbResult').textContent='Creative engine: '+(e.message||'generation failed');}
   finally{btn.disabled=false;}
 }
