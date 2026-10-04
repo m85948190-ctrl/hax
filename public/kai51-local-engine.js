@@ -40,7 +40,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   async function runOnce(full){
     await prepare();
     return pipe(full,{
-      max_new_tokens:32,
+      max_new_tokens:8,
       do_sample:false,
       return_full_text:false
     });
