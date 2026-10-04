@@ -25,7 +25,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.remoteHost = MODEL_HOST;
       env.remotePathTemplate = '{model}/{file}';
       env.fetch = (input,init)=>{
-        const raw = String(input);
+        const raw = typeof input === 'string' ? input : (input && input.url) || String(input);
         if (raw.startsWith(MODEL_HOST + '/')) {
           const file = raw.slice(raw.lastIndexOf('/') + 1);
           return fetch(MODEL_HOST + '/' + file, init);
