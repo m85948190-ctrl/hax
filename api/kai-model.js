@@ -11,7 +11,7 @@ const ASSETS={
 };
 export const methods=['GET','HEAD','OPTIONS'];
 export default async function(req,res){
-  if(req.method==='OPTIONS') return res.status(204).set({'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Range,Accept,Content-Type','Access-Control-Expose-Headers':'Content-Length,Content-Range,Accept-Ranges'}).send('');
+  if(req.method==='OPTIONS'){res.setHeader('Access-Control-Allow-Origin','*');res.setHeader('Access-Control-Allow-Headers','Range,Accept,Content-Type');res.setHeader('Access-Control-Expose-Headers','Content-Length,Content-Range,Accept-Ranges');return res.status(204).send('');}
   const raw=String(req.query?.file||'').replace(/^.*\//,'');
   const asset=ASSETS[raw];
   if(!asset) return res.status(404).json({error:'Unknown KAI 51 model asset'});
@@ -30,5 +30,6 @@ export default async function(req,res){
     'Content-Type':upstream.headers.get('content-type')||'application/octet-stream'
   };
   for(const h of ['content-length','content-range']){const v=upstream.headers.get(h);if(v)out[h==='content-length'?'Content-Length':'Content-Range']=v;}
-  return res.status(upstream.status).set(out).send(body);
+  Object.entries(out).forEach(([k,v])=>res.setHeader(k,v));
+  return res.status(upstream.status).send(body);
 }
