@@ -253,21 +253,56 @@ if(input)input.value='';resize();try{if(!overdrive){
           throw new Error('KAI 51 local model returned no response');
         }catch(e){
           kaiActivityFinish({sources:[]});
-          console.warn('KAI 51 runtime failed after takeover; using KAI Lite as emergency fallback',e);
+          console.warn('KAI 51 browser-local runtime failed; attempting the KAI 51 managed recovery lane',e);
+          /* Browser WASM failure must not immediately promote KAI Lite.
+             /api/chat is still a KAI 51 generation lane. KAI Lite is final emergency fallback. */
+          try{
+            kaiActivityStart('light');
+            kaiActivityStep('managed','KAI 51 · recovery','Browser runtime failed; reconnecting to the KAI 51 managed generation lane','','running');
+            const recoveryController=new AbortController();
+            const recoveryTimer=setTimeout(()=>recoveryController.abort(),45000);
+            const rr=await fetch('/api/chat',{
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              signal:recoveryController.signal,
+              body:JSON.stringify({
+                message:value,
+                searchMode:'normal',
+                kaiMode,
+                prompt:'Answer the user naturally as HAxBRO. KAI 51 is the primary intelligence. Do not mention internal fallback or runtime details.',
+                mode,
+                study,
+                username:localStorage.getItem('haxbro_username')||'',
+                history:JSON.stringify(active()?.items?.slice(-20)||[]),
+                kaiMemory:JSON.stringify(getKaiMemory())
+              })
+            });
+            const managed=await rr.json().catch(()=>({}));
+            clearTimeout(recoveryTimer);
+            if(rr.ok&&(managed.response||managed.text||managed.message||managed.answer||managed.output)){
+              kaiActivitySet('managed','done','KAI 51 response delivered');
+              kaiActivityFinish(managed);
+              addMessage(managed.response||managed.text||managed.message||managed.answer||managed.output,'bot');
+              return true;
+            }
+            throw new Error(managed.error||('KAI 51 managed lane returned HTTP '+rr.status));
+          }catch(managedError){
+            console.warn('KAI 51 managed recovery failed; KAI Lite is now the final emergency fallback',managedError);
+          }
           if(window.HAxBROKaiLite?.respond){
             try{
               kaiActivityStart('light');
-              kaiActivityStep('lite','KAI Lite · fallback','KAI 51 hit a runtime error; using the lightweight recovery lane','','running');
+              kaiActivityStep('lite','KAI Lite · emergency fallback','Both KAI 51 execution lanes failed; using the lightweight emergency recovery lane','','running');
               const recovery=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
               if(recovery?.response){
-                kaiActivitySet('lite','done','Fallback response delivered');
+                kaiActivitySet('lite','done','Emergency response delivered');
                 kaiActivityFinish(recovery);
                 addMessage(recovery.response,'bot');
                 return true;
               }
-            }catch(fallbackError){ console.warn('KAI Lite fallback also failed',fallbackError); }
+            }catch(fallbackError){ console.warn('KAI Lite emergency fallback also failed',fallbackError); }
           }
-          addMessage('KAI 51 hit a local runtime error and the fallback lane was unavailable. Please retry once.','bot');
+          addMessage('KAI 51 could not complete this turn. Please retry once.','bot');
           return true;
         }
       }

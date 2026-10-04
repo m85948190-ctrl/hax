@@ -1,7 +1,7 @@
 (() => {
   const VERSION = 'kai51-local-controller-v8';
   const KEY = 'haxbro:kai51:installation:v5';
-  const MODEL = 'HAxBRO/KAI-51-FIRST-PARTY';
+  const MODEL = 'HAxBRO/KAI-51-SMOLLM2-360M';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
 
   const defaultState = () => ({
