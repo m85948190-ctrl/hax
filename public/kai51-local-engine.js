@@ -24,7 +24,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       pipe=await pipeline('text-generation',MODEL,{
         dtype:'q4',
         device:DEVICE,
-        model_file_name:'model_q4'
+        model_file_name:'model'
       });
       progress(95,'Running KAI 51 neural self-test');
       const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{max_new_tokens:8,do_sample:false,return_full_text:false});
