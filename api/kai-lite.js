@@ -140,6 +140,10 @@ function groundedAnswer(query, sources, engine) {
   return answer + "\n\nSources (" + engine + "):\n" + sourceLines;
 }
 
+function liteNotice(text) {
+  return "I’m Kai Lite — this is the lightweight web layer, not the full power of HAxBRO. KAI 51 is loading in the background; when it is ready, you’ll get the real KAI 51 intelligence.\n\n" + String(text || "");
+}
+
 function casualAnswer(query) {
   const q = clean(query, 120).toLowerCase();
   if (/^(?:thanks|thank you|thx)/i.test(q)) return "Anytime, bro. 👊";
@@ -163,7 +167,7 @@ export default async function(req, res) {
     if (casual.test(query)) {
       return res.json({
         ok: true,
-        response: casualAnswer(query),
+        response: liteNotice(casualAnswer(query)),
         provider: "KAI LITE",
         model: "KAI LITE · CONVERSATION",
         lite: true,
@@ -176,7 +180,7 @@ export default async function(req, res) {
 
     return res.json({
       ok: true,
-      response: groundedAnswer(query, sources, searched.engine),
+      response: liteNotice(groundedAnswer(query, sources, searched.engine)),
       provider: "KAI LITE · WEB",
       model: "KAI LITE · GOOGLE/BING SCRAPER",
       lite: true,

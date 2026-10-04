@@ -133,14 +133,24 @@ function kaiActivityFinish(data){
  if(!thinkingBubble)return;
  if(thinkingTimer){clearInterval(thinkingTimer);thinkingTimer=null}
  kaiActivityResearch(data?.webSteps||data?.sources||[]);
- const elapsed=Math.floor((Date.now()-thinkingStartedAt)/1000);
+ const elapsedMs=Date.now()-thinkingStartedAt;
+ const elapsed=Math.floor(elapsedMs/1000);
  const clock=thinkingBubble.querySelector('.kai-activity-time');if(clock)clock.textContent=elapsed+'s';
  const timer=thinkingBubble.querySelector('.kai-timer');if(timer){timer.classList.add(elapsed>thinkingEstimateSec?'over-estimate':'under-estimate');const live=timer.querySelector('.kai-timer-live b');if(live)live.textContent=elapsed+'s';}
  const list=thinkingBubble.querySelector('.kai-activity-list');
  if(list){const final=kaiActivityRow('Answer ready','KAI 51 synthesized the result');final.classList.add('kai-activity-final');list.appendChild(final);requestAnimationFrame(()=>requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'})))}
  thinkingBubble.classList.add('is-complete');
- const minimumVisibleMs=1500; const remaining=Math.max(0,minimumVisibleMs-(Date.now()-thinkingStartedAt));
- setTimeout(()=>{if(thinkingBubble){thinkingBubble.classList.add('is-fading');setTimeout(()=>{thinkingBubble?.remove();thinkingBubble=null},420)}},Math.max(520,remaining));
+ // Force the thinking surface to remain visible for at least 4 seconds.
+ // Then keep it visible for another 3 seconds after the answer is ready.
+ const minimumThinkingMs=4000;
+ const holdAfterAnswerMs=3000;
+ const waitForMinimum=Math.max(0,minimumThinkingMs-elapsedMs);
+ setTimeout(()=>{
+   if(!thinkingBubble)return;
+   setTimeout(()=>{
+     if(thinkingBubble){thinkingBubble.classList.add('is-fading');setTimeout(()=>{thinkingBubble?.remove();thinkingBubble=null},420)}
+   },holdAfterAnswerMs);
+ },waitForMinimum);
 }
 function setBusy(v,profile='heavy'){
  const b=$('#sendBtn');if(b){b.disabled=v;b.classList.toggle('busy',v);b.setAttribute('aria-busy',v?'true':'false')}

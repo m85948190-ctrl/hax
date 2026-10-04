@@ -5,8 +5,8 @@
     s.textContent=`
       .kai51-boot-stamp{
         display:block!important;visibility:visible!important;opacity:1!important;
-        position:fixed;left:50%;bottom:88px;transform:translateX(-50%);
-        z-index:2147483000;width:min(520px,calc(100vw - 28px));
+        position:fixed;right:18px;top:78px;left:auto;bottom:auto;transform:none;
+        z-index:2147483000;width:min(420px,calc(100vw - 36px));
         padding:12px 15px;border:1px solid rgba(170,184,198,.58);border-radius:14px;
         background:rgba(255,255,255,.97);box-shadow:0 14px 38px rgba(20,35,50,.14),0 0 0 1px rgba(255,255,255,.7);
         backdrop-filter:blur(18px);font-family:Inter,system-ui,sans-serif;pointer-events:none
@@ -21,7 +21,7 @@
       .kai51-boot-meta b{font-size:10px;color:#2f5368;font-variant-numeric:tabular-nums}
       .kai51-boot-meta span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       @keyframes kai51BootPulse{0%,100%{opacity:.45;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
-      @media(max-width:600px){.kai51-boot-stamp{bottom:82px;width:calc(100vw - 24px)}}
+      @media(max-width:600px){.kai51-boot-stamp{right:12px;top:68px;width:calc(100vw - 24px)}}
     `;
     document.head.appendChild(s);
   }
