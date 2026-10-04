@@ -1,5 +1,7 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
-  const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
+  const MODEL = 'haxbro-ai-model';
+  const MODEL_HOST = 'https://github.com/m85948190-ctrl/haxbro/releases/download/kai51-model-latest';
+  const MODEL_CACHE = 'haxbro-kai51-v2';
   const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.0';
   let generator = null;
   let loading = null;
@@ -19,7 +21,17 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.allowLocalModels = false;
       env.allowRemoteModels = true;
       env.useBrowserCache = true;
-      env.cacheKey = 'haxbro-kai51-v1';
+      env.cacheKey = MODEL_CACHE;
+      env.remoteHost = MODEL_HOST;
+      env.remotePathTemplate = '{model}/{file}';
+      env.fetch = (input,init)=>{
+        const raw = String(input);
+        if (raw.startsWith(MODEL_HOST + '/')) {
+          const file = raw.slice(raw.lastIndexOf('/') + 1);
+          return fetch(MODEL_HOST + '/' + file, init);
+        }
+        return fetch(input,init);
+      };
       try { if (navigator.storage?.persist) await navigator.storage.persist(); } catch {}
       let useWebGPU = !!navigator.gpu;
       if (useWebGPU) {
