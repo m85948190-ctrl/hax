@@ -227,15 +227,41 @@ if(!opts.fromChoice&&!overdrive&&value.length>0&&!kaiChoiceSearchLike(value)&&/\
 let launchFromPending=false;if(overdrive){const pendingKey='haxbro_kai_pending_target';if(/^abort all$/i.test(value))sessionStorage.removeItem(pendingKey)}applyContextTheme(value);if(!launchFromPending&&opts.fromChoice===true){updateKaiMemory(value)}
 else if(!launchFromPending){addMessage(value,'user');updateKaiMemory(value)}
 if(input)input.value='';resize();try{if(!overdrive){
-      const kai51LocalReady=!!window.HAxBROKai51Bootstrap?.state?.().runtimeReady;
-      /* Before the real KAI 51 browser model is installed, KAI Lite is the actual
-         first-response engine for EVERY chat turn. It is web-grounded, not a
-         canned/rule-based responder. Once KAI 51 is genuinely verified ready,
-         this branch is skipped and the downloaded local model owns the turn. */
-      if(!kai51LocalReady&&!opts.fromChoice&&window.HAxBROKaiLite?.respond){
+      const bootstrapState=window.HAxBROKai51Bootstrap?.state?.()||{};
+      /* ONE handoff rule:
+         - while KAI 51 is not verified ready, KAI Lite may bridge the turn;
+         - once KAI 51 is verified, KAI Lite is never allowed to answer that turn again;
+         - bootstrap.generate() is allowed to await the final engine promise, eliminating
+           the tiny ready-event race that previously sent a turn back to KAI Lite. */
+      const kai51Verified=bootstrapState.status==='ready' || bootstrapState.verified===true || !!bootstrapState.runtimeReady;
+      if(kai51Verified&&!opts.fromChoice&&window.HAxBROKai51Bootstrap?.generate){
+        setBusy(true,'heavy');
+        try{
+          const local=await window.HAxBROKai51Bootstrap.generate(
+            value,
+            active()?.items?.slice(-12)||[],
+            window.HAxBROVoiceIntelligence?.snapshot?.()||window.HAxBROVoiceContext||null
+          );
+          if(local?.response){
+            kaiActivityStart('light');
+            kaiActivityStep('local','KAI 51 · local','Running directly on this device','','running');
+            kaiActivitySet('local','done','Response generated locally');
+            kaiActivityFinish({sources:[],local:true});
+            addMessage(local.response,'bot');
+            return true;
+          }
+          throw new Error('KAI 51 local model returned no response');
+        }catch(e){
+          kaiActivityFinish({sources:[]});
+          console.warn('KAI 51 verified local runtime failed; no KAI Lite substitution after takeover',e);
+          addMessage('KAI 51 is ready, but its local runtime hit an error on this turn. I did not switch back to KAI Lite. Please retry once.','bot');
+          return true;
+        }
+      }
+      if(!kai51Verified&&!opts.fromChoice&&window.HAxBROKaiLite?.respond){
         try{
           kaiActivityStart('light');
-          kaiActivityStep('lite','KAI Lite · web scraper','Searching public web context','','running');
+          kaiActivityStep('lite','KAI Lite · bridge','KAI 51 is still installing or restoring locally','','running');
           const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
           if(lite?.response){
             kaiActivitySet('lite','done',(lite.sources?.length||0)+' public sources');
@@ -243,35 +269,11 @@ if(input)input.value='';resize();try{if(!overdrive){
             addMessage(lite.response,'bot');
             return true;
           }
-          throw new Error('Kai Lite returned no response');
+          throw new Error('KAI Lite returned no response');
         }catch(e){
           kaiActivitySet('lite','error',e?.message||'web retrieval unavailable');
           kaiActivityFinish({sources:[]});
-          console.warn('Kai Lite web lane unavailable; escalating to managed KAI 51',e);
-        }
-      }
-      if(kai51LocalReady&&window.HAxBROKai51Bootstrap?.generate){
-        setBusy(true,'heavy');
-        try{
-          const local=await window.HAxBROKai51Bootstrap.generate(value,active()?.items?.slice(-12)||[]);
-          if(local?.response){
-            kaiActivityStep('thinking','KAI 51 · local model','Using the downloaded KAI 51 model on this device','','running');
-            kaiActivitySet('thinking','done','Local inference complete');
-            kaiActivityFinish({sources:[]});
-            addMessage(local.response,'bot');
-            return true;
-          }
-          throw new Error('KAI 51 local model returned no response');
-        }catch(e){
-          kaiActivityFinish({sources:[]});
-          console.warn('Verified local KAI 51 failed; falling back to web-grounded recovery',e);
-          if(window.HAxBROKaiLite?.respond){
-            try{
-              kaiActivityStart('light');
-              const recovery=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
-              if(recovery?.response){kaiActivityFinish(recovery);addMessage(recovery.response,'bot');return true}
-            }catch{}
-          }
+          console.warn('KAI Lite bridge unavailable; continuing to the KAI 51 managed lane',e);
         }
       }
       setBusy(true,opts.searchMode==='quick'?'light':'heavy');
@@ -502,20 +504,8 @@ if(!overdrive&&!opts.fromChoice&&localEngine?.isReady?.()){
   }
   return true;
 }
-/* Runtime hook: KAI Lite is the temporary bridge only until the verified local KAI 51 runtime is ready. */
-  if(!overdrive&&!opts.fromChoice&&!window.HAxBROKai51Engine?.isReady?.()&&window.HAxBROKaiLite?.respond){
-    try{
-      kaiActivityStart('light');
-      kaiActivityStep('runtime','KAI LITE · bridge','KAI 51 is still installing or restoring locally','','running');
-      const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
-      if(lite?.response){
-        kaiActivitySet('runtime','done','KAI Lite answered while KAI 51 prepares');
-        kaiActivityFinish({sources:lite.sources||[]});
-        addMessage(lite.response,'bot');
-        return true;
-      }
-    }catch(e){ console.warn('KAI Lite bridge unavailable',e); }
-  }
+/* The KAI Lite bridge is handled once above. Do not run a second Lite request here:
+   duplicate bridge calls were causing inconsistent handoffs and unnecessary latency. */
   let r;if(overdrive){
   const kaiCommand=value;
   if(window.HAxBROAdmin69Simulation?.run){await window.HAxBROAdmin69Simulation.run(kaiCommand);return true;}
