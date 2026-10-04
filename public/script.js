@@ -258,7 +258,7 @@ if(input)input.value='';resize();try{if(!overdrive){
              /api/chat is still a KAI 51 generation lane. KAI Lite is final emergency fallback. */
           try{
             kaiActivityStart('light');
-            kaiActivityStep('managed','KAI 51 · recovery','Browser runtime failed; reconnecting to the KAI 51 managed generation lane','','running');
+            kaiActivityStep('managed','KAI 51 · recovery','KAI 51 is active; reconnecting local execution through the managed KAI 51 lane','','running');
             const recoveryController=new AbortController();
             const recoveryTimer=setTimeout(()=>recoveryController.abort(),45000);
             const rr=await fetch('/api/chat',{
@@ -292,7 +292,7 @@ if(input)input.value='';resize();try{if(!overdrive){
           if(window.HAxBROKaiLite?.respond){
             try{
               kaiActivityStart('light');
-              kaiActivityStep('lite','KAI Lite · emergency fallback','Both KAI 51 execution lanes failed; using the lightweight emergency recovery lane','','running');
+              kaiActivityStep('lite','KAI Lite · emergency fallback','KAI 51 execution lanes were unavailable; using the emergency recovery lane','','running');
               const recovery=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
               if(recovery?.response){
                 kaiActivitySet('lite','done','Emergency response delivered');

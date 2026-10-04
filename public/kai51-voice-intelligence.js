@@ -69,10 +69,22 @@
     stream?.getTracks?.().forEach(t=>t.stop());stream=null;try{ctx?.close()}catch{};ctx=null;analyser=null;data=null;
     mic.classList.remove('voice-active');mic.setAttribute('aria-label','Start voice input');
     setHud(false);
-    const text=String(lastTranscript||'').trim();
     const voice=snapshot();
     window.HAxBROVoiceContext=voice;
-    if(text){const input=document.getElementById('promptInput');if(input){input.value=text;input.dispatchEvent(new Event('input',{bubbles:true}));input.focus()}}
+    /* Voice input must become an actual chat turn. Wait briefly for the final
+       SpeechRecognition result, then submit the captured transcript to KAI. */
+    setTimeout(()=>{
+      const text=String(lastTranscript||'').trim();
+      if(!text)return;
+      const input=document.getElementById('promptInput');
+      if(input){
+        input.value=text;
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+      }
+      const send=window.sendChat;
+      if(typeof send==='function')send(text,{voice:true});
+      else document.getElementById('sendBtn')?.click();
+    },180);
   }
   mic.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();start()});
   window.HAxBROVoiceIntelligence={start,stop,snapshot:()=>snapshot(),isListening:()=>listening};
