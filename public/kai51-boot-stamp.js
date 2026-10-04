@@ -66,7 +66,7 @@
     const title=document.getElementById('kai51BootTitle');
     const body=document.getElementById('kai51BootText');
     if(title) title.textContent='KAI 51 · REAL INTELLIGENCE MODEL IS LOADING';
-    if(body) body.textContent='Kai Lite is not the full intelligence model. It is a lightweight web-search layer for simple tasks and website results. Let KAI 51 finish loading to get the real accuracy, reasoning power and full HAxBRO AI experience.';
+    if(body) body.textContent='The full KAI 51 model is downloading from the HAxBRO GitHub Release and will be cached on this device. No manual download is required. After the first install, KAI 51 restores from the local browser cache.';
     document.getElementById('kai51BootFill').style.width=pct+'%';
     document.getElementById('kai51BootPercent').textContent=pct+'%';
     document.getElementById('kai51BootStatus').textContent=String(d.status||'Preparing KAI 51');
