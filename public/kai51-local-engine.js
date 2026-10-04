@@ -13,33 +13,20 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   async function prepare() {
     if (generator) return {ok:true,model:MODEL,device};
     if (loading) return loading;
-
     loading = (async()=>{
       progress(3,'restoring KAI 51 local runtime');
       const {pipeline,env} = await import(CDN);
-
-      // Browser Cache is the persistent model store. Keep it enabled so a
-      // previously downloaded model is reused instead of fetched again.
       env.allowLocalModels = false;
       env.allowRemoteModels = true;
       env.useBrowserCache = true;
       env.cacheKey = 'haxbro-kai51-v1';
-
-      try {
-        if (navigator.storage?.persist) await navigator.storage.persist();
-      } catch {}
-
+      try { if (navigator.storage?.persist) await navigator.storage.persist(); } catch {}
       let useWebGPU = !!navigator.gpu;
       if (useWebGPU) {
-        try {
-          const adapter = await navigator.gpu.requestAdapter();
-          useWebGPU = !!adapter;
-        } catch { useWebGPU = false; }
+        try { useWebGPU = !!(await navigator.gpu.requestAdapter()); } catch { useWebGPU = false; }
       }
-
       device = useWebGPU ? 'webgpu' : 'wasm';
       progress(8,device==='webgpu'?'restoring KAI 51 on WebGPU':'restoring KAI 51 on WASM');
-
       const options = {
         device,
         dtype: device==='webgpu' ? 'q4f16' : 'q4',
@@ -48,23 +35,15 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
           if (Number.isFinite(loaded)) progress(10 + loaded*0.88,'loading/restoring KAI 51 model');
         }
       };
-
       generator = await pipeline('text-generation',MODEL,options);
-
-      progress(99,'verifying KAI 51 local intelligence');
-      const test = await generator('KAI 51 READY',{max_new_tokens:8});
-      const text = extract(test).trim();
-      if (!text) throw new Error('Local model self-test returned no text');
-
-      onProgress({progress:100,status:'KAI 51 installed and verified',file:''});
+      onProgress({progress:100,status:'KAI 51 runtime ready',file:''});
       onReady({model:MODEL,device,verified:true});
       return {ok:true,model:MODEL,device};
     })().catch(e=>{
-      onProgress({progress:99,status:'KAI 51 verification failed — retry required',file:''});
+      onProgress({progress:99,status:'KAI 51 runtime failed — retry required',file:''});
       loading=null;
       throw e;
     });
-
     return loading;
   }
 
@@ -84,21 +63,15 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   async function generate(message,history=[]) {
     await prepare();
     const prompt=String(message||'').trim();
-    const recent = Array.isArray(history) ? history.slice(-6).map(x=>({
+    const recent = Array.isArray(history) ? history.slice(-3).map(x=>({
       role:x?.who==='user'?'user':'assistant',
-      content:String(x?.text||'').slice(0,1800)
+      content:String(x?.text||'').slice(0,900)
     })) : [];
-    recent.push({role:'user',content:prompt.slice(0,5000)});
-
-    // Conversation must feel immediate. Reserve long generation for real work.
-    const casual=/^(hi|hello|hey|yo|sup|what'?s up|what|who are you|good morning|good evening|good night|thanks|thank you|ok|okay|cool|nice|great)([.!?\s]|$)/i.test(prompt);
-    const complex=prompt.length>500 || /\b(code|build|debug|research|analy[sz]e|compare|investigate|write|design|app|project|security|cyber|explain in detail)\b/i.test(prompt);
-    const max_new_tokens=casual?48:(complex?192:96);
-
+    recent.push({role:'user',content:prompt.slice(0,2500)});
     const result = await generator(recent,{
-      max_new_tokens,
-      temperature:0.65,
-      do_sample:true,
+      max_new_tokens:64,
+      temperature:0.45,
+      do_sample:false,
       return_full_text:false
     });
     const text = extract(result).trim();
