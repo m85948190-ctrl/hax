@@ -13,11 +13,22 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   async function prepare() {
     if (generator) return {ok:true,model:MODEL,device};
     if (loading) return loading;
+
     loading = (async()=>{
-      progress(3,'loading browser ML runtime');
+      progress(3,'restoring KAI 51 local runtime');
       const {pipeline,env} = await import(CDN);
+
+      // Browser Cache is the persistent model store. Keep it enabled so a
+      // previously downloaded model is reused instead of fetched again.
       env.allowLocalModels = false;
       env.allowRemoteModels = true;
+      env.useBrowserCache = true;
+      env.cacheKey = 'haxbro-kai51-v1';
+
+      try {
+        if (navigator.storage?.persist) await navigator.storage.persist();
+      } catch {}
+
       let useWebGPU = !!navigator.gpu;
       if (useWebGPU) {
         try {
@@ -25,35 +36,35 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
           useWebGPU = !!adapter;
         } catch { useWebGPU = false; }
       }
+
       device = useWebGPU ? 'webgpu' : 'wasm';
-      progress(8,device==='webgpu'?'initializing WebGPU local inference':'initializing WASM local inference');
+      progress(8,device==='webgpu'?'restoring KAI 51 on WebGPU':'restoring KAI 51 on WASM');
+
       const options = {
         device,
         dtype: device==='webgpu' ? 'q4f16' : 'q4',
         progress_callback: p => {
           const loaded = Number(p?.progress);
-          if (Number.isFinite(loaded)) progress(10 + loaded*0.88,'loading KAI 51 model');
+          if (Number.isFinite(loaded)) progress(10 + loaded*0.88,'loading/restoring KAI 51 model');
         }
       };
+
       generator = await pipeline('text-generation',MODEL,options);
-      // 99% means the model files are present; the final 1% is the real
-      // inference self-test. Keep this phase monotonic so a failed test does
-      // not look like a download restarting from zero.
-      progress(99,'verifying local KAI 51 generation');
+
+      progress(99,'verifying KAI 51 local intelligence');
       const test = await generator('KAI 51 READY',{max_new_tokens:8});
       const text = extract(test).trim();
       if (!text) throw new Error('Local model self-test returned no text');
-      onProgress({progress:100,status:'KAI 51 local runtime ready',file:''});
+
+      onProgress({progress:100,status:'KAI 51 installed and verified',file:''});
       onReady({model:MODEL,device,verified:true});
       return {ok:true,model:MODEL,device};
     })().catch(e=>{
-      // Do not emit 0% on failure. A 0% reset was the visual cause of the
-      // 98% → 0% → 98% loop. Leave the UI at the last completed phase and
-      // require an explicit retry instead of silently restarting.
       onProgress({progress:99,status:'KAI 51 verification failed — retry required',file:''});
       loading=null;
       throw e;
     });
+
     return loading;
   }
 
