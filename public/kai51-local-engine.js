@@ -3,7 +3,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   // GitHub release provenance: m85948190-ctrl/haxbro · kai51-model-latest.
   // Browser transport uses the public CORS-enabled upstream ONNX CDN for the same
   // 360M model because GitHub release assets are currently rate-limited for bulk reads.
-  const MODEL='HuggingFaceTB/SmolLM2-360M-Instruct';
+  const MODEL='onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
@@ -58,55 +58,16 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       // Transformers.js still needs a model id for architecture/config resolution,
       // but every model asset request is rewritten to HAxBRO's same-origin proxy.
       // This keeps the authoritative bytes on the GitHub release behind /api/kai-model.
-      /* Point Transformers.js directly at the HAxBRO model proxy. This avoids relying on
-         service-worker/XHR interception, including model loads performed in workers. */
-      env.remoteHost=location.origin+'/';
-      env.remotePathTemplate='api/kai-model?file=';
-      const nativeFetch=globalThis.fetch.bind(globalThis);
-      /* Transformers.js 3.x can bypass env.fetch for some tokenizer/model loads. Install a
-         narrow global fetch shim so every Hugging Face-style asset URL is forced through
-         the same-origin HAxBRO model proxy. This fixes the exact unresolved-path failure
-         seen in browser verification without changing the neural weights. */
-      const routeModelUrl=url=>{
-        try{
-          const source=new URL(String(url),location.href);
-          const prefix='/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/main/';
-          if(source.origin===location.origin&&source.pathname.startsWith(prefix)){
-            const file=decodeURIComponent(source.pathname.slice(prefix.length));
-            const target=new URL(MODEL_PROXY,location.origin);
-            target.searchParams.set('file',file.split('/').pop()||file);
-            return target.toString();
-          }
-        }catch{}
-        return null;
-      };
-      if(!globalThis.__haxbroKai51FetchPatched){
-        const originalFetch=globalThis.fetch.bind(globalThis);
-        globalThis.fetch=(url,options)=>originalFetch(routeModelUrl(url)||url,options);
-        try{
-          const xhrOpen=XMLHttpRequest.prototype.open;
-          XMLHttpRequest.prototype.open=function(method,url,...rest){
-            const routed=routeModelUrl(url);
-            return xhrOpen.call(this,method,routed||url,...rest);
-          };
-        }catch{}
-        globalThis.__haxbroKai51FetchPatched=true;
-      }
-      env.fetch=async (url,options={})=>{
-        const source=new URL(String(url),location.href);
-        const isModelAsset=source.origin===location.origin && !source.pathname.startsWith('/api/');
-        if(isModelAsset){
-          const file=decodeURIComponent(source.pathname.split('/').filter(Boolean).pop()||'');
-          if(file){
-            const target=new URL(MODEL_PROXY,location.origin);
-            target.searchParams.set('file',file);
-            return nativeFetch(target.toString(),options);
-          }
-        }
-        return nativeFetch(url,options);
-      };
+      /* The GitHub copy remains the pinned HAxBRO release/provenance artifact, but
+         browser inference must not consume the Hatchable Free-plan bandwidth budget.
+         The release was built from this browser-ready Transformers.js package, so load
+         the same SmolLM2-360M-Instruct Q4 neural weights directly from Hugging Face. */
+      env.allowLocalModels=false;
+      env.allowRemoteModels=true;
+      env.remoteHost='https://huggingface.co/';
+      env.remotePathTemplate='{model}/resolve/{revision}/{file}';
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-q4-github-proxy';
+      env.cacheKey='haxbro-kai51-smollm2-360m-instruct-q4-browser';
 
       await resolveRuntime();
       await loadTrainingPack();
