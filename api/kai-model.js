@@ -39,10 +39,39 @@ export default async function(req,res){
   const range=req.headers?.range||req.headers?.Range;
   if(range)headers.Range=range;
 
-  const upstream=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/assets/'+assetId,{
-    headers,
-    redirect:'follow'
-  });
+  const assetUrl='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/assets/'+assetId;
+  /* GitHub's asset API can return a gateway failure when a browser asks the proxy
+     for the entire 386 MB ONNX object in one upstream fetch. Range requests work,
+     so for an un-ranged model request we assemble the same bytes in server-side
+     chunks and stream them to the browser. */
+  const isLargeModel=name==='model_q4.onnx'||name==='model_q4f16.onnx';
+  const knownSize=name==='model_q4.onnx'?386495938:name==='model_q4f16.onnx'?272000000:null;
+  if(isLargeModel && !range){
+    const total=knownSize;
+    if(req.method==='HEAD'){
+      res.setHeader('Content-Type','application/octet-stream');
+      res.setHeader('Content-Length',String(total));
+      res.setHeader('Accept-Ranges','bytes');
+      res.setHeader('Cache-Control','public,max-age=31536000,immutable');
+      return res.status(200).send('');
+    }
+    res.setHeader('Content-Type','application/octet-stream');
+    res.setHeader('Content-Length',String(total));
+    res.setHeader('Accept-Ranges','bytes');
+    res.setHeader('Cache-Control','public,max-age=31536000,immutable');
+    const CHUNK=8*1024*1024;
+    res.status(200);
+    for(let start=0;start<total;start+=CHUNK){
+      const end=Math.min(total-1,start+CHUNK-1);
+      const part=await fetch(assetUrl,{headers:{...headers,Range:'bytes='+start+'-'+end},redirect:'follow'});
+      if(!part.ok){try{res.end()}catch{};return;}
+      const buf=Buffer.from(await part.arrayBuffer());
+      res.write(buf);
+    }
+    return res.end();
+  }
+
+  const upstream=await fetch(assetUrl,{headers,redirect:'follow'});
   if(!upstream.ok)return res.status(upstream.status).send('KAI 51 model asset fetch failed: '+name);
 
   res.setHeader('Content-Type',upstream.headers.get('content-type')||'application/octet-stream');
