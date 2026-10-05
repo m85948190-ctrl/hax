@@ -234,7 +234,8 @@ if(input)input.value='';resize();try{if(!overdrive){
          - bootstrap.generate() is allowed to await the final engine promise, eliminating
            the tiny ready-event race that previously sent a turn back to KAI Lite. */
       const kai51Verified=bootstrapState.status==='ready' || bootstrapState.verified===true || !!bootstrapState.runtimeReady;
-      if(kai51Verified&&!opts.fromChoice&&window.HAxBROKai51Bootstrap?.generate){
+      /* Once KAI 51 is verified, it owns every subsequent normal turn, including turns launched from UI choice flows. */
+      if(kai51Verified&&window.HAxBROKai51Bootstrap?.generate){
         setBusy(true,'heavy');
         try{
           const local=await window.HAxBROKai51Bootstrap.generate(

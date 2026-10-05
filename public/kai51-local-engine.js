@@ -80,11 +80,27 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       await resolveRuntime();
       await loadTrainingPack();
       progress(15,'Loading the real KAI 51 360M Q4 neural model');
-      pipe=await pipeline('text-generation',MODEL,{
-        dtype:DTYPE,
-        device:DEVICE,
-        model_file_name:'model'
-      });
+      /* Real-model handoff rule: prefer GPU, but NEVER let an unsupported WebGPU
+         operator/device kill KAI 51. Retry the exact same neural weights on the
+         fully-supported WASM CPU backend before declaring the model unavailable. */
+      try{
+        pipe=await pipeline('text-generation',MODEL,{
+          dtype:DTYPE,
+          device:DEVICE,
+          model_file_name:'model'
+        });
+      }catch(gpuError){
+        if(DEVICE!=='webgpu') throw gpuError;
+        console.warn('KAI 51 WebGPU initialization failed; retrying the same real model on WASM',gpuError);
+        pipe=null;
+        DEVICE='wasm';
+        progress(35,'KAI 51 GPU path unavailable · switching to local CPU runtime');
+        pipe=await pipeline('text-generation',MODEL,{
+          dtype:'q4',
+          device:'wasm',
+          model_file_name:'model'
+        });
+      }
 
       progress(95,'Running KAI 51 neural self-test');
       const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{
