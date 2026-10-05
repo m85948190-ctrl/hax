@@ -61,5 +61,21 @@ export default async function(req,res){
     if(v)res.setHeader(h==='content-length'?'Content-Length':h==='content-range'?'Content-Range':'ETag',v);
   }
   if(req.method==='HEAD')return res.status(upstream.status).send('');
+  // Stream large ONNX assets instead of buffering hundreds of MB in one isolate.
+  // The browser needs the GitHub release bytes intact and supports ranged requests.
+  if(upstream.body && typeof res.write==='function' && typeof res.end==='function'){
+    res.status(upstream.status);
+    const reader=upstream.body.getReader();
+    try{
+      while(true){
+        const part=await reader.read();
+        if(part.done)break;
+        if(part.value?.length)res.write(Buffer.from(part.value));
+      }
+    }finally{
+      try{reader.releaseLock()}catch{}
+    }
+    return res.end();
+  }
   return res.status(upstream.status).send(Buffer.from(await upstream.arrayBuffer()));
 }
