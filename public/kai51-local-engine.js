@@ -6,10 +6,11 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL='HuggingFaceTB/SmolLM2-360M-Instruct';
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
-  const VERSION='kai51-real-model-v13-q4-github-proxy';
+  const TRAINING_SYNC='/api/kai-training-sync';
+  const VERSION='kai51-real-model-v14-hatchable-training-sync';
   let DEVICE='wasm';
   let DTYPE='q4';
-  let pipe=null, loading=null, generationChain=Promise.resolve();
+  let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
 
   async function resolveRuntime(){
     try{
@@ -24,6 +25,26 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   }
 
   const progress=(progress,status)=>onProgress({profile:'heavy',progress,status,file:''});
+
+  async function loadTrainingPack(){
+    if(trainingPack) return trainingPack;
+    if(trainingPromise) return trainingPromise;
+    trainingPromise=(async()=>{
+      try{
+        const r=await fetch(TRAINING_SYNC,{headers:{Accept:'application/json'},cache:'no-store'});
+        if(!r.ok) throw new Error('training sync HTTP '+r.status);
+        const d=await r.json();
+        if(!d?.ok||!d?.canonical) throw new Error('invalid Hatchable training pack');
+        trainingPack=d;
+        try{localStorage.setItem('haxbro:kai51:training-pack',JSON.stringify({savedAt:Date.now(),pack:d}));}catch{}
+        return d;
+      }catch(e){
+        try{const cached=JSON.parse(localStorage.getItem('haxbro:kai51:training-pack')||'null'); if(cached?.pack) return trainingPack=cached.pack;}catch{}
+        return trainingPack={ok:true,canonical:true,source:'HATCHABLE',rules:[] ,examples:[]};
+      }finally{trainingPromise=null;}
+    })();
+    return trainingPromise;
+  }
 
   async function prepare(){
     if(pipe) return {ok:true,model:MODEL,device:DEVICE,realModel:true};
@@ -57,7 +78,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-q4-github-proxy';
 
       await resolveRuntime();
-      progress(15,'Loading the real KAI 51 360M Q4F16 neural model');
+      await loadTrainingPack();
+      progress(15,'Loading the real KAI 51 360M Q4 neural model');
       pipe=await pipeline('text-generation',MODEL,{
         dtype:DTYPE,
         device:DEVICE,
@@ -108,7 +130,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
     const context=(history||[]).slice(-6)
       .map(x=>String(x?.role||'user').toUpperCase()+': '+String(x?.content||x?.text||''))
       .join('\n');
-    const full=(context?context+'\n':'')+'USER: '+prompt+'\nASSISTANT:';
+    const rules=(trainingPack?.rules||[]).filter(x=>x&&x.rule).slice(0,40).map(x=>'- '+x.rule).join('\n');
+    const examples=(trainingPack?.examples||[]).slice(0,6).map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||'')).join('\n');
+    const conditioning=[rules?'HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'HATCHABLE KAI 51 TRAINING EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
+    const full=(conditioning?conditioning+'\n\n':'')+(context?context+'\n':'')+'USER: '+prompt+'\nASSISTANT:';
 
     const job=generationChain.then(async()=>{
       try{
@@ -156,7 +181,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       realModel:true,
       externalChatProviders:false,
       cache:VERSION,
-      quantization:'q4f16',
+      quantization:'q4',
+      trainingSource:'HATCHABLE',
+      trainingVersion:trainingPack?.pack?.version||trainingPack?.pack?.version||null,
+      trainingChecksum:trainingPack?.pack?.checksum||null,
       provenance:'GitHub release kai51-model-latest'
     })
   };
