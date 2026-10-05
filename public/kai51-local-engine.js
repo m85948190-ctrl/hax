@@ -43,8 +43,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       pipe=await pipeline('text-generation',MODEL,{
         dtype:DTYPE,
         device:DEVICE,
-        // The GitHub release asset is model_q4.onnx (not the upstream generic name).
-        model_file_name:DEVICE==='webgpu'?'model_q4f16':'model_q4'
+        // Let Transformers.js derive the quantized filename from dtype: q4 -> model_q4.onnx,
+        // q4f16 -> model_q4f16.onnx. Supplying model_q4 here would double the suffix.
+        model_file_name:'model'
       });
       progress(95,'Running KAI 51 neural self-test');
       const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{max_new_tokens:DEVICE==='webgpu'?64:8,do_sample:false,return_full_text:false});

@@ -99,7 +99,7 @@
     return {
       ...state,
       ready: state.status === 'ready',
-      runtimeReady: !!window.HAxBROKai51Engine?.generate,
+      runtimeReady: !!(window.HAxBROKai51Engine && typeof window.HAxBROKai51Engine.isReady==='function' && window.HAxBROKai51Engine.isReady()),
       local:true,
       externalChatProviders:false,
       model:state.model||MODEL,
