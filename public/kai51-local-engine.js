@@ -3,11 +3,12 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   // GitHub release provenance: m85948190-ctrl/haxbro · kai51-model-latest.
   // Browser transport uses the public CORS-enabled upstream ONNX CDN for the same
   // 360M model because GitHub release assets are currently rate-limited for bulk reads.
-  const MODEL='onnx-community/SmolLM2-360M-Instruct-ONNX';
+  const MODEL='HuggingFaceTB/SmolLM2-360M-Instruct';
   const MODEL_RELEASE='kai51-model-latest';
-  const VERSION='kai51-real-model-v12-360m-q4f16-github-provenance';
+  const MODEL_PROXY='/api/kai-model';
+  const VERSION='kai51-real-model-v13-q4-github-proxy';
   let DEVICE='wasm';
-  let DTYPE='q4f16';
+  let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve();
 
   async function resolveRuntime(){
@@ -17,7 +18,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
           navigator.gpu.requestAdapter(),
           new Promise(resolve=>setTimeout(()=>resolve(null),1200))
         ]);
-        if(adapter){DEVICE='webgpu';DTYPE='q4f16';}
+        if(adapter){DEVICE='webgpu';DTYPE='q4';}
       }
     }catch{}
   }
@@ -33,10 +34,27 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       const {env,pipeline}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
+      // Transformers.js still needs a model id for architecture/config resolution,
+      // but every model asset request is rewritten to HAxBRO's same-origin proxy.
+      // This keeps the authoritative bytes on the GitHub release behind /api/kai-model.
       env.remoteHost='https://huggingface.co/';
       env.remotePathTemplate='{model}/resolve/main/';
+      const nativeFetch=globalThis.fetch.bind(globalThis);
+      env.fetch=async (url,options={})=>{
+        const source=new URL(String(url),location.href);
+        const isModelAsset=source.hostname==='huggingface.co' || source.hostname.endsWith('.huggingface.co');
+        if(isModelAsset){
+          const file=decodeURIComponent(source.pathname.split('/').filter(Boolean).pop()||'');
+          if(file){
+            const target=new URL(MODEL_PROXY,location.origin);
+            target.searchParams.set('file',file);
+            return nativeFetch(target.toString(),options);
+          }
+        }
+        return nativeFetch(url,options);
+      };
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-360m-q4f16';
+      env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-q4-github-proxy';
 
       await resolveRuntime();
       progress(15,'Loading the real KAI 51 360M Q4F16 neural model');
@@ -63,7 +81,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         realModel:true,
         localModel:true,
         provenance:'GitHub release kai51-model-latest',
-        quantization:'q4f16'
+        quantization:'q4'
       });
       return {ok:true,model:MODEL,device:DEVICE,realModel:true,localModel:true};
     })().catch(e=>{

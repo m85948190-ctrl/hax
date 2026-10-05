@@ -1,7 +1,7 @@
 (() => {
-  const VERSION = 'kai51-local-controller-v10-github-transport';
-  const KEY = 'haxbro:kai51:installation:v13-github-360m';
-  const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
+  const VERSION = 'kai51-local-controller-v11-github-q4';
+  const KEY = 'haxbro:kai51:installation:v14-github-q4';
+  const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
 
   const defaultState = () => ({

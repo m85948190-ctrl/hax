@@ -68,6 +68,7 @@ async function modelResponse(request){
   if(info.partial)headers.set('Content-Range','bytes '+start+'-'+end+'/'+total);
   return new Response(bytes,{status:info.partial?206:200,headers});
 }
-self.addEventListener('fetch',event=>{
-  if(isModel(new URL(event.request.url)))event.respondWith(modelResponse(event.request).catch(()=>new Response('KAI 51 model transport failed',{status:502})));
-});
+// KAI 51 model transport is now handled directly by /api/kai-model and
+// Transformers.js browser caching. Do not assemble the 386 MB model in a
+// service-worker Response: that creates an avoidable large transient memory peak.
+self.addEventListener('fetch',()=>{});

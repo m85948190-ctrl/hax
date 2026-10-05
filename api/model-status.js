@@ -10,9 +10,10 @@ function cors(res){
 export default async function(req,res){
   cors(res);
   if(req.method==='OPTIONS')return res.status(204).send('');
-  // Report the provider surface without exposing raw provider credentials.
-  const configured={openrouter:true,groq:true,mistral:true,cerebras:true,google:true,openai:true};
-  const live={auto:true,...configured,kai51:true,kai89:true};
+  // Truthful native-only status: provider adapters may exist in legacy code,
+  // but they are not active inference paths while KAI_NATIVE_ONLY is enabled.
+  const configured={openrouter:false,groq:false,mistral:false,cerebras:false,google:false,openai:false};
+  const live={auto:false,...configured,kai51:true,kai89:false,kaiLite:true};
   res.setHeader('cache-control','no-store');
   return res.json({live,configured:{...live}});
 }

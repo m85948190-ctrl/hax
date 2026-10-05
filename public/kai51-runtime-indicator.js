@@ -5,7 +5,7 @@
   function mount(){
     if(el)return el;
     el=document.createElement('div');el.id=id;el.setAttribute('aria-live','polite');
-    el.innerHTML='<span class="hook-lock">🔒</span><span class="hook-dot"></span><span class="hook-name">KAI 51</span><span class="hook-pct">0%</span><span class="hook-lite">· KAI Lite active</span>';
+    el.innerHTML='<span class="hook-lock">🔒</span><span class="hook-dot"></span><span class="hook-name">KAI 51</span><span class="hook-pct">0%</span><span class="hook-lite">· MODEL LOADING</span>';
     document.body.appendChild(el);return el;
   }
   function render(d={}){
@@ -15,7 +15,7 @@
     const pct=clamp(d.progress??(state.status==='installing'?5:0));
     const p=x.querySelector('.hook-pct');if(p)p.textContent=pct+'%';
     const lite=x.querySelector('.hook-lite');
-    if(lite)lite.textContent=pct<100?'· KAI Lite active':'· KAI 51 starting';
+    if(lite)lite.textContent=state.status==='error'?'· MODEL ERROR':(pct<100?'· MODEL LOADING':'· KAI 51 STARTING');
   }
   window.addEventListener('haxbro:kai-local-progress',e=>render(e.detail||{}));
   window.addEventListener('haxbro:kai51-bootstrap',e=>render(e.detail||{}));
