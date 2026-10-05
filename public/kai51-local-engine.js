@@ -60,8 +60,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       // This keeps the authoritative bytes on the GitHub release behind /api/kai-model.
       /* Point Transformers.js directly at the HAxBRO model proxy. This avoids relying on
          service-worker/XHR interception, including model loads performed in workers. */
-      env.remoteHost=location.origin+'/api/kai-model?';
-      env.remotePathTemplate='file={file}';
+      env.remoteHost=location.origin+'/';
+      env.remotePathTemplate='api/kai-model?file={file}';
       const nativeFetch=globalThis.fetch.bind(globalThis);
       /* Transformers.js 3.x can bypass env.fetch for some tokenizer/model loads. Install a
          narrow global fetch shim so every Hugging Face-style asset URL is forced through
