@@ -5,9 +5,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   // 360M model because GitHub release assets are currently rate-limited for bulk reads.
   const MODEL='onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE='kai51-model-latest';
-  const VERSION='kai51-real-model-v11-360m-q4-github-provenance';
+  const VERSION='kai51-real-model-v12-360m-q4f16-github-provenance';
   let DEVICE='wasm';
-  let DTYPE='q4';
+  let DTYPE='q4f16';
   let pipe=null, loading=null, generationChain=Promise.resolve();
 
   async function resolveRuntime(){
@@ -36,10 +36,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.remoteHost='https://huggingface.co/';
       env.remotePathTemplate='{model}/resolve/main/';
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-360m-q4';
+      env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-360m-q4f16';
 
       await resolveRuntime();
-      progress(15,'Loading the real KAI 51 360M neural model');
+      progress(15,'Loading the real KAI 51 360M Q4F16 neural model');
       pipe=await pipeline('text-generation',MODEL,{
         dtype:DTYPE,
         device:DEVICE,
@@ -62,7 +62,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         verified:true,
         realModel:true,
         localModel:true,
-        provenance:'GitHub release kai51-model-latest'
+        provenance:'GitHub release kai51-model-latest',
+        quantization:'q4f16'
       });
       return {ok:true,model:MODEL,device:DEVICE,realModel:true,localModel:true};
     })().catch(e=>{
@@ -118,6 +119,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       localModel:true,
       device:DEVICE,
       realModel:true,
+      quantization:'q4f16',
       provenance:'GitHub release kai51-model-latest'
     };
   }
@@ -136,6 +138,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       realModel:true,
       externalChatProviders:false,
       cache:VERSION,
+      quantization:'q4f16',
       provenance:'GitHub release kai51-model-latest'
     })
   };
