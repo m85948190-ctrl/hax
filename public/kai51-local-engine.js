@@ -58,8 +58,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       // Transformers.js still needs a model id for architecture/config resolution,
       // but every model asset request is rewritten to HAxBRO's same-origin proxy.
       // This keeps the authoritative bytes on the GitHub release behind /api/kai-model.
-      env.remoteHost=location.origin+'/';
-      env.remotePathTemplate='{model}/resolve/main/';
+      /* Point Transformers.js directly at the HAxBRO model proxy. This avoids relying on
+         service-worker/XHR interception, including model loads performed in workers. */
+      env.remoteHost=location.origin+'/api/kai-model?';
+      env.remotePathTemplate='file={file}';
       const nativeFetch=globalThis.fetch.bind(globalThis);
       /* Transformers.js 3.x can bypass env.fetch for some tokenizer/model loads. Install a
          narrow global fetch shim so every Hugging Face-style asset URL is forced through
