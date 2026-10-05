@@ -61,6 +61,28 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.remoteHost=location.origin+'/';
       env.remotePathTemplate='{model}/resolve/main/';
       const nativeFetch=globalThis.fetch.bind(globalThis);
+      /* Transformers.js 3.x can bypass env.fetch for some tokenizer/model loads. Install a
+         narrow global fetch shim so every Hugging Face-style asset URL is forced through
+         the same-origin HAxBRO model proxy. This fixes the exact unresolved-path failure
+         seen in browser verification without changing the neural weights. */
+      const routeModelUrl=url=>{
+        try{
+          const source=new URL(String(url),location.href);
+          const prefix='/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/main/';
+          if(source.origin===location.origin&&source.pathname.startsWith(prefix)){
+            const file=decodeURIComponent(source.pathname.slice(prefix.length));
+            const target=new URL(MODEL_PROXY,location.origin);
+            target.searchParams.set('file',file.split('/').pop()||file);
+            return target.toString();
+          }
+        }catch{}
+        return null;
+      };
+      if(!globalThis.__haxbroKai51FetchPatched){
+        const originalFetch=globalThis.fetch.bind(globalThis);
+        globalThis.fetch=(url,options)=>originalFetch(routeModelUrl(url)||url,options);
+        globalThis.__haxbroKai51FetchPatched=true;
+      }
       env.fetch=async (url,options={})=>{
         const source=new URL(String(url),location.href);
         const isModelAsset=source.origin===location.origin && !source.pathname.startsWith('/api/');
