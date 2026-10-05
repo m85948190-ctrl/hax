@@ -81,6 +81,13 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       if(!globalThis.__haxbroKai51FetchPatched){
         const originalFetch=globalThis.fetch.bind(globalThis);
         globalThis.fetch=(url,options)=>originalFetch(routeModelUrl(url)||url,options);
+        try{
+          const xhrOpen=XMLHttpRequest.prototype.open;
+          XMLHttpRequest.prototype.open=function(method,url,...rest){
+            const routed=routeModelUrl(url);
+            return xhrOpen.call(this,method,routed||url,...rest);
+          };
+        }catch{}
         globalThis.__haxbroKai51FetchPatched=true;
       }
       env.fetch=async (url,options={})=>{
