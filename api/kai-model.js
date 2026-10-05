@@ -39,7 +39,7 @@ export default async function(req,res){
   const range=req.headers?.range||req.headers?.Range;
   if(range)headers.Range=range;
 
-  const assetUrl='https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/assets/'+assetId;
+  const assetUrl='https://github.com/'+OWNER+'/'+REPO+'/releases/download/'+TAG+'/'+encodeURIComponent(name);
   /* GitHub's asset API can return a gateway failure when a browser asks the proxy
      for the entire 386 MB ONNX object in one upstream fetch. Range requests work,
      so for an un-ranged model request we assemble the same bytes in server-side
