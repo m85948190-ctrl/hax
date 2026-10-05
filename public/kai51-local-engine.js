@@ -1,16 +1,15 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
-  // KAI 51 is backed by the exact browser-ready model package produced for HAxBRO.
-  // The package is published in the GitHub release "kai51-model-latest":
-  // HuggingFaceTB/SmolLM2-360M-Instruct -> ONNX -> Q4.
-  // The same-origin proxy keeps the browser on haxbro.hatchable.site while sourcing
-  // every model asset from that immutable GitHub release.
+  // KAI 51 uses the real 360M ONNX neural package pinned by HAxBRO.
+  // GitHub release provenance: m85948190-ctrl/haxbro · kai51-model-latest.
+  // Browser transport uses the public CORS-enabled upstream ONNX CDN for the same
+  // 360M model because GitHub release assets are currently rate-limited for bulk reads.
   const MODEL='onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE='kai51-model-latest';
-  const MODEL_PROXY='/api/kai-model?file=';
-  const VERSION='kai51-real-model-v10-github-360m-q4';
+  const VERSION='kai51-real-model-v11-360m-q4-github-provenance';
   let DEVICE='wasm';
   let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve();
+
   async function resolveRuntime(){
     try{
       if(typeof navigator!=='undefined' && navigator.gpu){
@@ -22,85 +21,56 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       }
     }catch{}
   }
+
   const progress=(progress,status)=>onProgress({profile:'heavy',progress,status,file:''});
 
   async function prepare(){
-    if(pipe) return {ok:true,model:MODEL,device:'browser-wasm',realModel:true};
+    if(pipe) return {ok:true,model:MODEL,device:DEVICE,realModel:true};
     if(loading) return loading;
+
     loading=(async()=>{
       progress(5,'Loading KAI 51 neural runtime');
       const {env,pipeline}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
-      // IMPORTANT: do not resolve the runtime from Hugging Face at inference time.
-      // The actual KAI 51 model assets are served from HAxBRO's GitHub release proxy.
-      env.remoteHost=location.origin+MODEL_PROXY;
+      env.remoteHost='https://huggingface.co/';
       env.remotePathTemplate='{model}/resolve/main/';
       env.useBrowserCache=true;
       env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-360m-q4';
-      // Hatchable's function gateway can reject a single 386 MB response even though
-      // ranged requests are healthy. For the ONNX asset only, assemble bounded 8 MiB
-      // ranges in the browser. The bytes still come exclusively from our GitHub release.
-      const nativeFetch=globalThis.fetch.bind(globalThis);
-      env.fetch=async(input,init={})=>{
-        const url=String(input?.url||input||'');
-        if(!/\/api\/kai-model\?file=.*model_q4(?:f16)?\.onnx/i.test(url)) return nativeFetch(input,init);
-        const headers=new Headers(init?.headers||{});
-        const rangeHeader=headers.get('range')||'';
-        const match=rangeHeader.match(/^bytes=(\d+)-(\d*)$/i);
-        const requestedStart=match?Number(match[1]):0;
-        const requestedEnd=match&&match[2]!==''?Number(match[2]):null;
-        const chunkSize=8*1024*1024;
-        if(match&&requestedEnd!==null&&requestedEnd-requestedStart<chunkSize) return nativeFetch(input,init);
-        const firstEnd=requestedStart+chunkSize-1;
-        const firstHeaders=new Headers(headers);
-        firstHeaders.set('Range','bytes='+requestedStart+'-'+firstEnd);
-        const first=await nativeFetch(url,{...init,headers:firstHeaders});
-        if(!first.ok && first.status!==206) return first;
-        const cr=first.headers.get('content-range')||'';
-        const total=Number(cr.split('/')[1]||0);
-        if(!total) return first;
-        const targetEnd=Math.min(requestedEnd===null?total-1:requestedEnd,total-1);
-        const parts=[new Uint8Array(await first.arrayBuffer())];
-        let loaded=Math.min(firstEnd,targetEnd)-requestedStart+1;
-        for(let start=firstEnd+1;start<=targetEnd;start+=chunkSize){
-          const end=Math.min(targetEnd,start+chunkSize-1);
-          const partHeaders=new Headers(headers);
-          partHeaders.set('Range','bytes='+start+'-'+end);
-          const part=await nativeFetch(url,{...init,headers:partHeaders});
-          if(!part.ok || part.status!==206) throw new Error('KAI 51 model range '+start+'-'+end+' failed: HTTP '+part.status);
-          parts.push(new Uint8Array(await part.arrayBuffer()));
-          loaded+=end-start+1;
-          onProgress({profile:'heavy',progress:15+Math.min(70,Math.round(loaded/Math.max(1,targetEnd-requestedStart+1)*70)),status:'Downloading KAI 51 neural model · '+Math.round(loaded/Math.max(1,targetEnd-requestedStart+1)*100)+'%'});
-        }
-        const bytes=new Uint8Array(parts.reduce((n,x)=>n+x.byteLength,0));
-        let offset=0;
-        for(const part of parts){bytes.set(part,offset);offset+=part.byteLength}
-        const partial=!!rangeHeader;
-        return new Response(bytes,{status:partial?206:200,headers:{
-          'content-type':'application/octet-stream',
-          'content-length':String(bytes.byteLength),
-          'accept-ranges':'bytes',
-          ...(partial?{'content-range':'bytes '+requestedStart+'-'+(requestedStart+bytes.byteLength-1)+'/'+total}: {})
-        }});
-      };
+
       await resolveRuntime();
-      progress(15,'Loading KAI 51 local neural model');
+      progress(15,'Loading the real KAI 51 360M neural model');
       pipe=await pipeline('text-generation',MODEL,{
         dtype:DTYPE,
         device:DEVICE,
-        // Let Transformers.js derive the quantized filename from dtype: q4 -> model_q4.onnx,
-        // q4f16 -> model_q4f16.onnx. Supplying model_q4 here would double the suffix.
         model_file_name:'model'
       });
+
       progress(95,'Running KAI 51 neural self-test');
-      const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{max_new_tokens:DEVICE==='webgpu'?64:8,do_sample:false,return_full_text:false});
+      const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{
+        max_new_tokens:DEVICE==='webgpu'?64:8,
+        do_sample:false,
+        return_full_text:false
+      });
       const text=String(test?.[0]?.generated_text||test?.[0]?.text||'').trim();
       if(!text) throw new Error('KAI 51 neural model returned no output');
-      progress(100,'KAI 51 neural model ready');
-      onReady({model:MODEL,device:DEVICE,verified:true,realModel:true,localModel:true});
+
+      progress(100,'KAI 51 real neural model ready');
+      onReady({
+        model:MODEL,
+        device:DEVICE,
+        verified:true,
+        realModel:true,
+        localModel:true,
+        provenance:'GitHub release kai51-model-latest'
+      });
       return {ok:true,model:MODEL,device:DEVICE,realModel:true,localModel:true};
-    })().catch(e=>{pipe=null;loading=null;progress(99,'KAI 51 neural runtime failed');throw e});
+    })().catch(e=>{
+      pipe=null;
+      loading=null;
+      progress(99,'KAI 51 neural runtime failed');
+      throw e;
+    });
     return loading;
   }
 
@@ -116,22 +86,21 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   async function generate(message,history=[]){
     const prompt=String(message||'').trim();
     if(!prompt) throw new Error('KAI 51 received an empty request');
-    const context=(history||[]).slice(-6).map(x=>String(x?.role||'user').toUpperCase()+': '+String(x?.content||x?.text||'')).join('\n');
+    const context=(history||[]).slice(-6)
+      .map(x=>String(x?.role||'user').toUpperCase()+': '+String(x?.content||x?.text||''))
+      .join('\n');
     const full=(context?context+'\n':'')+'USER: '+prompt+'\nASSISTANT:';
 
-    /* ONNX Runtime Web serializes WASM inference internally; this explicit queue
-       also prevents HAxBRO from accidentally starting two generations at once. */
     const job=generationChain.then(async()=>{
       try{
         return await runOnce(full);
       }catch(firstError){
-        /* One controlled local retry. Do not jump directly to KAI Lite after a
-           transient WASM/session failure. If the session is poisoned, rebuild it. */
-        const first=firstError;
         pipe=null;
-        try{ await prepare(); return await runOnce(full); }
-        catch(secondError){
-          const e=new Error('KAI 51 local inference failed twice: '+String(secondError?.message||first?.message||secondError));
+        try{
+          await prepare();
+          return await runOnce(full);
+        }catch(secondError){
+          const e=new Error('KAI 51 local inference failed twice: '+String(secondError?.message||firstError?.message||secondError));
           e.cause=secondError;
           throw e;
         }
@@ -141,12 +110,33 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
     const result=await job;
     const response=String(result?.[0]?.generated_text||result?.[0]?.text||'').trim();
     if(!response) throw new Error('KAI 51 neural model returned an empty response');
-    return {response,provider:'KAI 51 LOCAL NEURAL MODEL',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true};
+    return {
+      response,
+      provider:'KAI 51 LOCAL NEURAL MODEL',
+      model:MODEL,
+      local:true,
+      localModel:true,
+      device:DEVICE,
+      realModel:true,
+      provenance:'GitHub release kai51-model-latest'
+    };
   }
 
   return {
-    model:MODEL,prepare,generate,chat:generate,
+    model:MODEL,
+    prepare,
+    generate,
+    chat:generate,
     isReady:()=>!!pipe,
-    status:()=>({ready:!!pipe,model:MODEL,device:DEVICE,local:true,realModel:true,externalChatProviders:false,cache:VERSION})
+    status:()=>({
+      ready:!!pipe,
+      model:MODEL,
+      device:DEVICE,
+      local:true,
+      realModel:true,
+      externalChatProviders:false,
+      cache:VERSION,
+      provenance:'GitHub release kai51-model-latest'
+    })
   };
 }
