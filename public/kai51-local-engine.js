@@ -37,12 +37,12 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       // Transformers.js still needs a model id for architecture/config resolution,
       // but every model asset request is rewritten to HAxBRO's same-origin proxy.
       // This keeps the authoritative bytes on the GitHub release behind /api/kai-model.
-      env.remoteHost='https://huggingface.co/';
+      env.remoteHost=location.origin+'/';
       env.remotePathTemplate='{model}/resolve/main/';
       const nativeFetch=globalThis.fetch.bind(globalThis);
       env.fetch=async (url,options={})=>{
         const source=new URL(String(url),location.href);
-        const isModelAsset=source.hostname==='huggingface.co' || source.hostname.endsWith('.huggingface.co');
+        const isModelAsset=source.origin===location.origin && !source.pathname.startsWith('/api/');
         if(isModelAsset){
           const file=decodeURIComponent(source.pathname.split('/').filter(Boolean).pop()||'');
           if(file){
@@ -137,7 +137,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       localModel:true,
       device:DEVICE,
       realModel:true,
-      quantization:'q4f16',
+      quantization:'q4',
       provenance:'GitHub release kai51-model-latest'
     };
   }
