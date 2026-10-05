@@ -1,6 +1,6 @@
 (() => {
   const VERSION = 'kai51-local-controller-v9';
-  const KEY = 'haxbro:kai51:installation:v11';
+  const KEY = 'haxbro:kai51:installation:v12-github-360m';
   const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
 
