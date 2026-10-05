@@ -1,6 +1,6 @@
 (() => {
-  const VERSION = 'kai51-local-controller-v9';
-  const KEY = 'haxbro:kai51:installation:v12-github-360m';
+  const VERSION = 'kai51-local-controller-v10-github-transport';
+  const KEY = 'haxbro:kai51:installation:v13-github-360m';
   const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
 
@@ -38,10 +38,30 @@
 
   let state = read();
   let enginePromise = null;
+  let transportPromise = null;
 
   function emit(detail) {
     window.dispatchEvent(new CustomEvent('haxbro:kai-local-progress',{detail}));
     window.dispatchEvent(new CustomEvent('haxbro:kai51-bootstrap',{detail}));
+  }
+
+  async function prepareTransport() {
+    if (transportPromise) return transportPromise;
+    transportPromise = (async()=>{
+      if (!('serviceWorker' in navigator)) return false;
+      const registration = await navigator.serviceWorker.register('/kai51-model-sw.js?v=2',{scope:'/'});
+      await navigator.serviceWorker.ready;
+      if (!navigator.serviceWorker.controller) {
+        await new Promise(resolve=>{
+          let finished=false;
+          const finish=()=>{if(finished)return;finished=true;resolve()};
+          navigator.serviceWorker.addEventListener('controllerchange',finish,{once:true});
+          setTimeout(finish,5000);
+        });
+      }
+      return !!navigator.serviceWorker.controller;
+    })().catch(()=>false);
+    return transportPromise;
   }
 
   async function loadEngine() {
@@ -50,11 +70,12 @@
 
     state = write({status:'installing',installed:state.installed,verified:false,error:null});
     emit({profile:'heavy',progress:state.installed ? 95 : 2,status:state.installed
-      ? 'KAI 51 installed · restoring local intelligence'
-      : 'KAI 51 first-time installation starting'});
+      ? 'KAI 51 installed · restoring GitHub-backed neural intelligence'
+      : 'KAI 51 GitHub-backed neural installation starting'});
 
     enginePromise = (async () => {
-      const mod = await import('/kai51-local-engine.js?v=20');
+      await prepareTransport();
+      const mod = await import('/kai51-local-engine.js?v=21');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
         onReady:info => {
@@ -69,7 +90,7 @@
       await engine.prepare();
       return engine;
     })().catch(err => {
-      state = write({status:'error',installed:state.installed,verified:false,error:safe(err?.message||err,500)});
+      state = write({status:'error',installed:state.installed,verified:false,error:safe(err?.message||err,700)});
       emit({profile:'heavy',progress:99,status:'KAI 51 verification failed — retry required',error:state.error});
       enginePromise = null;
       throw err;
@@ -80,8 +101,6 @@
 
   async function maybeInstall() {
     state = read();
-    // A READY state means the model was already downloaded and verified on this device.
-    // We still restore the runtime after a page reload, but this is NOT a new download.
     return loadEngine();
   }
 
@@ -121,11 +140,6 @@
     }
   };
 
-  // Durable browser storage is requested so the downloaded model is less likely
-  // to be evicted under storage pressure.
   try { navigator.storage?.persist?.().catch(()=>{}); } catch {}
-
-  // Restore the already-installed model runtime in the background.
-  // This does not mean "download again"; Transformers.js reuses its browser cache.
   setTimeout(()=>maybeInstall().catch(()=>{}),250);
 })();
