@@ -16,7 +16,7 @@ const ASSETS=Object.freeze({
 });
 
 function requestedName(req){
-  const raw=String(req.query?.file||'').trim();
+  const raw=String(req.query?.file||Object.entries(req.query||{}).find(([k,v])=>String(k).includes('file')||String(v).includes('.json')||String(v).includes('.onnx'))?.[1]||'').trim();
   try{return decodeURIComponent(raw).split('/').pop()}catch{return raw.split('/').pop()}
 }
 
