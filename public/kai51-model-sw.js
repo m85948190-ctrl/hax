@@ -71,4 +71,4 @@ async function modelResponse(request){
 // KAI 51 model transport is now handled directly by /api/kai-model and
 // Transformers.js browser caching. Do not assemble the 386 MB model in a
 // service-worker Response: that creates an avoidable large transient memory peak.
-self.addEventListener('fetch',()=>{});
+self.addEventListener('fetch',event=>{const url=new URL(event.request.url);const match=url.origin===self.location.origin&&url.pathname.startsWith('/HuggingFaceTB/SmolLM2-360M-Instruct/resolve/main/');if(!match)return;const file=decodeURIComponent(url.pathname.split('/').pop()||'');if(!file)return;const target=new URL('/api/kai-model',self.location.origin);target.searchParams.set('file',file);event.respondWith(fetch(new Request(target.toString(),{method:event.request.method,headers:event.request.headers,credentials:'omit',cache:'no-store'})));});

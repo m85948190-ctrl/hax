@@ -49,7 +49,7 @@
     if (transportPromise) return transportPromise;
     transportPromise = (async()=>{
       if (!('serviceWorker' in navigator)) return false;
-      const registration = await navigator.serviceWorker.register('/kai51-model-sw.js?v=2',{scope:'/'});
+      const registration = await navigator.serviceWorker.register('/kai51-model-sw.js?v=3',{scope:'/'});
       await navigator.serviceWorker.ready;
       if (!navigator.serviceWorker.controller) {
         await new Promise(resolve=>{
