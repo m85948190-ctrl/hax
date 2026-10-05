@@ -1,9 +1,13 @@
 export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
-  const MODEL='onnx-community/SmolLM2-135M-Instruct-ONNX';
-  const VERSION='kai51-real-model-v8-adaptive-local';
-  /* v2 uses the Q4 ONNX asset because the Q4F16 release asset was intermittently
-     returning 502 from the same-origin model proxy. Q4 is larger, but it is the
-     verified 386 MB asset and does not require external-data shards. */
+  // KAI 51 is backed by the exact browser-ready model package produced for HAxBRO.
+  // The package is published in the GitHub release "kai51-model-latest":
+  // HuggingFaceTB/SmolLM2-360M-Instruct -> ONNX -> Q4.
+  // The same-origin proxy keeps the browser on haxbro.hatchable.site while sourcing
+  // every model asset from that immutable GitHub release.
+  const MODEL='onnx-community/SmolLM2-360M-Instruct-ONNX';
+  const MODEL_RELEASE='kai51-model-latest';
+  const MODEL_PROXY='/api/kai-model?file=';
+  const VERSION='kai51-real-model-v10-github-360m-q4';
   let DEVICE='wasm';
   let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve();
@@ -28,16 +32,19 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       const {env,pipeline}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
-      env.remoteHost='https://huggingface.co/';
+      // IMPORTANT: do not resolve the runtime from Hugging Face at inference time.
+      // The actual KAI 51 model assets are served from HAxBRO's GitHub release proxy.
+      env.remoteHost=location.origin+MODEL_PROXY;
       env.remotePathTemplate='{model}/resolve/main/';
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-real-model-v8-adaptive-local';
+      env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-360m-q4';
       await resolveRuntime();
       progress(15,'Loading KAI 51 local neural model');
       pipe=await pipeline('text-generation',MODEL,{
         dtype:DTYPE,
         device:DEVICE,
-        model_file_name:'model'
+        // The GitHub release asset is model_q4.onnx (not the upstream generic name).
+        model_file_name:DEVICE==='webgpu'?'model_q4f16':'model_q4'
       });
       progress(95,'Running KAI 51 neural self-test');
       const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{max_new_tokens:DEVICE==='webgpu'?64:8,do_sample:false,return_full_text:false});
@@ -53,7 +60,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   async function runOnce(full){
     await prepare();
     return pipe(full,{
-      max_new_tokens:8,
+      max_new_tokens:32,
       do_sample:false,
       return_full_text:false
     });

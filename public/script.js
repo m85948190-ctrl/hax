@@ -306,22 +306,28 @@ if(input)input.value='';resize();try{if(!overdrive){
           return true;
         }
       }
-      if(!kai51Verified&&!opts.fromChoice&&window.HAxBROKaiLite?.respond){
+      if(!kai51Verified&&!opts.fromChoice&&window.HAxBROKai51Bootstrap?.generate){
+        /* The first request is allowed to wait for the real KAI 51 model to finish
+           restoring/downloading. Never answer ordinary chat with KAI Lite while the
+           independent model is merely warming up. */
         try{
-          kaiActivityStart('light');
-          kaiActivityStep('lite','KAI Lite · bridge','KAI 51 is still installing or restoring locally','','running');
-          const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
-          if(lite?.response){
-            kaiActivitySet('lite','done',(lite.sources?.length||0)+' public sources');
-            kaiActivityFinish(lite);
-            addMessage(lite.response,'bot');
+          setBusy(true,'heavy');
+          kaiActivityStart('heavy');
+          kaiActivityStep('install','KAI 51 · neural model','Restoring the GitHub-backed KAI 51 model on this device','','running');
+          const local=await window.HAxBROKai51Bootstrap.generate(value,active()?.items?.slice(-12)||[]);
+          if(local?.response){
+            kaiActivitySet('install','done','KAI 51 neural response generated locally');
+            kaiActivityFinish({sources:[],local:true,model:local.model});
+            addMessage(local.response,'bot');
             return true;
           }
-          throw new Error('KAI Lite returned no response');
+          throw new Error('KAI 51 local model returned no response');
         }catch(e){
-          kaiActivitySet('lite','error',e?.message||'web retrieval unavailable');
-          kaiActivityFinish({sources:[]});
-          console.warn('KAI Lite bridge unavailable; continuing to the KAI 51 managed lane',e);
+          kaiActivitySet('install','error',e?.message||'KAI 51 local runtime unavailable');
+          kaiActivityFinish({sources:[],local:true});
+          console.warn('KAI 51 is not ready and local generation failed; no external chat provider is permitted.',e);
+          addMessage('KAI 51 is still initializing its independent neural model. Please retry in a moment.','bot');
+          return true;
         }
       }
       setBusy(true,opts.searchMode==='quick'?'light':'heavy');
