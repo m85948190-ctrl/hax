@@ -1,4 +1,20 @@
 /* HAxBRO mobile final polish — preserves the existing sidebar and desktop layout. */
+/* Phone composer: pin it to the physical viewport edge, like a native chat app. */
+@media (max-width:700px){
+  body.hax-modern .chat-panel{position:relative!important;min-height:calc(100dvh - 54px)!important;overflow:hidden!important}
+  body.hax-modern #chatForm.composer{
+    position:fixed!important;left:6px!important;right:6px!important;
+    bottom:max(2px,env(safe-area-inset-bottom))!important;
+    width:auto!important;transform:none!important;z-index:6000!important;margin:0!important;
+  }
+  body.hax-modern .messages{padding-bottom:92px!important}
+  body.hax-modern #chatForm .input-wrap{min-width:0!important}
+}
+@media(max-width:380px){
+  body.hax-modern #chatForm.composer{left:4px!important;right:4px!important}
+  body.hax-modern .messages{padding-bottom:88px!important}
+}
+
 @media (max-width: 700px) {
   html, body { width:100%; max-width:100%; overflow-x:hidden; }
   body.hax-modern .chat-panel { min-width:0; }

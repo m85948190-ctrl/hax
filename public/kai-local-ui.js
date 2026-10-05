@@ -134,7 +134,7 @@
     state.preparing=true;state.activeProfile=profile;
     const installed=!!api.status().models?.[profile]?.installed;
     if(!installed){button('download',state.initProgress);overlay('show',state.initProgress,profile==='heavy'?'Installing KAI 51 locally…':'Installing KAI FAST locally…','download');}
-    api.prepare(profile).then(ok=>{state.preparing=false;if(ok){state.initProgress=100;state.displayProgress=100;button('ready');if(!installed)overlay('hide',100,profile==='heavy'?'KAI 51 installed and ready.':'KAI FAST installed and ready.','initializing');}else{button('error');if(!installed)overlay('show',state.initProgress,profile==='heavy'?'KAI 51 installation failed — retry to resume.':'KAI FAST installation failed — retry to resume.');}});
+    api.prepare(profile).then(ok=>{state.preparing=false;if(ok){state.initProgress=100;state.displayProgress=100;button('ready');if(!installed)overlay('hide',100,profile==='heavy'?'KAI 51 installed and ready.':'KAI FAST installed and ready.','initializing');}else{button('send');if(!installed)overlay('hide',state.initProgress,'KAI 51 continues warming in the background…','download');}});
   }
   document.addEventListener('DOMContentLoaded',()=>{
     const picker=$('modelPickerBtn'),menu=$('modelPickerMenu');
@@ -172,7 +172,7 @@
     });
     function apiStatusReady(){return !!window.HAxBROLocalKai?.status?.().ready;}
     window.addEventListener('haxbro:kai-local-ready',e=>{if(state.model==='kai'){const p=e.detail?.profile||state.activeProfile;if(p!==state.activeProfile)return;state.preparing=false;state.initProgress=100;state.displayProgress=100;state.overlayReleased=true;button('ready');if(!e.detail?.profile||!window.HAxBROLocalKai?.status?.().models?.[p]?.installed)overlay('hide',100,p==='heavy'?'KAI 51 ready':'KAI FAST ready','initializing')}});
-    window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');overlay('show',state.initProgress,(state.activeProfile==='heavy'?'KAI 51':'KAI FAST')+' local installation failed — '+(detail?detail.slice(0,180):'retry to resume.'));button('error')}});
+    window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');console.warn('KAI local model is still warming; KAI Lite remains available',detail);overlay('hide',state.initProgress,'KAI 51 continues warming in the background…','download');button('send')}});
     applyChoice(localStorage.getItem('haxbro_model_choice')||'kai');
     // Do not auto-install or re-initialize KAI on every page visit. The model is prepared on first KAI use.
     // This keeps returning users out of the installation flow and prevents the 100% initialization box from reappearing between chats.

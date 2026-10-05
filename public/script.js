@@ -253,7 +253,7 @@ if(input)input.value='';resize();try{if(!overdrive){
           throw new Error('KAI 51 local model returned no response');
         }catch(e){
           kaiActivityFinish({sources:[]});
-          console.warn('KAI 51 browser-local runtime failed after local retry; external recovery is disabled',e); kaiActivityStart('light'); kaiActivityStep('local-error','KAI 51 · local','The independent KAI 51 model failed this turn after a controlled local retry. No external model is being used.','','error'); kaiActivityFinish({sources:[],local:true}); addMessage('KAI 51 local inference failed on this turn. No Gemini or other external model is being used. Please retry.','bot'); return true;
+          console.warn('KAI 51 browser-local runtime failed after local retry; moving through the controlled recovery chain',e);
           /* Browser WASM failure must not immediately promote KAI Lite.
              /api/chat is still a KAI 51 generation lane. KAI Lite is final emergency fallback. */
           try{
