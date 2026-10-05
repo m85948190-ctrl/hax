@@ -4,22 +4,16 @@ export const methods=['GET','HEAD','OPTIONS'];
 const OWNER='m85948190-ctrl';
 const REPO='haxbro';
 const TAG='kai51-model-latest';
-let manifestPromise=null;
-
-async function manifest(){
-  if(manifestPromise)return manifestPromise;
-  manifestPromise=(async()=>{
-    const r=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/tags/'+TAG,{
-      headers:{Accept:'application/vnd.github+json','User-Agent':'HAxBRO-KAI51-Proxy'}
-    });
-    if(!r.ok)throw new Error('GitHub release lookup failed: '+r.status);
-    const data=await r.json();
-    const map={};
-    for(const a of (data.assets||[]))map[String(a.name)]=a;
-    return map;
-  })().catch(e=>{manifestPromise=null;throw e});
-  return manifestPromise;
-}
+const ASSETS=Object.freeze({
+  'config.json':609319996,
+  'generation_config.json':609319997,
+  'MODEL-MANIFEST.json':609319995,
+  'model_q4.onnx':609320000,
+  'model_q4f16.onnx':609319994,
+  'special_tokens_map.json':609320010,
+  'tokenizer.json':609320008,
+  'tokenizer_config.json':609320011
+});
 
 function requestedName(req){
   const raw=String(req.query?.file||'').trim();
@@ -35,10 +29,8 @@ export default async function(req,res){
   const name=requestedName(req);
   if(!name)return res.status(400).send('Missing model asset name.');
 
-  let assets;
-  try{assets=await manifest()}catch(e){return res.status(502).send('KAI 51 model manifest unavailable.')}
-  const asset=assets[name]||Object.values(assets).find(a=>String(a.name).endsWith('/'+name));
-  if(!asset)return res.status(404).send('KAI 51 model asset not found: '+name);
+  const assetId=ASSETS[name];
+  if(!assetId)return res.status(404).send('KAI 51 model asset not found: '+name);
 
   const headers={
     Accept:'application/octet-stream',
@@ -47,7 +39,7 @@ export default async function(req,res){
   const range=req.headers?.range||req.headers?.Range;
   if(range)headers.Range=range;
 
-  const upstream=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/assets/'+asset.id,{
+  const upstream=await fetch('https://api.github.com/repos/'+OWNER+'/'+REPO+'/releases/assets/'+assetId,{
     headers,
     redirect:'follow'
   });
