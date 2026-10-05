@@ -306,29 +306,29 @@ if(input)input.value='';resize();try{if(!overdrive){
           return true;
         }
       }
-      if(!kai51Verified&&!opts.fromChoice&&window.HAxBROKai51Bootstrap?.generate){
-        /* The first request is allowed to wait for the real KAI 51 model to finish
-           restoring/downloading. Never answer ordinary chat with KAI Lite while the
-           independent model is merely warming up. */
+      if(!kai51Verified&&!opts.fromChoice){
+        /* KAI Lite is the working bridge while the real KAI 51 neural package is
+           downloading/restoring. Do NOT block the user on a 386MB browser model.
+           The real model continues loading in the background and automatically
+           takes over once verified. */
         try{
-          setBusy(true,'heavy');
-          kaiActivityStart('heavy');
-          kaiActivityStep('install','KAI 51 · neural model','Restoring the GitHub-backed KAI 51 model on this device','','running');
-          const local=await window.HAxBROKai51Bootstrap.generate(value,active()?.items?.slice(-12)||[]);
-          if(local?.response){
-            kaiActivitySet('install','done','KAI 51 neural response generated locally');
-            kaiActivityFinish({sources:[],local:true,model:local.model});
-            addMessage(local.response,'bot');
-            return true;
-          }
-          throw new Error('KAI 51 local model returned no response');
-        }catch(e){
-          kaiActivitySet('install','error',e?.message||'KAI 51 local runtime unavailable');
-          kaiActivityFinish({sources:[],local:true});
-          console.warn('KAI 51 is not ready and local generation failed; no external chat provider is permitted.',e);
-          addMessage('KAI 51 is still initializing its independent neural model. Please retry in a moment.','bot');
-          return true;
+          window.HAxBROKai51Bootstrap?.prepare?.().catch(e=>console.warn('KAI 51 background download retry',e));
+        }catch{}
+        if(window.HAxBROKaiLite?.respond){
+          try{
+            setBusy(true,'light');
+            kaiActivityStart('light');
+            kaiActivityStep('lite','KAI Lite · active bridge','KAI 51 real model is downloading; KAI Lite is handling this turn','','running');
+            const recovery=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
+            if(recovery?.response){
+              kaiActivitySet('lite','done','KAI Lite response delivered');
+              kaiActivityFinish(recovery);
+              addMessage(recovery.response,'bot');
+              return true;
+            }
+          }catch(e){ console.warn('KAI Lite bridge failed while KAI 51 loads',e); }
         }
+        /* If Lite itself is unavailable, allow the existing managed lane below. */
       }
       setBusy(true,opts.searchMode==='quick'?'light':'heavy');
 /* KAI 51 UNIFIED LOCAL ROUTER: one natural-language command can invoke any HAxBRO workspace before chat. */

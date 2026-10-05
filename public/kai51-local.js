@@ -141,5 +141,13 @@
   };
 
   try { navigator.storage?.persist?.().catch(()=>{}); } catch {}
+  /* Keep retrying the real model in the background. KAI Lite remains the user-facing
+     bridge until the neural model is actually verified. */
   setTimeout(()=>maybeInstall().catch(()=>{}),250);
+  setInterval(()=>{
+    try{
+      const s=read();
+      if(s.status!=='ready' && !enginePromise) maybeInstall().catch(()=>{});
+    }catch{}
+  },15000);
 })();

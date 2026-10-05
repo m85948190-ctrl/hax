@@ -15,7 +15,13 @@
     const pct=clamp(d.progress??(state.status==='installing'?5:0));
     const p=x.querySelector('.hook-pct');if(p)p.textContent=pct+'%';
     const lite=x.querySelector('.hook-lite');
-    if(lite)lite.textContent=state.status==='error'?'· MODEL ERROR':(pct<100?'· MODEL LOADING':'· KAI 51 STARTING');
+    if(lite){
+      lite.textContent=state.status==='ready'
+        ? '· KAI 51 READY'
+        : (state.status==='error'
+          ? '· KAI LITE ACTIVE · MODEL RETRYING'
+          : '· KAI LITE ACTIVE · MODEL DOWNLOADING');
+    }
   }
   window.addEventListener('haxbro:kai-local-progress',e=>render(e.detail||{}));
   window.addEventListener('haxbro:kai51-bootstrap',e=>render(e.detail||{}));
