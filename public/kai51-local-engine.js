@@ -38,6 +38,34 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.remotePathTemplate='{model}/resolve/main/';
       env.useBrowserCache=true;
       env.cacheKey='haxbro-kai51-'+MODEL_RELEASE+'-360m-q4';
+      // Hatchable's function gateway can reject a single 386 MB response even though
+      // ranged requests are healthy. For the ONNX asset only, assemble bounded 8 MiB
+      // ranges in the browser. The bytes still come exclusively from our GitHub release.
+      const nativeFetch=globalThis.fetch.bind(globalThis);
+      env.fetch=async(input,init={})=>{
+        const url=String(input?.url||input||'');
+        if(!/\/api\/kai-model\?file=.*model_q4(?:f16)?\.onnx/i.test(url)) return nativeFetch(input,init);
+        const headers=new Headers(init?.headers||{});
+        if(headers.has('range')) return nativeFetch(input,init);
+        const first=await nativeFetch(url,{...init,headers:new Headers({...Object.fromEntries(headers.entries()),Range:'bytes=0-0'})});
+        if(!first.ok && first.status!==206) return first;
+        const cr=first.headers.get('content-range')||'';
+        const total=Number(cr.split('/')[1]||0);
+        if(!total) return first;
+        const chunkSize=8*1024*1024;
+        const parts=[new Uint8Array(await first.arrayBuffer())];
+        for(let start=1;start<total;start+=chunkSize){
+          const end=Math.min(total-1,start+chunkSize-1);
+          const part=await nativeFetch(url,{...init,headers:new Headers({...Object.fromEntries(headers.entries()),Range:'bytes='+start+'-'+end})});
+          if(!part.ok || part.status!==206) throw new Error('KAI 51 model range '+start+'-'+end+' failed: HTTP '+part.status);
+          parts.push(new Uint8Array(await part.arrayBuffer()));
+          onProgress({profile:'heavy',progress:15+Math.min(70,Math.round(end/total*70)),status:'Downloading KAI 51 neural model · '+Math.round(end/total*100)+'%'});
+        }
+        const bytes=new Uint8Array(parts.reduce((n,x)=>n+x.byteLength,0));
+        let offset=0;
+        for(const part of parts){bytes.set(part,offset);offset+=part.byteLength}
+        return new Response(bytes,{status:200,headers:{'content-type':'application/octet-stream','content-length':String(bytes.byteLength),'accept-ranges':'bytes'}});
+      };
       await resolveRuntime();
       progress(15,'Loading KAI 51 local neural model');
       pipe=await pipeline('text-generation',MODEL,{
