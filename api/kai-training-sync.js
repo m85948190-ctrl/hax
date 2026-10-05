@@ -1,4 +1,5 @@
 import { getTrainingPack, recordTrainingExample } from 'lib/kai-training';
+import { admin } from 'hatchable';
 
 export const access='public';
 export const methods=['GET','POST'];
@@ -18,6 +19,7 @@ export default async function(req,res){
         sync:{required:true,cacheKey:'haxbro:kai51:training:'+pack.version+':'+pack.checksum}
       });
     }
+    if(!await admin.check(req))return res.status(403).json({ok:false,error:'Owner authorization required for training updates.'});
     const body=req.body||{};
     if(body.action!=='record')return res.status(400).json({ok:false,error:'action=record required'});
     const example=await recordTrainingExample(body);
