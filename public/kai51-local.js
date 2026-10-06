@@ -76,7 +76,7 @@
     enginePromise = (async () => {
       // The current browser-ready ONNX package is fetched directly from Hugging Face.
       // Do not register the legacy GitHub model service worker on this path.
-      const mod = await import('/kai51-local-engine.js?v=31');
+      const mod = await import('/kai51-local-engine.js?v=32');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
         onReady:info => {

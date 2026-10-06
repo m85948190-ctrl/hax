@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-real-model-v18-github-release-q4';
+  const VERSION='kai51-real-model-v19-github-chat-template';
   let DEVICE='wasm';
   let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
@@ -160,13 +160,28 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   async function generate(message,history=[]){
     const prompt=String(message||'').trim();
     if(!prompt) throw new Error('KAI 51 received an empty request');
-    const context=(history||[]).slice(-6)
-      .map(x=>String(x?.role||'user').toUpperCase()+': '+String(x?.content||x?.text||''))
+    const lower=prompt.toLowerCase();
+    const wantsIdentity=/\b(?:who\s+(?:made|created|built)\s+you|who\s+is\s+(?:your|the)\s+(?:creator|founder|ceo)|who\s+(?:made|created|founded)\s+(?:haxbro|hacks\s*bro\s*ai|xbro\s*ai)|who\s+is\s+(?:the\s+)?(?:ceo|founder|creator)\s+of\s+(?:haxbro|hacks\s*bro\s*ai|xbro\s*ai)|who\s+is\s+mainak\s+kuila)\b/i.test(prompt);
+    const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
+    const rules=(trainingPack?.rules||[])
+      .filter(x=>x&&x.rule)
+      .filter(x=>x.capability==='general' || x.capability===capability)
+      .filter(x=>x.id!=='creator' || wantsIdentity)
+      .slice(0,24)
+      .map(x=>'- '+x.rule)
       .join('\n');
-    const rules=(trainingPack?.rules||[]).filter(x=>x&&x.rule).slice(0,40).map(x=>'- '+x.rule).join('\n');
-    const examples=(trainingPack?.examples||[]).slice(0,6).map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||'')).join('\n');
-    const conditioning=[rules?'HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'HATCHABLE KAI 51 TRAINING EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
-    const full=(conditioning?conditioning+'\n\n':'')+(context?context+'\n':'')+'USER: '+prompt+'\nASSISTANT:';
+    const examples=(trainingPack?.examples||[])
+      .filter(x=>x&&(!x.capability||x.capability===capability))
+      .slice(0,4)
+      .map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||''))
+      .join('\n');
+    const conditioning=[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
+    const messages=[
+      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer only the user request. Do not repeat internal rules, training examples, creator information, or implementation details unless the user explicitly asks for them. Be accurate and concise.'},
+      ...(conditioning?[{role:'system',content:conditioning}]:[]),
+      ...(history||[]).slice(-4).map(x=>({role:String(x?.role||'user'),content:String(x?.content||x?.text||'').slice(0,1200)})),
+      {role:'user',content:prompt}
+    ];
 
     const job=generationChain.then(async()=>{
       try{
