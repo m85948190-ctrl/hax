@@ -1,4 +1,4 @@
-export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
+export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},preferCache=false}={}) {
   // KAI 51 uses the real 360M ONNX neural package pinned by HAxBRO.
   // GitHub release provenance: m85948190-ctrl/haxbro · kai51-model-latest.
   // Browser transport uses the public CORS-enabled upstream ONNX CDN for the same
@@ -80,6 +80,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       // This preserves Range requests and avoids browser-side GitHub redirect/CORS variance.
       const nativeFetch=globalThis.fetch.bind(globalThis);
       const MODEL_CACHE_NAME='haxbro-kai51-model-v1';
+      // A previously verified installation must be restored from browser cache first.
+      // Only a genuine cache miss may re-enable network loading.
+      let cacheOnlyFirst=!!preferCache;
       const modelCacheKey=(file,range)=>{
         const key='/__haxbro_kai51_cache__/'+encodeURIComponent(file);
         return new Request(key+(range?'?range='+encodeURIComponent(range):''));
@@ -100,6 +103,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
             const target=MODEL_PROXY+'?file='+encodeURIComponent(file);
             const headers=new Headers(init?.headers||{});
             if(range) headers.set('Range',range);
+            if(cacheOnlyFirst) throw new Error('KAI51_CACHE_MISS:'+file);
             const network=await nativeFetch(target,{...init,headers,cache:'no-store'});
             if(network.ok){
               try{await cache.put(key,network.clone());}catch{}
@@ -114,7 +118,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
 
       await resolveRuntime();
       await loadTrainingPack();
-      progress(15,'Loading the real KAI 51 360M Q4 neural model');
+      progress(15,cacheOnlyFirst
+        ? 'Restoring the installed KAI 51 neural model from browser cache'
+        : 'Installing the real KAI 51 360M Q4 neural model');
       /* Real-model handoff rule: prefer GPU, but NEVER let an unsupported WebGPU
          operator/device kill KAI 51. Retry the exact same neural weights on the
          fully-supported WASM CPU backend before declaring the model unavailable. */
@@ -122,6 +128,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         pipe=await pipeline('text-generation',MODEL,{
           dtype:DTYPE,
           device:DEVICE,
+          local_files_only:cacheOnlyFirst,
           // Report the real Transformers.js download progress instead of leaving the UI at 15%.
           progress_callback:info=>{
             const n=Number(info?.status==='progress_total'?info.progress:info?.progress);
@@ -141,6 +148,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         pipe=await pipeline('text-generation',MODEL,{
           dtype:'q4',
           device:'wasm',
+          local_files_only:cacheOnlyFirst,
           progress_callback:info=>{
             const n=Number(info?.progress);
             if(Number.isFinite(n)){

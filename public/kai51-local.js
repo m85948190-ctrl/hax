@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-local-controller-v12-singleton';
+  const VERSION = 'kai51-local-controller-v13-persistent-cache';
   const KEY = 'haxbro:kai51:installation:v14-github-q4';
   const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
@@ -18,7 +18,7 @@
       const x = JSON.parse(localStorage.getItem(KEY)||'null');
       if (!x || typeof x !== 'object') return defaultState();
       return {
-        status: ['not_installed','installing','ready','error'].includes(x.status) ? x.status : 'not_installed',
+        status: ['not_installed','installing','restoring','ready','error'].includes(x.status) ? x.status : 'not_installed',
         installed: x.status === 'ready' || x.installed === true,
         verified: x.status === 'ready' || x.verified === true,
         model: x.model || MODEL,
@@ -68,17 +68,19 @@
     if (window.HAxBROKai51Engine?.generate) return window.HAxBROKai51Engine;
     if (enginePromise) return enginePromise;
 
-    state = write({status:'installing',installed:state.installed,verified:false,error:null});
-    emit({profile:'heavy',progress:state.installed ? 95 : 2,status:state.installed
-      ? 'KAI 51 installed · restoring GitHub-backed neural intelligence'
-      : 'KAI 51 GitHub-backed neural installation starting'});
+    const restoring=state.installed===true;
+    state = write({status:restoring?'restoring':'installing',installed:state.installed,verified:false,error:null});
+    emit({profile:'heavy',progress:restoring ? 95 : 2,status:restoring
+      ? 'KAI 51 installed · restoring from persistent browser cache'
+      : 'KAI 51 neural installation starting'});
 
     enginePromise = window.__HAxBROKai51EnginePromise = (async () => {
       // The current browser-ready ONNX package is fetched directly from Hugging Face.
       // Do not register the legacy GitHub model service worker on this path.
-      const mod = await import('/kai51-local-engine.js?v=33');
+      const mod = await import('/kai51-local-engine.js?v=34');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
+        preferCache:state.installed===true,
         onReady:info => {
           state = write({status:'ready',installed:true,verified:true,model:info?.model||MODEL,error:null});
           emit({profile:'heavy',progress:100,status:'KAI 51 installed and verified',installed:true,verified:true});
@@ -148,7 +150,7 @@
   setInterval(()=>{
     try{
       const s=read();
-      if(s.status!=='ready' && !enginePromise) maybeInstall().catch(()=>{});
+      if(s.status==='not_installed' && !enginePromise) maybeInstall().catch(()=>{});
     }catch{}
   },15000);
 })();
