@@ -22,6 +22,14 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
 
+  async function disposePipe(){
+    const current=pipe;
+    pipe=null;
+    if(current?.dispose){
+      try{await current.dispose();}catch{}
+    }
+  }
+
   async function resolveRuntime(){
     try{
       if(typeof navigator!=='undefined' && navigator.gpu){
@@ -142,7 +150,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       }catch(gpuError){
         if(DEVICE!=='webgpu') throw gpuError;
         console.warn('KAI 51 WebGPU initialization failed; retrying the same real model on WASM',gpuError);
-        pipe=null;
+        await disposePipe();
         DEVICE='wasm';
         progress(35,'KAI 51 GPU path unavailable · switching to local CPU runtime');
         pipe=await pipeline('text-generation',MODEL,{
@@ -186,8 +194,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         quantization:'q4'
       });
       return {ok:true,model:MODEL,device:DEVICE,realModel:true,localModel:true};
-    })().catch(e=>{
-      pipe=null;
+    })().catch(async e=>{
+      await disposePipe();
       loading=null;
       progress(99,'KAI 51 neural runtime failed');
       throw e;
@@ -234,7 +242,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       try{
         return await runOnce(messages);
       }catch(firstError){
-        pipe=null;
+        await disposePipe();
         try{
           await prepare();
           return await runOnce(messages);

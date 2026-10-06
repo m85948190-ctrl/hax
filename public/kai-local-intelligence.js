@@ -104,7 +104,10 @@
      * LOCAL owns ordinary conversation and evidence-backed questions.
      * GITHUB owns requests whose precision/complexity exceeds this lane.
      */
-    const precisionRequired=s.hard || s.score>=0.68 || (sources.length===0 && (s.research||prompt.length>220));
+    /* No-evidence requests are not answered with the old canned failure sentence.
+       If LOCAL cannot establish enough context/evidence, it explicitly hands the turn to
+       GITHUB instead of pretending that a rule-based guess is an answer. */
+    const precisionRequired=s.hard || s.score>=0.68 || (sources.length===0 && (s.research||prompt.length>12));
     if(precisionRequired){
       const why=s.hard?'The request needs deeper technical reasoning.':s.research&&sources.length===0?'The request needs precise external evidence that LOCAL could not establish.':'The request is complex enough to benefit from the newer neural reasoning lane.';
       hooks.onHandoff?.(why);

@@ -243,61 +243,80 @@ if(!opts.fromChoice&&!overdrive&&value.length>0&&!kaiChoiceSearchLike(value)&&/\
 let launchFromPending=false;if(overdrive){const pendingKey='haxbro_kai_pending_target';if(/^abort all$/i.test(value))sessionStorage.removeItem(pendingKey)}applyContextTheme(value);if(!launchFromPending&&opts.fromChoice===true){updateKaiMemory(value)}
 else if(!launchFromPending){addMessage(value,'user');updateKaiMemory(value)}
 if(input)input.value='';resize();try{if(!overdrive){
-      /* OG KAI 51 LOCAL is the first intelligence lane. It is an orchestration engine,
-         not the Hugging Face foundational model. LOCAL understands, searches, analyzes,
-         and converses; only genuinely hard/precision-heavy turns are handed to GITHUB. */
+      /* ONE browser intelligence contract.
+         LOCAL is the first lane. GITHUB is the precision neural lane.
+         LITE is independent and remains the final web-only recovery lane.
+         The UI receives one ordered activity stream so stages cannot overwrite/jumble each other. */
       const selectedModel=window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||'kai-local';
-      if(!opts.fromChoice && selectedModel==='kai-local' && window.HAxBROKaiLocalIntelligence?.run){
-        setBusy(true,'light');
-        kaiActivityStart('light');
-        kaiActivityStep('local','KAI 51 · LOCAL','Understanding the request in the OG local intelligence lane','','running');
-        let localTurn=null;
+      if(!opts.fromChoice && (selectedModel==='kai-local'||selectedModel==='kai-github')){
+        setBusy(true,selectedModel==='kai-github'?'heavy':'light');
+        kaiActivityStart(selectedModel==='kai-github'?'heavy':'light');
+        const history=active()?.items?.slice(-12)||[];
+        const mark=(key,label,detail,state='running')=>{
+          if(state==='running') kaiActivityStep(key,label,detail,'','running');
+          else kaiActivitySet(key,state,detail);
+        };
+        const finish=payload=>{try{kaiActivityFinish(payload||{});}catch{}};
         try{
-          localTurn=await window.HAxBROKaiLocalIntelligence.run(value,active()?.items?.slice(-12)||[],{
-            onStage:(stage,label)=>kaiActivityStep(stage,label,'Local intelligence','','running'),
-            onHandoff:(reason)=>kaiActivitySet('local','done','LOCAL recommends KAI 51 · GITHUB')
-          });
-        }catch(e){
-          console.warn('KAI 51 LOCAL intelligence failed',e);
-          localTurn=null;
-        }
-        if(localTurn?.response && !localTurn.handoff){
-          kaiActivitySet('local','done','LOCAL response generated');
-          kaiActivityFinish({sources:localTurn.sources||[],local:true,foundationalModel:false});
-          addMessage(localTurn.response,'bot');
-          /* Sequential boot: LOCAL is first; GITHUB installation starts only after LOCAL is ready. */
-          try{window.HAxBROKai51Bootstrap?.prepare?.().catch(e=>console.warn('KAI 51 GITHUB background install',e));}catch{}
-          return true;
-        }
-        if(localTurn?.handoff){
-          const reason=localTurn.reason||'This request needs deeper reasoning and higher precision.';
-          addMessage('KAI 51 · LOCAL\n\nI understand the request, but I\'m shifting this to KAI 51 · GITHUB because '+reason+' I want to give you the more precise answer.','bot');
-          kaiActivitySet('local','done','LOCAL → GITHUB handoff');
-          kaiActivityStep('github','KAI 51 · GITHUB','Running the newer neural model for this harder request','','running');
-          try{
-            const github=await window.HAxBROKai51Bootstrap?.generate?.(value,active()?.items?.slice(-12)||[]);
-            if(github?.response){
+          let result=null;
+          if(selectedModel==='kai-local'){
+            mark('understanding','KAI 51 · LOCAL · understanding','Reading intent and context','running');
+            result=await window.HAxBROKai51Bootstrap?.unifiedGenerate?.(value,history,{
+              onStage:(stage,detail)=>{
+                const labels={
+                  understanding:'KAI 51 · LOCAL · understanding',
+                  searching:'KAI 51 · LOCAL · searching',
+                  analyzing:'KAI 51 · LOCAL · analyzing',
+                  composing:'KAI 51 · LOCAL · composing',
+                  github:'KAI 51 · GITHUB · precision inference',
+                  lite:'KAI LITE · recovery'
+                };
+                const key=stage==='github'?'github':stage==='lite'?'lite':stage;
+                const label=labels[stage]||'KAI 51 · '+String(stage||'working');
+                if(stage==='searching') kaiActivitySet('understanding','done','Intent understood');
+                if(stage==='analyzing') kaiActivitySet('searching','done','Evidence collected');
+                if(stage==='composing') kaiActivitySet('analyzing','done','Evidence analyzed');
+                mark(key,label,detail,'running');
+              },
+              onHandoff:reason=>{
+                kaiActivitySet('understanding','done','LOCAL → GITHUB handoff');
+                mark('github','KAI 51 · GITHUB · precision inference',reason||'LOCAL requested deeper precision','running');
+              }
+            });
+          }else{
+            mark('github','KAI 51 · GITHUB','Running the installed neural model directly','running');
+            result=await window.HAxBROKai51Bootstrap?.generate?.(value,history);
+          }
+          if(result?.response){
+            if(result.lane==='local'){
+              kaiActivitySet('understanding','done','LOCAL understood the request');
+              kaiActivitySet('composing','done','LOCAL response composed');
+            }else if(result.lane==='github'){
               kaiActivitySet('github','done','GITHUB produced the answer');
-              kaiActivityFinish({sources:github.sources||[],local:false,github:true});
-              addMessage(github.response,'bot');
-              return true;
+            }else if(result.lane==='lite'){
+              kaiActivitySet('lite','done','KAI LITE response delivered');
             }
-            throw new Error('KAI 51 GITHUB returned no response');
-          }catch(e){
-            console.warn('KAI 51 GITHUB handoff failed',e);
-            kaiActivitySet('github','error','GITHUB neural lane unavailable');
-            if(window.HAxBROKaiLite?.respond){
-              try{
-                kaiActivityStep('lite','KAI LITE','Both KAI 51 lanes were unavailable; using the final web-only lane','','running');
-                const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
-                if(lite?.response){kaiActivitySet('lite','done','KAI LITE response delivered');kaiActivityFinish(lite);addMessage(lite.response,'bot');return true;}
-              }catch{}
-            }
-            addMessage('KAI 51 could not complete this request right now.','bot');
+            finish({sources:result.sources||[],local:result.lane==='local',github:result.lane==='github',lite:result.lane==='lite'});
+            addMessage(result.response,'bot');
             return true;
           }
+          throw new Error('Selected KAI lane returned no response');
+        }catch(e){
+          console.warn('KAI unified lane failed',e);
+          if(selectedModel==='kai-local') kaiActivitySet('understanding','error','LOCAL/GITHUB intelligence pipeline failed');
+          else kaiActivitySet('github','error','GITHUB neural lane unavailable');
+          if(selectedModel==='kai-local'&&window.HAxBROKaiLite?.respond){
+            try{
+              kaiActivityStep('lite','KAI LITE · recovery','Both KAI 51 lanes were unavailable; using the web-only recovery lane','','running');
+              const lite=await window.HAxBROKaiLite.respond(value,history);
+              if(lite?.response){kaiActivitySet('lite','done','KAI LITE response delivered');finish(lite);addMessage(lite.response,'bot');return true;}
+            }catch{}
+          }
+          addMessage(selectedModel==='kai-github'
+            ? 'KAI 51 · GITHUB could not complete this turn. The installed neural runtime reported an error.'
+            : 'KAI 51 could not complete this turn. The local intelligence and precision neural lanes reported an error.','bot');
+          return true;
         }
-        /* LOCAL could not establish a reliable answer. Continue into the existing recovery path. */
       }
       const bootstrapState=window.HAxBROKai51Bootstrap?.state?.()||{};
       /* ONE handoff rule:
