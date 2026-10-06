@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-real-model-v19-github-chat-template';
+  const VERSION='kai51-real-model-v21-github-native-chat-no-rule-injection';
   let DEVICE='wasm';
   let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
@@ -148,10 +148,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
     return loading;
   }
 
-  async function runOnce(full){
+  async function runOnce(messages){
     await prepare();
-    return pipe(full,{
-      max_new_tokens:32,
+    return pipe(messages,{
+      max_new_tokens:96,
       do_sample:false,
       return_full_text:false
     });
@@ -166,7 +166,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
     const rules=(trainingPack?.rules||[])
       .filter(x=>x&&x.rule)
       .filter(x=>x.capability==='general' || x.capability===capability)
-      .filter(x=>x.id!=='creator' || wantsIdentity)
+      .filter(x=>x.id!=='creator')
       .slice(0,24)
       .map(x=>'- '+x.rule)
       .join('\n');
@@ -185,12 +185,12 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
 
     const job=generationChain.then(async()=>{
       try{
-        return await runOnce(full);
+        return await runOnce(messages);
       }catch(firstError){
         pipe=null;
         try{
           await prepare();
-          return await runOnce(full);
+          return await runOnce(messages);
         }catch(secondError){
           const e=new Error('KAI 51 local inference failed twice: '+String(secondError?.message||firstError?.message||secondError));
           e.cause=secondError;
