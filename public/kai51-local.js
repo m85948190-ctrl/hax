@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-local-controller-v11-github-q4';
+  const VERSION = 'kai51-local-controller-v12-singleton';
   const KEY = 'haxbro:kai51:installation:v14-github-q4';
   const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
@@ -37,7 +37,7 @@
   };
 
   let state = read();
-  let enginePromise = null;
+  let enginePromise = window.__HAxBROKai51EnginePromise || null;
   let transportPromise = null;
 
   function emit(detail) {
@@ -49,7 +49,7 @@
     if (transportPromise) return transportPromise;
     transportPromise = (async()=>{
       if (!('serviceWorker' in navigator)) return false;
-      const registration = await navigator.serviceWorker.register('/kai51-model-sw.js?v=3',{scope:'/'});
+      return false; // Legacy model service-worker transport is retired; KAI 51 uses the engine's browser cache.
       await navigator.serviceWorker.ready;
       if (!navigator.serviceWorker.controller) {
         await new Promise(resolve=>{
@@ -73,10 +73,10 @@
       ? 'KAI 51 installed · restoring GitHub-backed neural intelligence'
       : 'KAI 51 GitHub-backed neural installation starting'});
 
-    enginePromise = (async () => {
+    enginePromise = window.__HAxBROKai51EnginePromise = (async () => {
       // The current browser-ready ONNX package is fetched directly from Hugging Face.
       // Do not register the legacy GitHub model service worker on this path.
-      const mod = await import('/kai51-local-engine.js?v=32');
+      const mod = await import('/kai51-local-engine.js?v=33');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
         onReady:info => {

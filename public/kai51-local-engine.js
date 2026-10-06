@@ -106,10 +106,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
           device:DEVICE,
           // Report the real Transformers.js download progress instead of leaving the UI at 15%.
           progress_callback:info=>{
-            const n=Number(info?.progress);
+            const n=Number(info?.status==='progress_total'?info.progress:info?.progress);
             if(Number.isFinite(n)){
               const mapped=15+(Math.max(0,Math.min(100,n))*0.80);
-              progress(Math.min(95,Math.round(mapped)),info?.file?'Downloading '+String(info.file).split('/').pop():'Downloading KAI 51 neural model');
+              progress(Math.min(95,Math.round(mapped)),info?.status==='progress_total'?'Downloading KAI 51 neural model':(info?.file?'Downloading '+String(info.file).split('/').pop():'Downloading KAI 51 neural model'));
             }
           }
           // Q4 file is selected automatically by Transformers.js from dtype:'q4'.

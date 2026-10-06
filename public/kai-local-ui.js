@@ -67,6 +67,9 @@
       b.innerHTML='<b>➜</b><span>➜</span>';
     }
   }
+  function removeExternalProviderOptions(){
+    document.querySelectorAll('.model-option[data-model-choice="openai"],.model-option[data-model-choice="google"],.model-option[data-model-choice="openrouter"],.model-option[data-model-choice="groq"],.model-option[data-model-choice="mistral"]').forEach(el=>el.remove());
+  }
   function applyChoice(choice){
     const allowed=new Set(['kai-local','kai-github','kai-lite']);
     state.model=allowed.has(choice)?choice:'kai-local';
@@ -140,6 +143,7 @@
     api.prepare(profile).then(ok=>{state.preparing=false;if(ok){state.initProgress=100;state.displayProgress=100;button('ready');if(!installed)overlay('hide',100,profile==='heavy'?'KAI 51 installed and ready.':'KAI FAST installed and ready.','initializing');}else{button('send');if(!installed)overlay('hide',state.initProgress,'KAI 51 continues warming in the background…','download');}});
   }
   document.addEventListener('DOMContentLoaded',()=>{
+    removeExternalProviderOptions();
     const picker=$('modelPickerBtn'),menu=$('modelPickerMenu');
     if(picker&&menu){
       picker.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();menu.hidden=!menu.hidden;picker.setAttribute('aria-expanded',menu.hidden?'false':'true')});
