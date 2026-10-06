@@ -7,7 +7,17 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-real-model-v21-github-native-chat-no-rule-injection';
+  const VERSION='kai51-github-q4-v22-proxy-chat-selftest';
+  const MODEL_ASSETS=new Set([
+    'config.json',
+    'generation_config.json',
+    'MODEL-MANIFEST.json',
+    'model_q4.onnx',
+    'model_q4f16.onnx',
+    'special_tokens_map.json',
+    'tokenizer.json',
+    'tokenizer_config.json'
+  ]);
   let DEVICE='wasm';
   let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
@@ -65,34 +75,24 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
       // KAI 51 model assets come ONLY from the pinned HAxBRO GitHub release.
-      // Transformers.js asks for Hugging Face-style paths, so translate those
-      // requests at the fetch boundary to the exact GitHub release assets.
-      const GITHUB_RELEASE='https://github.com/m85948190-ctrl/haxbro/releases/download/kai51-model-latest/';
-      const githubAssets=new Set([
-        'config.json',
-        'generation_config.json',
-        'MODEL-MANIFEST.json',
-        'model_q4.onnx',
-        'model_q4f16.onnx',
-        'special_tokens_map.json',
-        'tokenizer.json',
-        'tokenizer_config.json'
-      ]);
+      // Transformers.js still resolves the model using its Hugging Face-style model id,
+      // but the actual bytes are served by HAxBRO's same-origin proxy from that release.
+      // This preserves Range requests and avoids browser-side GitHub redirect/CORS variance.
       const nativeFetch=globalThis.fetch.bind(globalThis);
       env.fetch=async (input,init)=>{
         const raw=typeof input==='string'?input:(input?.url||String(input));
         try{
           const u=new URL(raw,location.href);
           const file=decodeURIComponent(u.pathname.split('/').pop()||'');
-          if(githubAssets.has(file)){
-            const target=GITHUB_RELEASE+encodeURIComponent(file);
+          if(MODEL_ASSETS.has(file)){
+            const target=MODEL_PROXY+'?file='+encodeURIComponent(file);
             return nativeFetch(target,init);
           }
         }catch{}
         return nativeFetch(input,init);
       };
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-github-release-q4';
+      env.cacheKey='haxbro-kai51-github-q4-v22';
 
       await resolveRuntime();
       await loadTrainingPack();
@@ -120,12 +120,18 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       }
 
       progress(95,'Running KAI 51 neural self-test');
-      const test=await pipe('User: Say exactly: KAI 51 online.\nAssistant:',{
-        max_new_tokens:DEVICE==='webgpu'?64:8,
+      const test=await pipe([
+        {role:'system',content:'You are KAI 51. Reply with exactly: KAI 51 online.'},
+        {role:'user',content:'Status check.'}
+      ],{
+        max_new_tokens:16,
         do_sample:false,
         return_full_text:false
       });
-      const text=String(test?.[0]?.generated_text||test?.[0]?.text||'').trim();
+      const testGenerated=test?.[0]?.generated_text;
+      const text=Array.isArray(testGenerated)
+        ? String(testGenerated.at(-1)?.content||'').trim()
+        : String(testGenerated||test?.[0]?.text||'').trim();
       if(!text) throw new Error('KAI 51 neural model returned no output');
 
       progress(100,'KAI 51 real neural model ready');
@@ -200,7 +206,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
     });
     generationChain=job.catch(()=>{});
     const result=await job;
-    const response=String(result?.[0]?.generated_text||result?.[0]?.text||'').trim();
+    const generated=result?.[0]?.generated_text;
+    const response=(Array.isArray(generated)
+      ? String(generated.at(-1)?.content||'')
+      : String(generated||result?.[0]?.text||'')).trim();
     if(!response) throw new Error('KAI 51 neural model returned an empty response');
     return {
       response,
