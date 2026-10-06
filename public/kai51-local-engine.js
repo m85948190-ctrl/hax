@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-real-model-v17-direct-hf-q4';
+  const VERSION='kai51-real-model-v18-github-release-q4';
   let DEVICE='wasm';
   let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
@@ -64,10 +64,35 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
          the same SmolLM2-360M-Instruct Q4 neural weights directly from Hugging Face. */
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
-      env.remoteHost='https://huggingface.co/';
-      env.remotePathTemplate='{model}/resolve/{revision}/{file}';
+      // KAI 51 model assets come ONLY from the pinned HAxBRO GitHub release.
+      // Transformers.js asks for Hugging Face-style paths, so translate those
+      // requests at the fetch boundary to the exact GitHub release assets.
+      const GITHUB_RELEASE='https://github.com/m85948190-ctrl/haxbro/releases/download/kai51-model-latest/';
+      const githubAssets=new Set([
+        'config.json',
+        'generation_config.json',
+        'MODEL-MANIFEST.json',
+        'model_q4.onnx',
+        'model_q4f16.onnx',
+        'special_tokens_map.json',
+        'tokenizer.json',
+        'tokenizer_config.json'
+      ]);
+      const nativeFetch=globalThis.fetch.bind(globalThis);
+      env.fetch=async (input,init)=>{
+        const raw=typeof input==='string'?input:(input?.url||String(input));
+        try{
+          const u=new URL(raw,location.href);
+          const file=decodeURIComponent(u.pathname.split('/').pop()||'');
+          if(githubAssets.has(file)){
+            const target=GITHUB_RELEASE+encodeURIComponent(file);
+            return nativeFetch(target,init);
+          }
+        }catch{}
+        return nativeFetch(input,init);
+      };
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-smollm2-360m-instruct-q4-browser';
+      env.cacheKey='haxbro-kai51-github-release-q4';
 
       await resolveRuntime();
       await loadTrainingPack();
