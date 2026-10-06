@@ -75,7 +75,7 @@
 
     enginePromise = (async () => {
       await prepareTransport();
-      const mod = await import('/kai51-local-engine.js?v=28');
+      const mod = await import('/kai51-local-engine.js?v=29');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
         onReady:info => {

@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-real-model-v15-q4-asset-resolution';
+  const VERSION='kai51-real-model-v16-dtype-q4-resolution';
   let DEVICE='wasm';
   let DTYPE='q4';
   let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
@@ -79,7 +79,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         pipe=await pipeline('text-generation',MODEL,{
           dtype:DTYPE,
           device:DEVICE,
-          model_file_name:'model_q4'
+          // Q4 file is selected automatically by Transformers.js from dtype:'q4'.
         });
       }catch(gpuError){
         if(DEVICE!=='webgpu') throw gpuError;
@@ -90,7 +90,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         pipe=await pipeline('text-generation',MODEL,{
           dtype:'q4',
           device:'wasm',
-          model_file_name:'model_q4'
+          // Q4 file is selected automatically by Transformers.js from dtype:'q4'.
         });
       }
 
