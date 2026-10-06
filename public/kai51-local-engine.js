@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-github-q4-v22-proxy-chat-selftest';
+  const VERSION='kai51-github-q4-v23-progress-cache-reset';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -92,7 +92,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         return nativeFetch(input,init);
       };
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-github-q4-v22';
+      env.cacheKey='haxbro-kai51-github-q4-v23';
 
       await resolveRuntime();
       await loadTrainingPack();
@@ -104,6 +104,14 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         pipe=await pipeline('text-generation',MODEL,{
           dtype:DTYPE,
           device:DEVICE,
+          // Report the real Transformers.js download progress instead of leaving the UI at 15%.
+          progress_callback:info=>{
+            const n=Number(info?.progress);
+            if(Number.isFinite(n)){
+              const mapped=15+(Math.max(0,Math.min(100,n))*0.80);
+              progress(Math.min(95,Math.round(mapped)),info?.file?'Downloading '+String(info.file).split('/').pop():'Downloading KAI 51 neural model');
+            }
+          }
           // Q4 file is selected automatically by Transformers.js from dtype:'q4'.
         });
       }catch(gpuError){
@@ -115,6 +123,13 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
         pipe=await pipeline('text-generation',MODEL,{
           dtype:'q4',
           device:'wasm',
+          progress_callback:info=>{
+            const n=Number(info?.progress);
+            if(Number.isFinite(n)){
+              const mapped=35+(Math.max(0,Math.min(100,n))*0.60);
+              progress(Math.min(95,Math.round(mapped)),info?.file?'Downloading '+String(info.file).split('/').pop():'Downloading KAI 51 neural model');
+            }
+          }
           // Q4 file is selected automatically by Transformers.js from dtype:'q4'.
         });
       }

@@ -218,6 +218,17 @@ function showAppPlatformChoices(value){
   ]);
 }
 async function sendChat(text,opts={}){let value=String(text||'').trim();if(!value)return false;if(sendInFlight&&!opts.internalRetry)return true;const now=Date.now();if(value===lastSendValue&&now-lastSendAt<5000&&!opts.internalRetry)return true;if(!opts.internalRetry){sendInFlight=true;lastSendValue=value;lastSendAt=now}if(await checkAdmin69(value)){sendInFlight=false;return true}ensureChat();
+/* Explicit model picker: KAI 51 LOCAL, KAI 51 GITHUB, or KAI LITE. */
+if(!opts.internalRetry&&window.HAxBROSelectedModel==='kai-lite'&&window.HAxBROKaiLite?.respond){
+  addMessage(value,'user');updateKaiMemory(value);if(input){input.value='';resize();}
+  try{
+    setBusy(true,'light');kaiActivityStart('light');kaiActivityStep('lite','KAI LITE · selected','Using the lightweight web intelligence lane','','running');
+    const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
+    if(lite?.response){kaiActivitySet('lite','done','KAI LITE response delivered');kaiActivityFinish(lite);addMessage(lite.response,'bot');return true;}
+    throw new Error('KAI LITE returned no response');
+  }catch(e){addMessage('KAI LITE could not complete this turn. Select KAI 51 LOCAL or KAI 51 GITHUB to continue.','bot');return true}
+  finally{setBusy(false);sendInFlight=false;}
+}
 /* No hard-coded creator/identity response. Every normal question is handled by the selected KAI intelligence/fallback chain. */
 if(!opts.fromChoice&&!overdrive&&kaiChoiceSearchLike(value)){
   addMessage(value,'user');updateKaiMemory(value);if(input)input.value='';resize();showSearchChoices(value);return true;

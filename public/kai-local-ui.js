@@ -68,14 +68,17 @@
     }
   }
   function applyChoice(choice){
-    // Native-only test: keep the selector visually on KAI and never switch the active engine.
-    state.model='kai';
+    const allowed=new Set(['kai-local','kai-github','kai-lite']);
+    state.model=allowed.has(choice)?choice:'kai-local';
     localStorage.setItem('haxbro_model_choice',state.model);
     window.HAxBROSelectedModel=state.model;
+    document.documentElement.dataset.haxbroModel=state.model;
     document.querySelectorAll('.model-option').forEach(x=>x.classList.toggle('active',x.dataset.modelChoice===state.model));
     const label=$('selectedModelLabel');
-    if(label)label.textContent=state.model==='kai'?'KAI':(document.querySelector('.model-option.active b')?.textContent||'AI');
+    if(label)label.textContent=state.model==='kai-lite'?'KAI LITE':state.model==='kai-github'?'KAI 51 · GITHUB':'KAI 51 · LOCAL';
+    if(state.model==='kai-lite') state.preparing=false;
     button('send');
+    window.dispatchEvent(new CustomEvent('haxbro:model-selected',{detail:{model:state.model}}));
   }
   async function runLocal(value){
     const api=window.HAxBROLocalKai;
