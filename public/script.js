@@ -218,15 +218,7 @@ function showAppPlatformChoices(value){
   ]);
 }
 async function sendChat(text,opts={}){let value=String(text||'').trim();if(!value)return false;if(sendInFlight&&!opts.internalRetry)return true;const now=Date.now();if(value===lastSendValue&&now-lastSendAt<5000&&!opts.internalRetry)return true;if(!opts.internalRetry){sendInFlight=true;lastSendValue=value;lastSendAt=now}if(await checkAdmin69(value)){sendInFlight=false;return true}ensureChat();
-/* First-party identity facts are deterministic product metadata, not generated guesses.
-   This prevents the real KAI 51 model or Lite bridge from inventing the creator/CEO. */
-const identityAsk=/\b(?:who\s+(?:made|created|built)\s+you|who\s+is\s+(?:your|the)\s+(?:creator|founder|ceo)|who\s+(?:made|created|founded)\s+(?:haxbro|hacks\s*bro\s*ai|xbro\s*ai)|(?:who|what)\s+is\s+(?:the\s+)?(?:ceo|founder|creator)\s+of\s+(?:haxbro|hacks\s*bro\s*ai|xbro\s*ai)|who\s+is\s+mainak\s+kuila)\b/i;
-if(identityAsk&&!opts.internalRetry){
-  const identity='Mainak Kuila is the founder, creator and CEO behind HAxBRO AI (Hacks Bro AI / HAxBRO). He is an independent developer building HAxBRO as an independent AI product and brand.';
-  addMessage(value,'user');updateKaiMemory(value);if(input){input.value='';resize();}
-  addMessage(identity,'bot');setBusy(false);sendInFlight=false;return true;
-}
-/* Normal chat stays model-driven. Roast requests, jokes, explanations, and casual conversation are handled by KAI 51 naturally rather than a hard-coded response table. */
+/* No hard-coded creator/identity response. Every normal question is handled by the selected KAI intelligence/fallback chain. */
 if(!opts.fromChoice&&!overdrive&&kaiChoiceSearchLike(value)){
   addMessage(value,'user');updateKaiMemory(value);if(input)input.value='';resize();showSearchChoices(value);return true;
 }
