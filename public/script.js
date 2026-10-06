@@ -98,6 +98,10 @@ function kaiActivityStart(profile='heavy'){
  const label=profile==='light'?'KAI FAST · LIVE':'KAI 51 · LIVE';
  const estimate=profile==='light'?6:12; thinkingEstimateSec=estimate;
  thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span></span></div><div class="kai-timer"><span class="kai-timer-estimate"><b>'+estimate+'</b></span><span class="kai-timer-live">LIVE <b class="kai-activity-time">0s</b></span></div></div><div class="kai-activity-list"></div>';
+ kaiActivityStep('thinking','KAI 51 · thinking','Reading your request and understanding the task','','running');
+ kaiActivityStep('interpreting','KAI 51 · interpreting','Interpreting intent, context and required action','','pending');
+ kaiActivityStep('searching','KAI 51 · searching','Waiting for research signal','','pending');
+ kaiActivityStep('synthesis','KAI 51 · composing','Waiting for the result to be organized','','pending');
  messages.appendChild(thinkingBubble);
  thinkingTimer=setInterval(()=>{
    if(token!==thinkingSeq||thinkingBubble!==bubble){clearInterval(thinkingTimer);thinkingTimer=null;return}
@@ -146,7 +150,7 @@ function kaiActivityFinish(data){
  if(list){const final=kaiActivityRow('Answer ready','KAI 51 synthesized the result');final.classList.add('kai-activity-final');list.appendChild(final);requestAnimationFrame(()=>requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'})))}
  bubble.classList.add('is-complete');
  const minimumThinkingMs=650;
- const holdAfterAnswerMs=850;
+ const holdAfterAnswerMs=2600;
  const waitForMinimum=Math.max(0,minimumThinkingMs-elapsedMs);
  setTimeout(()=>{
    if(token!==thinkingSeq||thinkingBubble!==bubble)return;
@@ -256,9 +260,11 @@ if(input)input.value='';resize();try{if(!overdrive){
             window.HAxBROVoiceIntelligence?.snapshot?.()||window.HAxBROVoiceContext||null
           );
           if(local?.response){
-            kaiActivityStart('light');
             kaiActivityStep('local','KAI 51 · local','Running directly on this device','','running');
+            kaiActivitySet('thinking','done','Understanding complete');
+            kaiActivitySet('language','done','Language and communication mode detected');
             kaiActivitySet('local','done','Response generated locally');
+            kaiActivitySet('synthesis','done','Answer synthesis completed');
             kaiActivityFinish({sources:[],local:true});
             addMessage(local.response,'bot');
             return true;
@@ -430,12 +436,12 @@ async function kai51WorkspaceRoute(value){
       let done=false,final=null,client=null;
       const handle=ev=>{
         if(ev.type==='connected') kaiActivityStep('execution','KAI 51 execution','Live activity channel connected','', 'done');
-        else if(ev.type==='planning'){kaiActivitySet('execution','done');kaiActivityStep('planning',ev.label||'Understanding request',ev.detail,'','running');}
-        else if(ev.type==='search-start'){kaiActivitySet('planning','done');kaiActivityStep('search-'+String(ev.source||'web').toLowerCase(),'Searching '+(ev.source||'the web'),ev.query,ev.source==='Wikipedia'?'https://www.wikipedia.org':'https://www.bing.com','running');}
+        else if(ev.type==='planning'){kaiActivitySet('execution','done');kaiActivitySet('thinking','done','Request understood');kaiActivityStep('interpreting',ev.label||'KAI 51 · interpreting',ev.detail||'Interpreting intent, context and required action','','running');}
+        else if(ev.type==='search-start'){kaiActivitySet('interpreting','done','Intent interpreted');kaiActivitySet('searching','done','Research started');kaiActivityStep('search-'+String(ev.source||'web').toLowerCase(),'KAI 51 · searching · '+(ev.source||'the web'),ev.query,ev.source==='Wikipedia'?'https://www.wikipedia.org':'https://www.bing.com','running');}
         else if(ev.type==='knowledge-start') kaiActivityStep('knowledge','Checking HAxBRO Knowledge','Knowledge base lookup','','running');
         else if(ev.type==='source-found'){kaiActivitySet('search-'+String(ev.source||'web').toLowerCase(),'done');kaiActivityStep('source-'+String(ev.title||ev.source||'source').toLowerCase().replace(/[^a-z0-9]+/g,'-'),'Reading '+(ev.title||ev.source),ev.source,ev.url||'','done');}
         else if(ev.type==='context-ready'){kaiActivitySet('knowledge','done',(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items');kaiActivityStep('evidence','Evidence ready',(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items','','done');}
-        else if(ev.type==='synthesis-start'){kaiActivitySet('planning','done');kaiActivityStep('synthesis','Organizing answer',ev.detail||'Synthesizing the retrieved context','','running');}
+        else if(ev.type==='synthesis-start'){kaiActivitySet('searching','done','Research complete');kaiActivitySet('interpreting','done','Interpretation complete');kaiActivityStep('synthesis','KAI 51 · composing',ev.detail||'Organizing the retrieved context into an answer','','running');}
         else if(ev.type==='complete'){kaiActivitySet('synthesis','done','Answer synthesis completed');final=ev.result;done=true;}
         else if(ev.type==='error'){kaiActivitySet('synthesis','error',ev.message||'KAI execution failed');done=true;}
       };
@@ -461,8 +467,8 @@ async function kai51WorkspaceRoute(value){
           try{
             const ev=JSON.parse(line.slice(6));
             if(ev.type==='connected') kaiActivityStep('stream','KAI 51 execution','Live stream connected','','done');
-            else if(ev.type==='planning') kaiActivityStep('planning',ev.label||'Understanding request',ev.detail,'','running');
-            else if(ev.type==='search-start') kaiActivityStep('search-'+String(ev.source||'web').toLowerCase(),'Searching '+(ev.source||'the web'),ev.query,ev.source==='Wikipedia'?'https://wikipedia.org':'https://www.bing.com','running');
+            else if(ev.type==='planning'){kaiActivitySet('thinking','done','Request understood');kaiActivityStep('interpreting',ev.label||'KAI 51 · interpreting',ev.detail||'Interpreting intent, context and required action','','running');}
+            else if(ev.type==='search-start'){kaiActivitySet('interpreting','done','Intent interpreted');kaiActivitySet('searching','done','Research started');kaiActivityStep('search-'+String(ev.source||'web').toLowerCase(),'KAI 51 · searching · '+(ev.source||'the web'),ev.query,ev.source==='Wikipedia'?'https://wikipedia.org':'https://www.bing.com','running');}
             else if(ev.type==='knowledge-start') kaiActivityStep('knowledge','Checking HAxBRO Knowledge','Knowledge base lookup','','running');
             else if(ev.type==='source-found'){kaiActivitySet('search-'+String(ev.source||'web').toLowerCase(),'done');kaiActivityStep('source-'+String(ev.title||ev.source||'source').toLowerCase().replace(/[^a-z0-9]+/g,'-'),'Reading '+(ev.title||ev.source),ev.source,ev.url||'','done');}
             else if(ev.type==='context-ready'){kaiActivitySet('knowledge','done',(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items');kaiActivityStep('evidence','Evidence ready',(ev.sourceCount||0)+' sources · '+(ev.knowledgeCount||0)+' context items','','done');}
