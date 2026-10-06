@@ -1,6 +1,7 @@
 (() => {
-  const VERSION = 'kai51-local-controller-v13-persistent-cache';
+  const VERSION = 'kai51-unified-controller-v14-local-first';
   const KEY = 'haxbro:kai51:installation:v14-github-q4';
+  const LOCAL_KEY = 'haxbro:kai51:local-intelligence:og-v1';
   const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
 
@@ -102,9 +103,38 @@
     return enginePromise;
   }
 
+  function localInstallState(){
+    try{
+      const x=JSON.parse(localStorage.getItem(LOCAL_KEY)||'null');
+      return x&&x.ready===true?x:null;
+    }catch{return null}
+  }
+
+  async function installLocalFirst(){
+    /* LOCAL is the OG orchestration intelligence, so its "installation" is the
+       deterministic registration/initialization of that intelligence layer — no
+       386MB neural download belongs to LOCAL. */
+    if(!window.HAxBROKaiLocalIntelligence?.run) throw new Error('KAI 51 LOCAL intelligence is not loaded');
+    const existing=localInstallState();
+    const info={ready:true,version:window.HAxBROKaiLocalIntelligence.version||'kai51-local-intelligence-v1',installedAt:existing?.installedAt||new Date().toISOString()};
+    try{localStorage.setItem(LOCAL_KEY,JSON.stringify(info));}catch{}
+    window.HAxBROKaiLocalInstalled=true;
+    window.HAxBRO_KAI51_LOCAL_READY=true;
+    window.dispatchEvent(new CustomEvent('haxbro:kai-local-installed',{detail:info}));
+    emit({profile:'local',progress:100,status:'KAI 51 · LOCAL installed and ready',installed:true,verified:true});
+    return info;
+  }
+
+  let unifiedBootPromise=null;
   async function maybeInstall() {
-    state = read();
-    return loadEngine();
+    if(unifiedBootPromise) return unifiedBootPromise;
+    unifiedBootPromise=(async()=>{
+      /* HARD ORDER: LOCAL first. Only after LOCAL is initialized do we start GITHUB. */
+      await installLocalFirst();
+      emit({profile:'heavy',progress:0,status:'KAI 51 · GITHUB installation starting after LOCAL'});
+      return loadEngine();
+    })().catch(e=>{unifiedBootPromise=null;throw e;});
+    return unifiedBootPromise;
   }
 
   async function generate(message,history=[]) {
@@ -129,14 +159,37 @@
     };
   }
 
+  async function unifiedGenerate(message,history=[],hooks={}){
+    /* Combined intelligence contract: LOCAL is always the first reasoning lane;
+       GITHUB is the precision neural lane; LITE is always present as final recovery. */
+    await installLocalFirst();
+    const local=window.HAxBROKaiLocalIntelligence;
+    if(local?.run){
+      const turn=await local.run(message,history,hooks);
+      if(turn?.response&&!turn.handoff) return {...turn,lane:'local',combined:true};
+      if(turn?.handoff) hooks.onHandoff?.(turn.reason||'LOCAL requested deeper precision');
+    }
+    try{
+      hooks.onStage?.('github','KAI 51 · GITHUB is handling the precision lane');
+      const github=await generate(message,history);
+      if(github?.response) return {...github,lane:'github',combined:true};
+    }catch(e){
+      hooks.onStage?.('lite','KAI LITE remains available as the final working lane');
+    }
+    const lite=await window.HAxBROKaiLite?.respond?.(message,history);
+    if(lite?.response) return {...lite,lane:'lite',combined:true};
+    throw new Error('No KAI intelligence lane is currently available');
+  }
+
   window.HAxBROKai51Bootstrap = {
     version:VERSION,
-    state:status,
+    state:()=>({...status(),localInstalled:!!localInstallState()}),
     maybeInstall,
     prepare:maybeInstall,
     generate,
     chat,
-    isInstalled:()=>read().status==='ready',
+    unifiedGenerate,
+    isInstalled:()=>read().status==='ready'&&!!localInstallState(),
     resetForTesting() {
       try { localStorage.removeItem(KEY); } catch {}
       state = write(defaultState());
