@@ -10,8 +10,14 @@
   }
   function render(d={}){
     const state=window.HAxBROKai51Bootstrap?.state?.()||{};
-    if(state.status==='ready'&&state.installed&&state.verified){mount().classList.add('is-ready');return}
-    const x=mount();x.classList.remove('is-ready');
+    const x=mount();
+    if(state.status==='ready'&&state.installed&&state.verified){
+      x.classList.add('is-ready');
+      const p=x.querySelector('.hook-pct');if(p)p.textContent='100%';
+      const lite=x.querySelector('.hook-lite');if(lite)lite.textContent='· KAI 51 READY · GITHUB Q4';
+      return;
+    }
+    x.classList.remove('is-ready');
     const pct=clamp(d.progress??(state.status==='installing'?5:0));
     const p=x.querySelector('.hook-pct');if(p)p.textContent=pct+'%';
     const lite=x.querySelector('.hook-lite');
