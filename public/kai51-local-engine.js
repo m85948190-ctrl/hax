@@ -79,14 +79,32 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{}}={}) {
       // but the actual bytes are served by HAxBRO's same-origin proxy from that release.
       // This preserves Range requests and avoids browser-side GitHub redirect/CORS variance.
       const nativeFetch=globalThis.fetch.bind(globalThis);
+      const MODEL_CACHE_NAME='haxbro-kai51-model-v1';
+      const modelCacheKey=(file,range)=>{
+        const key='/__haxbro_kai51_cache__/'+encodeURIComponent(file);
+        return new Request(key+(range?'?range='+encodeURIComponent(range):''));
+      };
       env.fetch=async (input,init)=>{
         const raw=typeof input==='string'?input:(input?.url||String(input));
         try{
           const u=new URL(raw,location.href);
           const file=decodeURIComponent(u.pathname.split('/').pop()||'');
           if(MODEL_ASSETS.has(file)){
+            const range=init?.headers?.Range||init?.headers?.range||(
+              typeof input!=='string' && input?.headers ? input.headers.get?.('Range') : ''
+            )||'';
+            const cache=await caches.open(MODEL_CACHE_NAME);
+            const key=modelCacheKey(file,range);
+            const cached=await cache.match(key);
+            if(cached) return cached;
             const target=MODEL_PROXY+'?file='+encodeURIComponent(file);
-            return nativeFetch(target,init);
+            const headers=new Headers(init?.headers||{});
+            if(range) headers.set('Range',range);
+            const network=await nativeFetch(target,{...init,headers,cache:'no-store'});
+            if(network.ok){
+              try{await cache.put(key,network.clone());}catch{}
+            }
+            return network;
           }
         }catch{}
         return nativeFetch(input,init);
