@@ -58,6 +58,17 @@
       return;
     }
 
+    if(d.profile==='local'){
+      mount();
+      const title=document.getElementById('kai51BootTitle');
+      const body=document.getElementById('kai51BootText');
+      if(title) title.textContent='KAI 51 · LOCAL INTELLIGENCE READY';
+      if(body) body.textContent='The original HAxBRO local intelligence lane is initialized. KAI 51 · GITHUB will continue its neural installation separately.';
+      document.getElementById('kai51BootFill').style.width='100%';
+      document.getElementById('kai51BootPercent').textContent='100%';
+      document.getElementById('kai51BootStatus').textContent='LOCAL ready · GITHUB installing next';
+      return;
+    }
     const incoming=Math.max(0,Math.min(99,Math.round(Number(d.progress)||0)));
     const current=Number(document.getElementById('kai51BootPercent')?.textContent?.replace('%',''))||0;
     const pct=Math.max(current,incoming);

@@ -215,8 +215,6 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   async function generate(message,history=[]){
     const prompt=String(message||'').trim();
     if(!prompt) throw new Error('KAI 51 received an empty request');
-    const lower=prompt.toLowerCase();
-    const wantsIdentity=/\b(?:who\s+(?:made|created|built)\s+you|who\s+is\s+(?:your|the)\s+(?:creator|founder|ceo)|who\s+(?:made|created|founded)\s+(?:haxbro|hacks\s*bro\s*ai|xbro\s*ai)|who\s+is\s+(?:the\s+)?(?:ceo|founder|creator)\s+of\s+(?:haxbro|hacks\s*bro\s*ai|xbro\s*ai)|who\s+is\s+mainak\s+kuila)\b/i.test(prompt);
     const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
     const rules=(trainingPack?.rules||[])
       .filter(x=>x&&x.rule)
