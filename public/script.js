@@ -243,6 +243,62 @@ if(!opts.fromChoice&&!overdrive&&value.length>0&&!kaiChoiceSearchLike(value)&&/\
 let launchFromPending=false;if(overdrive){const pendingKey='haxbro_kai_pending_target';if(/^abort all$/i.test(value))sessionStorage.removeItem(pendingKey)}applyContextTheme(value);if(!launchFromPending&&opts.fromChoice===true){updateKaiMemory(value)}
 else if(!launchFromPending){addMessage(value,'user');updateKaiMemory(value)}
 if(input)input.value='';resize();try{if(!overdrive){
+      /* OG KAI 51 LOCAL is the first intelligence lane. It is an orchestration engine,
+         not the Hugging Face foundational model. LOCAL understands, searches, analyzes,
+         and converses; only genuinely hard/precision-heavy turns are handed to GITHUB. */
+      const selectedModel=window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||'kai-local';
+      if(!opts.fromChoice && selectedModel==='kai-local' && window.HAxBROKaiLocalIntelligence?.run){
+        setBusy(true,'light');
+        kaiActivityStart('light');
+        kaiActivityStep('local','KAI 51 · LOCAL','Understanding the request in the OG local intelligence lane','','running');
+        let localTurn=null;
+        try{
+          localTurn=await window.HAxBROKaiLocalIntelligence.run(value,active()?.items?.slice(-12)||[],{
+            onStage:(stage,label)=>kaiActivityStep(stage,label,'Local intelligence','','running'),
+            onHandoff:(reason)=>kaiActivitySet('local','done','LOCAL recommends KAI 51 · GITHUB')
+          });
+        }catch(e){
+          console.warn('KAI 51 LOCAL intelligence failed',e);
+          localTurn=null;
+        }
+        if(localTurn?.response && !localTurn.handoff){
+          kaiActivitySet('local','done','LOCAL response generated');
+          kaiActivityFinish({sources:localTurn.sources||[],local:true,foundationalModel:false});
+          addMessage(localTurn.response,'bot');
+          /* Sequential boot: LOCAL is first; GITHUB installation starts only after LOCAL is ready. */
+          try{window.HAxBROKai51Bootstrap?.prepare?.().catch(e=>console.warn('KAI 51 GITHUB background install',e));}catch{}
+          return true;
+        }
+        if(localTurn?.handoff){
+          const reason=localTurn.reason||'This request needs deeper reasoning and higher precision.';
+          addMessage('KAI 51 · LOCAL\n\nI understand the request, but I\'m shifting this to KAI 51 · GITHUB because '+reason+' I want to give you the more precise answer.','bot');
+          kaiActivitySet('local','done','LOCAL → GITHUB handoff');
+          kaiActivityStep('github','KAI 51 · GITHUB','Running the newer neural model for this harder request','','running');
+          try{
+            const github=await window.HAxBROKai51Bootstrap?.generate?.(value,active()?.items?.slice(-12)||[]);
+            if(github?.response){
+              kaiActivitySet('github','done','GITHUB produced the answer');
+              kaiActivityFinish({sources:github.sources||[],local:false,github:true});
+              addMessage(github.response,'bot');
+              return true;
+            }
+            throw new Error('KAI 51 GITHUB returned no response');
+          }catch(e){
+            console.warn('KAI 51 GITHUB handoff failed',e);
+            kaiActivitySet('github','error','GITHUB neural lane unavailable');
+            if(window.HAxBROKaiLite?.respond){
+              try{
+                kaiActivityStep('lite','KAI LITE','Both KAI 51 lanes were unavailable; using the final web-only lane','','running');
+                const lite=await window.HAxBROKaiLite.respond(value,active()?.items?.slice(-12)||[]);
+                if(lite?.response){kaiActivitySet('lite','done','KAI LITE response delivered');kaiActivityFinish(lite);addMessage(lite.response,'bot');return true;}
+              }catch{}
+            }
+            addMessage('KAI 51 could not complete this request right now.','bot');
+            return true;
+          }
+        }
+        /* LOCAL could not establish a reliable answer. Continue into the existing recovery path. */
+      }
       const bootstrapState=window.HAxBROKai51Bootstrap?.state?.()||{};
       /* ONE handoff rule:
          - while KAI 51 is not verified ready, KAI Lite may bridge the turn;
