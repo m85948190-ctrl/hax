@@ -66,6 +66,8 @@
       return {response:'Hey! I\'m KAI 51 · LOCAL. What are we working on?',confidence:0.98};
     if(/^(thanks|thank you|thx|ty)\b/i.test(t))
       return {response:'You\'re welcome. I\'m ready for the next one.',confidence:0.98};
+    if(/^(gj|gg|good job|great|nice|nice one|awesome|cool|perfect|brilliant|well done|that works|works great)\b[.! ]*$/i.test(t))
+      return {response:'Thanks, bro. We\'re good — send me the next thing you want to work on.',confidence:0.97};
     if(/^(ok|okay|sure|yes|yeah|yep|no|nah|got it)\b/i.test(t) && last)
       return {response:'Got it. I\'ll keep the previous context in mind. What should I do next?',confidence:0.82};
     if(/^(who are you|what are you)\??$/i.test(t))
