@@ -150,17 +150,15 @@ function kaiActivityFinish(data){
  if(list){const final=kaiActivityRow('Answer ready','KAI 51 synthesized the result');final.classList.add('kai-activity-final');list.appendChild(final);requestAnimationFrame(()=>requestAnimationFrame(()=>list.scrollTo({top:list.scrollHeight,behavior:'smooth'})))}
  bubble.classList.add('is-complete');
  const minimumThinkingMs=650;
- const holdAfterAnswerMs=2600;
  const waitForMinimum=Math.max(0,minimumThinkingMs-elapsedMs);
+ /* The activity surface must never coexist with the final answer.
+    Collapse it before addMessage() appends the response, eliminating
+    visual overlap on mobile and desktop. */
  setTimeout(()=>{
    if(token!==thinkingSeq||thinkingBubble!==bubble)return;
-   setTimeout(()=>{
-     if(token!==thinkingSeq||thinkingBubble!==bubble)return;
-     bubble.classList.add('is-fading');
-     setTimeout(()=>{
-       if(token===thinkingSeq&&thinkingBubble===bubble){bubble.remove();thinkingBubble=null}
-     },260);
-   },holdAfterAnswerMs);
+   bubble.classList.add('is-fading');
+   bubble.remove();
+   if(thinkingBubble===bubble)thinkingBubble=null;
  },waitForMinimum);
 }
 function setBusy(v,profile='heavy'){
