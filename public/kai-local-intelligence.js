@@ -66,8 +66,7 @@
       return {response:'Hey! I\'m KAI 51 · LOCAL. What are we working on?',confidence:0.98};
     if(/^(thanks|thank you|thx|ty)\b/i.test(t))
       return {response:'You\'re welcome. I\'m ready for the next one.',confidence:0.98};
-    if(/^(gj|gg|good job|great|nice|nice one|awesome|cool|perfect|brilliant|well done|that works|works great)\b[.! ]*$/i.test(t))
-      return {response:'Thanks, bro. We\'re good — send me the next thing you want to work on.',confidence:0.97};
+    /* Contextual acknowledgement handling is intentionally delegated to the KAI 51 lanes; no phrase-specific canned matcher. */
     if(/^(ok|okay|sure|yes|yeah|yep|no|nah|got it)\b/i.test(t) && last)
       return {response:'Got it. I\'ll keep the previous context in mind. What should I do next?',confidence:0.82};
     if(/^(who are you|what are you)\??$/i.test(t))
@@ -109,7 +108,7 @@
     /* No-evidence requests are not answered with the old canned failure sentence.
        If LOCAL cannot establish enough context/evidence, it explicitly hands the turn to
        GITHUB instead of pretending that a rule-based guess is an answer. */
-    const precisionRequired=s.hard || s.score>=0.68 || (sources.length===0 && (s.research||prompt.length>12));
+    const precisionRequired=s.hard || s.score>=0.68 || sources.length===0;
     if(precisionRequired){
       const why=s.hard?'The request needs deeper technical reasoning.':s.research&&sources.length===0?'The request needs precise external evidence that LOCAL could not establish.':'The request is complex enough to benefit from the newer neural reasoning lane.';
       hooks.onHandoff?.(why);
