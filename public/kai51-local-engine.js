@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-github-q4-v23-progress-cache-reset';
+  const VERSION='kai51-github-q4-v24-resumable-github-cache';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -87,47 +87,97 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       // but the actual bytes are served by HAxBRO's same-origin proxy from that release.
       // This preserves Range requests and avoids browser-side GitHub redirect/CORS variance.
       const nativeFetch=globalThis.fetch.bind(globalThis);
-      const MODEL_CACHE_NAME='haxbro-kai51-model-v1';
-      // A previously verified installation must be restored from browser cache first.
-      // Only a genuine cache miss may re-enable network loading.
-      let cacheOnlyFirst=!!preferCache;
+      const MODEL_CACHE_NAME='haxbro-kai51-model-v2';
+      const MODEL_SIZES=Object.freeze({'model_q4.onnx':386495938,'model_q4f16.onnx':272353302});
+      const CHUNK_SIZE=8*1024*1024;
       const modelCacheKey=(file,range)=>{
-        const key='/__haxbro_kai51_cache__/'+encodeURIComponent(file);
+        const key='/__haxbro_kai51_cache_v2__/'+encodeURIComponent(file);
         return new Request(key+(range?'?range='+encodeURIComponent(range):''));
       };
+      const cacheOpen=()=>caches.open(MODEL_CACHE_NAME);
+
+      /* IMPORTANT: never use local_files_only for a browser installation.
+         A verified cache is used automatically, but a missing chunk must be fetched
+         from the pinned GitHub release rather than turning into a permanent CACHE_MISS.
+         This makes interrupted/partial downloads resumable. */
       env.fetch=async (input,init)=>{
         const raw=typeof input==='string'?input:(input?.url||String(input));
-        try{
-          const u=new URL(raw,location.href);
-          const file=decodeURIComponent(u.pathname.split('/').pop()||'');
-          if(MODEL_ASSETS.has(file)){
-            const range=init?.headers?.Range||init?.headers?.range||(
-              typeof input!=='string' && input?.headers ? input.headers.get?.('Range') : ''
-            )||'';
-            const cache=await caches.open(MODEL_CACHE_NAME);
-            const key=modelCacheKey(file,range);
-            const cached=await cache.match(key);
-            if(cached) return cached;
-            const target=MODEL_PROXY+'?file='+encodeURIComponent(file);
-            const headers=new Headers(init?.headers||{});
-            if(range) headers.set('Range',range);
-            if(cacheOnlyFirst) throw new Error('KAI51_CACHE_MISS:'+file);
-            const network=await nativeFetch(target,{...init,headers,cache:'no-store'});
-            if(network.ok){
-              try{await cache.put(key,network.clone());}catch{}
-            }
-            return network;
-          }
-        }catch{}
+        const u=new URL(raw,location.href);
+        const file=decodeURIComponent(u.pathname.split('/').pop()||'');
+        if(!MODEL_ASSETS.has(file)) return nativeFetch(input,init);
+
+        const requestedRange=init?.headers?.Range||init?.headers?.range||(
+          typeof input!=='string' && input?.headers ? input.headers.get?.('Range') : ''
+        )||'';
+        const cache=await cacheOpen();
+
+        /* Normal ranged request: cache the exact range and resume missing pieces. */
+        if(requestedRange){
+          const key=modelCacheKey(file,requestedRange);
+          const cached=await cache.match(key);
+          if(cached) return cached;
+          const headers=new Headers(init?.headers||{});
+          headers.set('Range',requestedRange);
+          const network=await nativeFetch(MODEL_PROXY+'?file='+encodeURIComponent(file),{...init,headers,cache:'no-store'});
+          if(!network.ok) throw new Error('KAI51_MODEL_HTTP_'+network.status+'_'+file);
+          try{await cache.put(key,network.clone());}catch{}
+          return network;
+        }
+
+        /* Some ONNX/runtime paths request the entire .onnx file without a Range.
+           Do not ask Hatchable to buffer 386 MB. Stream the same GitHub release
+           through small ranged requests directly to the browser, caching every chunk. */
+        if(MODEL_SIZES[file]){
+          const total=MODEL_SIZES[file];
+          let stopped=false;
+          let chunkIndex=0;
+          const stream=new ReadableStream({
+            start(controller){controllerRef=controller;},
+            async pull(controller){
+              if(stopped)return;
+              const index=chunkIndex;
+              const start=index*CHUNK_SIZE;
+              if(start>=total){stopped=true;controller.close();return;}
+              const end=Math.min(total-1,start+CHUNK_SIZE-1);
+              const range='bytes='+start+'-'+end;
+              const key=modelCacheKey(file,range);
+              try{
+                let part=await cache.match(key);
+                if(!part){
+                  const headers=new Headers(init?.headers||{});
+                  headers.set('Range',range);
+                  part=await nativeFetch(MODEL_PROXY+'?file='+encodeURIComponent(file),{...init,headers,cache:'no-store'});
+                  if(!part.ok) throw new Error('KAI51_MODEL_HTTP_'+part.status+'_'+range);
+                  try{await cache.put(key,part.clone());}catch{}
+                }
+                const bytes=new Uint8Array(await part.arrayBuffer());
+                controller.enqueue(bytes);
+                chunkIndex=index+1;
+                const pct=15+Math.min(80,Math.round(((end+1)/total)*80));
+                progress(pct,'Downloading KAI 51 neural model · '+Math.round(((end+1)/total)*100)+'%');
+              }catch(e){
+                stopped=true;
+                controller.error(e);
+              }
+            },
+            cancel(){stopped=true;}
+          });
+          const headers=new Headers();
+          headers.set('Content-Type','application/octet-stream');
+          headers.set('Content-Length',String(total));
+          headers.set('Accept-Ranges','bytes');
+          return new Response(stream,{status:200,headers});
+        }
+
         return nativeFetch(input,init);
       };
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-github-q4-v23';
+      env.cacheKey='haxbro-kai51-github-q4-v24';
 
       await resolveRuntime();
       await loadTrainingPack();
-      progress(15,cacheOnlyFirst
-        ? 'Restoring the installed KAI 51 neural model from browser cache'
+      progress(15,preferCache
+        ? 'Restoring available KAI 51 neural chunks from browser cache'
         : 'Installing the real KAI 51 360M Q4 neural model');
       /* Real-model handoff rule: prefer GPU, but NEVER let an unsupported WebGPU
          operator/device kill KAI 51. Retry the exact same neural weights on the
@@ -136,7 +186,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         pipe=await pipeline('text-generation',MODEL,{
           dtype:DTYPE,
           device:DEVICE,
-          local_files_only:cacheOnlyFirst,
+          local_files_only:false,
           // Report the real Transformers.js download progress instead of leaving the UI at 15%.
           progress_callback:info=>{
             const n=Number(info?.status==='progress_total'?info.progress:info?.progress);
@@ -156,7 +206,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         pipe=await pipeline('text-generation',MODEL,{
           dtype:'q4',
           device:'wasm',
-          local_files_only:cacheOnlyFirst,
+          local_files_only:false,
           progress_callback:info=>{
             const n=Number(info?.progress);
             if(Number.isFinite(n)){

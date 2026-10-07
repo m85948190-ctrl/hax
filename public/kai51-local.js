@@ -1,6 +1,6 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v14-local-first';
-  const KEY = 'haxbro:kai51:installation:v14-github-q4';
+  const VERSION = 'kai51-unified-controller-v15-local-first-stable';
+  const KEY = 'haxbro:kai51:installation:v15-github-q4';
   const LOCAL_KEY = 'haxbro:kai51:local-intelligence:og-v1';
   const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
@@ -69,8 +69,8 @@
     if (window.HAxBROKai51Engine?.generate) return window.HAxBROKai51Engine;
     if (enginePromise) return enginePromise;
 
-    const restoring=state.installed===true;
-    state = write({status:restoring?'restoring':'installing',installed:state.installed,verified:false,error:null});
+    const restoring=state.status==='ready' && state.verified===true;
+    state = write({status:restoring?'restoring':'installing',installed:restoring,verified:false,error:null});
     emit({profile:'heavy',progress:restoring ? 95 : 2,status:restoring
       ? 'KAI 51 installed · restoring from persistent browser cache'
       : 'KAI 51 neural installation starting'});
@@ -78,10 +78,10 @@
     enginePromise = window.__HAxBROKai51EnginePromise = (async () => {
       // The current browser-ready ONNX package is fetched directly from Hugging Face.
       // Do not register the legacy GitHub model service worker on this path.
-      const mod = await import('/kai51-local-engine.js?v=34');
+      const mod = await import('/kai51-local-engine.js?v=36');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
-        preferCache:state.installed===true,
+        preferCache:restoring,
         onReady:info => {
           state = write({status:'ready',installed:true,verified:true,model:info?.model||MODEL,error:null});
           emit({profile:'heavy',progress:100,status:'KAI 51 installed and verified',installed:true,verified:true});
@@ -94,7 +94,7 @@
       await engine.prepare();
       return engine;
     })().catch(err => {
-      state = write({status:'error',installed:state.installed,verified:false,error:safe(err?.message||err,700)});
+      state = write({status:'error',installed:false,verified:false,error:safe(err?.message||err,700)});
       emit({profile:'heavy',progress:99,status:'KAI 51 verification failed — retry required',error:state.error});
       enginePromise = null;
       throw err;
@@ -203,7 +203,7 @@
   setInterval(()=>{
     try{
       const s=read();
-      if(s.status==='not_installed' && !enginePromise) maybeInstall().catch(()=>{});
+      if((s.status==='not_installed'||s.status==='error') && !enginePromise) maybeInstall().catch(()=>{});
     }catch{}
   },15000);
 })();

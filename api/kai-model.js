@@ -47,28 +47,12 @@ export default async function(req,res){
   const isLargeModel=name==='model_q4.onnx'||name==='model_q4f16.onnx';
   const knownSize=name==='model_q4.onnx'?386495938:name==='model_q4f16.onnx'?272000000:null;
   if(isLargeModel && !range){
-    const total=knownSize;
-    if(req.method==='HEAD'){
-      res.setHeader('Content-Type','application/octet-stream');
-      res.setHeader('Content-Length',String(total));
-      res.setHeader('Accept-Ranges','bytes');
-      res.setHeader('Cache-Control','public,max-age=31536000,immutable');
-      return res.status(200).send('');
-    }
-    res.setHeader('Content-Type','application/octet-stream');
-    res.setHeader('Content-Length',String(total));
+    /* Never make the Hatchable function buffer/assemble hundreds of MB.
+       The browser engine now requests the release in resumable Range chunks. */
     res.setHeader('Accept-Ranges','bytes');
+    res.setHeader('Content-Length',String(knownSize));
     res.setHeader('Cache-Control','public,max-age=31536000,immutable');
-    const CHUNK=8*1024*1024;
-    res.status(200);
-    for(let start=0;start<total;start+=CHUNK){
-      const end=Math.min(total-1,start+CHUNK-1);
-      const part=await fetch(assetUrl,{headers:{...headers,Range:'bytes='+start+'-'+end},redirect:'follow'});
-      if(!part.ok){try{res.end()}catch{};return;}
-      const buf=Buffer.from(await part.arrayBuffer());
-      res.write(buf);
-    }
-    return res.end();
+    return res.status(416).send('KAI 51 large model requires a Range request; the browser loader will resume it in chunks.');
   }
 
   const upstream=await fetch(assetUrl,{headers,redirect:'follow'});
