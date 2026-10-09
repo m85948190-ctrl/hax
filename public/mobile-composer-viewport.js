@@ -1,67 +1,64 @@
-/* HAxBRO iOS visual-viewport composer correction.
-   Recalculate while the keyboard opens/closes; always reset the keyboard inset
-   when focus leaves the prompt so the composer cannot remain suspended. */
+/* HAxBRO iOS composer: never leave a stale keyboard offset or suspended bar. */
 (() => {
-  if (window.__haxbroViewportComposerV1) return;
-  window.__haxbroViewportComposerV1 = true;
+  if (window.__haxbroViewportComposerV2) return;
+  window.__haxbroViewportComposerV2 = true;
   const root = document.documentElement;
-  const getForm = () => document.querySelector('#chatForm.composer');
-  const getInput = () => document.querySelector('#promptInput');
-  let raf = 0;
-  function syncViewport() {
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(() => {
-      const form = getForm();
-      const input = getInput();
-      if (!form) return;
+  const form = () => document.getElementById('chatForm');
+  const input = () => document.getElementById('promptInput');
+  let frame = 0;
+  function sync() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      const f = form(), i = input();
+      if (!f) return;
       const vv = window.visualViewport;
-      const focused = !!input && document.activeElement === input;
-      const layoutHeight = window.innerHeight || document.documentElement.clientHeight;
-      const visualBottom = vv ? vv.height + vv.offsetTop : layoutHeight;
-      const obscured = Math.max(0, Math.round(layoutHeight - visualBottom));
-      // Only lift the composer when the prompt is focused and the visual viewport
-      // indicates a real keyboard. Otherwise explicitly clear any stale offset.
-      const keyboardInset = focused && obscured > 120 ? obscured : 0;
-      root.style.setProperty('--hb-keyboard-inset', keyboardInset + 'px');
-      form.style.removeProperty('top');
-      form.style.removeProperty('transform');
-      form.style.setProperty('bottom', 'calc(8px + env(safe-area-inset-bottom, 0px) + var(--hb-keyboard-inset, 0px))', 'important');
+      const layoutHeight = window.innerHeight || root.clientHeight;
+      const visualHeight = vv ? vv.height : layoutHeight;
+      const focused = !!i && document.activeElement === i;
+      // Use viewport height (not offsetTop) and only lift while the prompt is focused.
+      const keyboardOpen = focused && (layoutHeight - visualHeight > 140);
+      const inset = keyboardOpen ? Math.max(0, Math.round(layoutHeight - visualHeight)) : 0;
+      root.style.setProperty('--hb-keyboard-inset', inset + 'px');
+      f.style.setProperty('bottom', 'calc(8px + env(safe-area-inset-bottom, 0px) + var(--hb-keyboard-inset, 0px))', 'important');
+      f.style.setProperty('position', 'fixed', 'important');
+      f.style.removeProperty('top');
+      f.style.removeProperty('transform');
     });
   }
-  function resetIfBlurred() {
-    requestAnimationFrame(() => {
-      const input = getInput();
-      if (!input || document.activeElement !== input) {
+  function resetAfterKeyboardClose() {
+    // Safari emits several viewport events during dismissal; reset now and after settling.
+    root.style.setProperty('--hb-keyboard-inset', '0px');
+    const f = form();
+    if (f) f.style.setProperty('bottom', 'calc(8px + env(safe-area-inset-bottom, 0px))', 'important');
+    sync();
+    setTimeout(() => {
+      if (!input() || document.activeElement !== input()) {
         root.style.setProperty('--hb-keyboard-inset', '0px');
-        const form = getForm();
-        if (form) {
-          form.style.removeProperty('top');
-          form.style.removeProperty('transform');
-          form.style.setProperty('bottom', 'calc(8px + env(safe-area-inset-bottom, 0px))', 'important');
-        }
+        const current = form();
+        if (current) current.style.setProperty('bottom', 'calc(8px + env(safe-area-inset-bottom, 0px))', 'important');
       }
-      syncViewport();
-    });
+    }, 280);
+    setTimeout(sync, 420);
   }
-  document.addEventListener('focusin', e => {
-    if (e.target && e.target.id === 'promptInput') syncViewport();
-  }, true);
-  document.addEventListener('focusout', e => {
-    if (e.target && e.target.id === 'promptInput') setTimeout(resetIfBlurred, 80);
-  }, true);
-  document.addEventListener('submit', e => {
-    if (e.target && e.target.id === 'chatForm') {
-      if (getInput()) getInput().blur();
-      setTimeout(resetIfBlurred, 40);
+  document.addEventListener('focusin', e => { if (e.target?.id === 'promptInput') sync(); }, true);
+  document.addEventListener('focusout', e => { if (e.target?.id === 'promptInput') setTimeout(resetAfterKeyboardClose, 60); }, true);
+  document.addEventListener('click', e => {
+    if (e.target?.closest?.('#sendBtn')) {
+      // script.js reads the value synchronously in its click handler before this blur.
+      setTimeout(() => { input()?.blur(); resetAfterKeyboardClose(); }, 90);
     }
   }, true);
-  window.addEventListener('resize', syncViewport, { passive: true });
-  window.addEventListener('orientationchange', () => setTimeout(syncViewport, 180), { passive: true });
+  document.addEventListener('submit', e => {
+    if (e.target?.id === 'chatForm') {
+      setTimeout(() => { input()?.blur(); resetAfterKeyboardClose(); }, 0);
+    }
+  }, true);
+  window.addEventListener('resize', sync, { passive: true });
+  window.addEventListener('orientationchange', () => setTimeout(resetAfterKeyboardClose, 180), { passive: true });
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', syncViewport, { passive: true });
-    window.visualViewport.addEventListener('scroll', syncViewport, { passive: true });
+    window.visualViewport.addEventListener('resize', sync, { passive: true });
+    window.visualViewport.addEventListener('scroll', sync, { passive: true });
   }
-  // Initial sync plus a second pass after Safari finishes its first layout.
-  syncViewport();
-  window.addEventListener('pageshow', () => setTimeout(syncViewport, 80), { passive: true });
+  window.addEventListener('pageshow', () => setTimeout(resetAfterKeyboardClose, 80), { passive: true });
+  sync();
 })();
