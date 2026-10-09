@@ -80,8 +80,13 @@ async function bingSearch(query) {
 function normalizeSearchQuery(message) {
   let q = clean(message, 700).replace(/[?!.]+$/g, "").trim();
   const fact = q.match(/\b(?:one|an?|some|interesting|fun|cool|random|amazing|surprising)?\s*(?:interesting\s+)?facts?\s+about\s+(.+)$/i);
-  if (fact?.[1]) return clean(fact[1], 300) + " octopus facts".replace(/^ octopus facts$/, " facts");
-  q = q.replace(/^\s*(?:please\s+)?(?:tell me|give me|share with me|find me|search for|look up|can you tell me|could you tell me)\s+/i, "");
+  if (fact?.[1]) return clean(fact[1], 300) + " facts";
+  // Strip conversational framing before search. Keeping phrases such as
+  // "in one sentence, what is" in a search query can return unrelated pages.
+  q = q.replace(/^\s*(?:please\s+)?(?:in\s+(?:one|a|two)\s+sentences?[, ]*|briefly[, ]*|simply[, ]*)?/i, "");
+  q = q.replace(/^\s*(?:please\s+)?(?:can you|could you|would you)\s+/i, "");
+  q = q.replace(/^\s*(?:tell me|give me|share with me|find me|search for|look up|can you tell me|could you tell me)\s+/i, "");
+  q = q.replace(/^\s*(?:what is|what are|who is|who are|define|explain|describe|meaning of|tell me about|how does|how do|why does|why is)\s+/i, "");
   q = q.replace(/^\s*(?:one|an?|some|interesting|fun|cool|random|amazing|surprising)\s+/i, "").trim();
   return q || clean(message, 300);
 }
