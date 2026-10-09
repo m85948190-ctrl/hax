@@ -35,7 +35,10 @@ async function googleSearch(query){
         let host='';try{host=new URL(href).hostname}catch{continue}
         if(host.includes('google.'))continue;
         if(!title||seen.has(href))continue;
-        seen.add(href);out.push({title,url:href});
+        seen.add(href);
+        const block=a.closest('div.MjjYud')||a.parentElement?.parentElement||a.parentElement;
+        const text=(block?.innerText||block?.textContent||'').replace(/\\s+/g,' ').trim().slice(0,1400);
+        out.push({title,url:href,text});
         if(out.length>=6)break;
       }
       return out;
@@ -69,7 +72,10 @@ async function bingSearch(query){
         if((!href.startsWith("http://")&&!href.startsWith("https://"))||!title||seen.has(href))continue;
         let host="";try{host=new URL(href).hostname}catch{continue}
         if(host.includes("bing.com"))continue;
-        seen.add(href);out.push({title,url:href});
+        seen.add(href);
+        const block=a.closest("li.b_algo")||a.parentElement?.parentElement||a.parentElement;
+        const text=(block?.innerText||block?.textContent||"").replace(/\\s+/g," ").trim().slice(0,1400);
+        out.push({title,url:href,text});
         if(out.length>=8)break;
       }
       return out;
@@ -116,8 +122,17 @@ export default async function(req,res){
     const searched=await multiSearch(query,mode);
     const links=searched.links||[];
     const take=mode==="deep"?5:3;
-    const pages=await Promise.all(links.slice(0,take).map(async x=>{try{const timeout=mode==="deep"?3500:950;const html=await Promise.race([browser.html(x.url),new Promise((_,reject)=>setTimeout(()=>reject(new Error("source timeout")),timeout))]);return {...x,text:pageText(html)}}catch{return {...x,text:""}}}));
-    return res.json({ok:true,engine:searched.engine,mode,query,searchQueries:queryVariants(query),sources:pages.filter(x=>x.text).slice(0,take)});
+    const pages=await Promise.all(links.slice(0,take).map(async x=>{
+      const snippet=clean(x.text||"",1400);
+      if(snippet.length>=90)return {...x,text:snippet};
+      try{
+        const timeout=mode==="deep"?2200:650;
+        const html=await Promise.race([browser.html(x.url),new Promise((_,reject)=>setTimeout(()=>reject(new Error("source timeout")),timeout))]);
+        const text=pageText(html);
+        return {...x,text:text.length>snippet.length?text:snippet};
+      }catch{return {...x,text:snippet}}
+    }));
+    return res.json({ok:true,engine:searched.engine,mode,query,searchQueries:queryVariants(query),sources:pages.filter(x=>x.text||x.title).slice(0,take)});
   }catch(e){
     return res.status(502).json({ok:false,error:"KAI web search unavailable",detail:clean(e?.message,300)});
   }
