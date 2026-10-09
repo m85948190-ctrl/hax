@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-hf-q4-v26-direct-cors-loader';
+  const VERSION='kai51-hf-q4-v27-greeting-quality';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -200,7 +200,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .filter(x=>x.content && !(x.role==='user' && x.content===prompt))
       .slice(-6);
     const messages=[
-      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
+      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. When the user greets you, greet them warmly and naturally in one short sentence, then invite them to continue if appropriate; never say you are unsure what they are asking in response to a greeting. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
       ...normalizedHistory,
       {role:'user',content:prompt}
