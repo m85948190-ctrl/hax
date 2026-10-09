@@ -1,7 +1,7 @@
 (() => {
   /* KAI 51 LOCAL: fast evidence retrieval + neural conversation.
      This file routes and gathers evidence; it must not fabricate a response from phrase rules. */
-  const VERSION='kai51-local-evidence-synthesis-v5';
+  const VERSION='kai51-local-evidence-synthesis-v6';
   const clean=(v,n=9000)=>String(v??'').replace(/\u0000/g,'').trim().slice(0,n);
   const words=s=>clean(s,5000).toLowerCase().split(/\s+/).filter(Boolean);
 
@@ -57,11 +57,13 @@
 
   function shouldSearch(message){
     const t=clean(message).toLowerCase();
-    // Search factual questions, current claims, names, and requests to investigate.
-    // Simple social turns go to the neural model directly, never to canned reply tables.
+    // Greetings, relationship-building, self-referential questions, and personal memory
+    // stay conversational; they should not launch a browser search.
     if(/^(hi|hello|hey|yo|good morning|good afternoon|good evening|thanks|thank you|thx|ok|okay|sure|yes|yeah|yep|no|nah|got it)\b/i.test(t)) return false;
-    return /\?|\b(what|who|when|where|why|how|latest|recent|today|news|price|cost|version|release|update|current|weather|compare|comparison|evidence|sources?|research|look up|find out|verify|check|search|according to|statistics|study|paper|official|explain|tell me|meaning|history|fact|facts)\b/i.test(t)
-      || words(t).length>=5;
+    if(/\b(?:how are you|what can you do|what can you help me with|what do you think|tell me about yourself|who are you|what is your name|can we talk|let's talk|lets talk|remember that|what do you remember about me|what answer style do i prefer|i feel|i think|i prefer|i like|call me|my name is|forget everything|clear my memory)\b/i.test(t)) return false;
+    // Research only when the wording signals a factual lookup, current information,
+    // verification, or explicit research intent—not merely because a sentence is long.
+    return /\b(?:what is|what are|who is|who are|where is|where are|when did|when was|when is|why does|why do|why is|why are|how does|how do|how is|how are|how to|latest|recent|today|news|price|cost|version|release|update|current|weather|compare|comparison|evidence|sources?|research|look up|find out|verify|check|search|according to|statistics|study|paper|official|explain|tell me about|meaning|history|fact|facts|population|capital|definition|calculate|convert)\b/i.test(t);
   }
 
   async function searchWeb(query,mode='fast'){
