@@ -153,8 +153,9 @@
       return {lane:'local',handoff:false,response:calculation.expression.replace(/,/g,'')+' = '+formatted,provider:'KAI 51 LOCAL · calculator tool',model:'local arithmetic evaluation',local:true,localModel:false,tool:'calculator',sources:[],searchEngines:[],retrievalMs:0};
     }
     const query=queryFor(prompt);
+    const wantsSearch=shouldSearch(prompt);
     let web=null,wiki=[],files=[];
-    if(shouldSearch(prompt)){
+    if(wantsSearch){
       hooks.onStage?.('searching','KAI 51 · LOCAL is searching Google, Bing and Wikipedia in parallel');
       const [retrieved,knowledge]=await Promise.all([
         searchFast(query),
@@ -179,7 +180,7 @@
     const grounded=evidenceAnswer(query,unique);
     if(!grounded){
       const reason=unique.length?'Retrieved evidence needs neural synthesis':'No usable web evidence was retrieved; answer transparently from local model knowledge';
-      const evidencePrompt='You are KAI 51 LOCAL, using the browser-local neural model. Answer the user request naturally. Do not claim sources prove anything unless the evidence supports it. If evidence is missing, say so briefly.\n\nUSER REQUEST:\n'+prompt+(evidence?'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+evidence:'\n\nNo reliable retrieved evidence was available.');
+      const evidencePrompt=!wantsSearch?prompt:'You are KAI 51 LOCAL, using the browser-local neural model. Answer the user request naturally. Do not claim sources prove anything unless the evidence supports it. If evidence is missing, say so briefly.\n\nUSER REQUEST:\n'+prompt+(evidence?'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+evidence:'\n\nNo reliable retrieved evidence was available.');
       return {lane:'local',handoff:true,reason,evidencePrompt,response:null,provider:'KAI 51 LOCAL · retrieval + neural synthesis',model:'browser-local neural synthesis',local:true,localModel:true,sources:unique.slice(0,4).map(({title,url,source})=>({title,url,source})),searchEngines:[...(web?.engine?[web.engine]:[]),...(wiki.length?['Wikipedia']:[])],retrievalMs:0};
     }
     return {
