@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v5':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v6':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -213,7 +213,11 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   async function generate(message,history=[]){
     const prompt=String(message||'').trim();
     if(!prompt) throw new Error('KAI 51 received an empty request');
-    const isGreeting=/^(?:hi|hello|hey|yo|howdy|good morning|good afternoon|good evening|what'?s up|sup)(?:\s+bro)?[!,.?\s]*$/i.test(prompt);
+    // Local intelligence may wrap the actual message with memory/evidence instructions.
+    // Classify and validate against the user's real request, not that wrapper.
+    const requestMatch=prompt.match(/USER REQUEST:\s*([\s\S]*?)(?=\n\nRETRIEVED WEB \/ WIKIPEDIA \/ HAxBRO KNOWLEDGE EVIDENCE:|\n\nNo reliable retrieved evidence was available\.|$)/i);
+    const userRequest=String(requestMatch?.[1]||prompt).trim();
+    const isGreeting=/^(?:hi|hello|hey|yo|howdy|good morning|good afternoon|good evening|what'?s up|sup)(?:\s+bro)?[!,.?\s]*$/i.test(userRequest);
     const generationOptions=isGreeting?{max_new_tokens:20,do_sample:false,repetition_penalty:1.12,no_repeat_ngram_size:3}:{};
     const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
     const rules=(trainingPack?.rules||[])
@@ -241,7 +245,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .slice(-6);
     const messages=isGreeting?[
       {role:'system',content:'You are KAI 51, a friendly conversational assistant. Reply to this greeting with one short, natural, warm sentence. Do not mention status, loading, time, or uncertainty.'},
-      {role:'user',content:prompt}
+      {role:'user',content:userRequest}
     ]:[
       {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
@@ -273,7 +277,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     // Tiny local models sometimes emit a generic greeting for a real question.
     // Retry that failure with a more explicit native-model instruction instead of
     // silently returning an unrelated greeting or switching to an external provider.
-    const normalizedPrompt=prompt.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+    const normalizedPrompt=userRequest.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
     const normalizedResponse=response.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
     const offTopicGreeting=!isGreeting && /^(?:hi|hello|hey|hello there|i'?m here(?: to help)?|how can i help(?: you)?)[!. ,]*$/i.test(response);
     const echoedPrompt=!isGreeting && normalizedPrompt.length>8 && (normalizedResponse===normalizedPrompt || normalizedResponse.includes(normalizedPrompt));
