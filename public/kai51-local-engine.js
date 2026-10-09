@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v8':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v9':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -314,10 +314,12 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     // Final safety guard: never expose a loop or an irrelevant weather answer for small talk.
     const finalSentences=response.split(/(?<=[.!?])\s+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
     const stillRepeating=finalSentences.length>=2&&new Set(finalSentences).size<=Math.max(1,Math.floor(finalSentences.length/2));
-    const stillApologizing=(response.match(/i'?m sorry for the misunderstanding/gi)||[]).length>=2;
+    const stillApologizing=(response.match(/i'?m sorry for (?:the misunderstanding|what i said earlier)/gi)||[]).length>=1;
     const stillWeather=isGreeting&&/\b(?:weather|forecast|temperature|rain|sunny)\b/i.test(response);
-    if(isSmallTalk&&(stillRepeating||stillApologizing||stillWeather)){
-      response=isGreeting?"Hey! 😊 What’s up?":/^(?:o+|h+e+h+|l+o+l+|haha+|wow+|whoa+)[!?. ,\s]*$/i.test(userRequest)?"Haha, what’s up? 😄":"I’m listening, bro. What’s on your mind?";
+    const stalePoliteReply=isSmallTalk&&/\b(?:glad i could help you today|thanks for asking|since we last spoke|sorry for what i said earlier|is there something specific|status check|system online)\b/i.test(response);
+    const unfinishedSmallTalk=isSmallTalk&&response.length>0&&!/[.!?…)"’]$/.test(response);
+    if(isSmallTalk&&(stillRepeating||stillApologizing||stillWeather||stalePoliteReply||unfinishedSmallTalk)){
+      response=isGreeting?"Hey! 😊 What’s up?":/^(?:o+|h+e+h+|l+o+l+|haha+|wow+|whoa+)[!?. ,\s]*$/i.test(userRequest)?"Haha 😄 what’s up?":"I’m listening. What’s on your mind?";
     }
     if(!response) throw new Error('KAI 51 neural model returned an empty response');
     return {
