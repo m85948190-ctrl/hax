@@ -169,7 +169,13 @@
       try{
         const turn=await local.run(message,history,hooks);
         if(turn?.response&&!turn.handoff) return {...turn,lane:'local',combined:true};
-        if(turn?.handoff) hooks.onHandoff?.(turn.reason||'LOCAL requested deeper precision');
+        if(turn?.handoff){
+          hooks.onHandoff?.(turn.reason||'LOCAL retrieved context for neural synthesis');
+          const neuralPrompt=turn.evidencePrompt||message;
+          hooks.onStage?.('github','KAI 51 · neural synthesis using retrieved evidence');
+          const neural=await generate(neuralPrompt,history,{onProgress:p=>hooks.onStage?.('github-progress',p?.status||('KAI 51 · neural model '+Math.round(Number(p?.progress)||0)+'%'))});
+          if(neural?.response) return {...neural,lane:'github',combined:true,sources:turn.sources||[],searchEngines:turn.searchEngines||[]};
+        }
       }catch(e){
         hooks.onStage?.('local-error','KAI 51 · LOCAL could not complete this turn — handing off to GITHUB');
         hooks.onHandoff?.('LOCAL pipeline error; switching to GITHUB precision lane');

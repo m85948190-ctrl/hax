@@ -77,36 +77,28 @@ async function bingSearch(query){
   });
 }
 
-async function multiSearch(query){
+async function multiSearch(query,mode="fast"){
   const variants=queryVariants(query);
-  const googleResults=await Promise.all(variants.map(async q=>{
-    try{return await googleSearch(q)}catch{return []}
-  }));
-  const links=[];const seen=new Set();
-  for(const list of googleResults)for(const x of list){
-    if(!seen.has(x.url)){seen.add(x.url);links.push(x)}
-    if(links.length>=12)break;
-  }
-  if(links.length)return {links,engine:"Google Web"};
-  const bingResults=await Promise.all(variants.map(async q=>{
-    try{return await bingSearch(q)}catch{return []}
-  }));
-  const bingLinks=[];const bingSeen=new Set();
-  for(const list of bingResults)for(const x of list){
-    if(!bingSeen.has(x.url)){bingSeen.add(x.url);bingLinks.push(x)}
-    if(bingLinks.length>=12)break;
-  }
-  if(bingLinks.length)return {links:bingLinks,engine:"Bing Web"};
-
-  const fallbackResults=await Promise.all(variants.slice(0,4).map(async q=>{
-    try{return await ddgSearch(q)}catch{return []}
-  }));
-  const fallback=[];const seenFallback=new Set();
-  for(const list of fallbackResults)for(const x of list){
-    if(!seenFallback.has(x.url)){seenFallback.add(x.url);fallback.push(x)}
-    if(fallback.length>=12)break;
-  }
-  return {links:fallback,engine:fallback.length?"Fallback Web Search":"Web Search"};
+  const primary=variants.slice(0,mode==="deep"?3:1);
+  // Google and Bing run concurrently; never wait for one engine to fail before starting the other.
+  const deadline=mode==="deep"?5000:1800;
+  const settled=await Promise.race([
+    Promise.all([
+      Promise.all(primary.map(async q=>{try{return await googleSearch(q)}catch{return []}})),
+      Promise.all(primary.map(async q=>{try{return await bingSearch(q)}catch{return []}}))
+    ]),
+    new Promise(resolve=>setTimeout(()=>resolve([[],[]]),deadline))
+  ]);
+  const [googleResults,bingResults]=settled||[[],[]];
+  const collect=(lists,engine,limit)=>{const out=[],seen=new Set();for(const list of lists||[])for(const x of list||[]){if(!x?.url||seen.has(x.url))continue;seen.add(x.url);out.push({...x,engine});if(out.length>=limit)return out;}return out;};
+  const google=collect(googleResults,"Google Web",6);
+  const bing=collect(bingResults,"Bing Web",6);
+  const merged=[],seen=new Set();
+  // Interleave results so one engine cannot monopolize the evidence set.
+  for(let i=0;i<Math.max(google.length,bing.length);i++){for(const x of [google[i],bing[i]])if(x&&!seen.has(x.url)){seen.add(x.url);merged.push(x);}}
+  if(merged.length)return {links:merged.slice(0,mode==="deep"?12:8),engine:"Google + Bing Web",engines:{google:google.length,bing:bing.length}};
+  const fallbackResults=await Promise.all(primary.slice(0,2).map(async q=>{try{return await ddgSearch(q)}catch{return []}}));
+  return {links:collect(fallbackResults,"Fallback Web Search",8),engine:"Fallback Web Search"};
 }
 
 async function ddgSearch(query){
@@ -121,10 +113,10 @@ export default async function(req,res){
   if(!query)return res.status(400).json({error:"query required"});
   const mode=req.body?.mode==="deep"?"deep":"fast";
   try{
-    const searched=await multiSearch(query);
+    const searched=await multiSearch(query,mode);
     const links=searched.links||[];
-    const take=mode==="deep"?5:4;
-    const pages=await Promise.all(links.slice(0,take).map(async x=>{try{return {...x,text:pageText(await browser.html(x.url))}}catch{return {...x,text:""}}}));
+    const take=mode==="deep"?5:3;
+    const pages=await Promise.all(links.slice(0,take).map(async x=>{try{const timeout=mode==="deep"?3500:950;const html=await Promise.race([browser.html(x.url),new Promise((_,reject)=>setTimeout(()=>reject(new Error("source timeout")),timeout))]);return {...x,text:pageText(html)}}catch{return {...x,text:""}}}));
     return res.json({ok:true,engine:searched.engine,mode,query,searchQueries:queryVariants(query),sources:pages.filter(x=>x.text).slice(0,take)});
   }catch(e){
     return res.status(502).json({ok:false,error:"KAI web search unavailable",detail:clean(e?.message,300)});
