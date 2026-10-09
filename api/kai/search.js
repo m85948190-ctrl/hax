@@ -114,27 +114,34 @@ async function ddgSearch(query){
 }
 
 async function wikipediaEvidence(query){
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),1400);
+  const normalized=clean(query,300).replace(/^\s*(?:please\s+)?(?:what is|what are|who is|who are|where is|where are|tell me about|explain)\s+/i,"").replace(/[?!.]+$/,"").trim();
+  const fetchSummary=async(title,timeout=1350)=>{
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeout);
+    try{
+      const endpoint="https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(title.replace(/\s+/g,"_"));
+      const r=await fetch(endpoint,{signal:controller.signal,headers:{accept:"application/json"}});
+      if(!r.ok)return null;
+      const item=await r.json();
+      if(!item?.extract||item.type==="disambiguation")return null;
+      return {title:item.title||title,url:item.content_urls?.desktop?.page||("https://en.wikipedia.org/wiki/"+encodeURIComponent(String(item.title||title).replace(/ /g,"_"))),text:clean(item.extract,1800),engine:"Wikipedia"};
+    }catch{return null}finally{clearTimeout(timer)}
+  };
+  /* Try the exact article first; this is faster and more accurate for clean topics. */
+  if(normalized&&normalized.split(/\s+/).length<=4){
+    const direct=await fetchSummary(normalized,1000);
+    if(direct)return [direct];
+  }
+  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),1500);
   try{
-    const endpoint="https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="+encodeURIComponent(query)+"&srlimit=2&format=json";
+    const endpoint="https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="+encodeURIComponent(normalized||query)+"&srlimit=4&format=json";
     const response=await fetch(endpoint,{signal:controller.signal,headers:{accept:"application/json"}});
     if(!response.ok)return [];
     const data=await response.json();
     const rows=Array.isArray(data?.query?.search)?data.query.search:[];
-    const summaries=await Promise.all(rows.slice(0,2).map(async row=>{
-      try{
-        const title=String(row.title||"").replace(/ /g,"_");
-        const r=await fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(title),{signal:controller.signal,headers:{accept:"application/json"}});
-        if(!r.ok)return null;
-        const item=await r.json();
-        if(!item?.extract)return null;
-        return {title:item.title||row.title,url:item.content_urls?.desktop?.page||("https://en.wikipedia.org/wiki/"+encodeURIComponent(title)),text:clean(item.extract,1800),engine:"Wikipedia"};
-      }catch{return null}
-    }));
-    return summaries.filter(Boolean);
-  }catch{return []}
-  finally{clearTimeout(timer)}
+    const summaries=await Promise.all(rows.slice(0,3).map(row=>fetchSummary(String(row.title||""),1500)));
+    const terms=normalized.toLowerCase().split(/\s+/).filter(w=>w.length>2&&!["the","and","for","with","from","what","who","when","where","how","current","latest","about"].includes(w));
+    return summaries.filter(Boolean).map(x=>({...x,_score:terms.filter(t=>(x.title+" "+x.text).toLowerCase().includes(t)).length})).filter(x=>x._score>0).sort((a,b)=>b._score-a._score).map(({_score,...x})=>x).slice(0,2);
+  }catch{return []}finally{clearTimeout(timer)}
 }
 
 export default async function(req,res){

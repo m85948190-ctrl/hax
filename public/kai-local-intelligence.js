@@ -10,6 +10,7 @@
       .replace(/^\s*(?:please\s+)?(?:can you|could you|would you|tell me|explain|help me)\s+/i,'')
       .replace(/^\s*(?:what is|what are|who is|who are|where is|where are|when did|when was|why does|why do|how does|how do|how is|how are)\s+/i,'')
       .replace(/\b(?:explain it simply|explain simply|in simple terms|in simple words|briefly|please)\b/ig,' ')
+      .replace(/^\s*(?:the\s+)?(?:current|latest|recent)\s+/i,'')
       .replace(/[?!.]+$/,'').replace(/\s+/g,' ').trim().slice(0,700);
   }
 
