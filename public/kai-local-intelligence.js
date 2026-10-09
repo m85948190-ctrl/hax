@@ -15,6 +15,17 @@
   }
 
   const STOP_WORDS=new Set('a an the is are was were be been being do does did how what who where when why which can could would should please tell explain simply simple terms words about for from into with that this these those it its of on in to by and or current latest today now me my you your we they them their as according'.split(' '));
+
+  // KAI user memory is user-controlled and browser-local; no memory is sent to a model provider.
+  const memoryKey=()=>{let who='anonymous-device';try{who=localStorage.getItem('haxbro_username')||localStorage.getItem('haxbro:user-id')||who;}catch{}return 'haxbro:kai51:user-memory:v1:'+String(who).replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,100);};
+  function readUserMemory(){try{const x=JSON.parse(localStorage.getItem(memoryKey())||'{"items":[]}');return {items:Array.isArray(x.items)?x.items.filter(i=>i&&typeof i.text==='string').slice(-80):[]};}catch{return {items:[]};}}
+  function writeUserMemory(m){try{localStorage.setItem(memoryKey(),JSON.stringify({version:1,items:(m.items||[]).slice(-80)}));return true;}catch{return false;}}
+  function rememberUser(text,source='explicit'){const value=clean(text,400).replace(/\\s+/g,' ').trim();if(!value||value.length<3||/password|passcode|api[_ -]?key|secret|recovery code|one[- ]time code|credit card|cvv|private key/i.test(value))return false;const m=readUserMemory();const key=value.toLowerCase();const existing=m.items.findIndex(i=>i.text.toLowerCase()===key);const item={text:value,source,updatedAt:new Date().toISOString()};if(existing>=0)m.items.splice(existing,1);m.items.push(item);return writeUserMemory(m);}
+  function forgetUserMemory(query=''){const q=clean(query,300).toLowerCase();if(!q){const ok=writeUserMemory({items:[]});return {ok,removed:'all'};}const m=readUserMemory(),before=m.items.length;m.items=m.items.filter(i=>!i.text.toLowerCase().includes(q));writeUserMemory(m);return {ok:true,removed:before-m.items.length};}
+  function memoryCommand(message){const t=clean(message,800);let m=t.match(/^\\s*(?:please\\s+)?remember(?:\\s+that)?\\s*[:,-]?\\s+(.+)$/i);if(m){const ok=rememberUser(m[1],'explicit');return {type:'remember',ok,text:clean(m[1],400)};}m=t.match(/^\\s*(?:please\\s+)?forget(?:\\s+(?:that|about))?\\s+(.+)$/i);if(m)return {type:'forget',...forgetUserMemory(m[1])};if(/^\\s*(?:forget everything|forget all my memories|clear (?:my )?memory)\\s*[.!]?\\s*$/i.test(t))return {type:'forget',...forgetUserMemory()};return null;}
+  function learnStatedPreference(message){const t=clean(message,700);const patterns=[/\\bmy name is ([^.!?]{1,80})/i,/\\bcall me ([^.!?]{1,80})/i,/\\bi prefer ([^.!?]{1,180})/i,/\\bi like ([^.!?]{1,160})/i,/\\bi am building ([^.!?]{1,160})/i,/\\bi'm building ([^.!?]{1,160})/i,/\\bI work on ([^.!?]{1,160})/i];for(const re of patterns){const m=t.match(re);if(m){rememberUser(m[0],'stated-preference');break;}}}
+  function userMemoryPrompt(){const items=readUserMemory().items;if(!items.length)return '';return 'USER MEMORY (persistent on this browser profile; treat as helpful context, not unquestionable truth):\\n'+items.slice(-20).map(i=>'- '+i.text).join('\\n')+'\\nUse this naturally when relevant. Do not claim to remember anything absent from this list.\\n\\n';}
+  window.HAxBROKaiUserMemory={list:()=>readUserMemory().items,remember:rememberUser,forget:forgetUserMemory,clear:()=>forgetUserMemory(),key:memoryKey};
   function evidenceAnswer(question,sources){
     const terms=[...new Set(words(question).filter(w=>w.length>2&&!STOP_WORDS.has(w)))];
     if(!terms.length)return null;
@@ -146,6 +157,11 @@
   async function run(message,history=[],hooks={}){
     const prompt=clean(message);
     if(!prompt) throw new Error('empty request');
+    const memoryAction=memoryCommand(prompt);
+    if(memoryAction?.type==='remember') return {lane:'local',handoff:false,response:memoryAction.ok?'Got it — I’ll remember that: '+memoryAction.text:'I couldn’t save that memory. Please avoid storing passwords, keys, or other secrets.',provider:'KAI 51 LOCAL · user memory',model:'browser-local memory',local:true,localModel:false,memory:{saved:!!memoryAction.ok,count:readUserMemory().items.length},sources:[]};
+    if(memoryAction?.type==='forget') return {lane:'local',handoff:false,response:memoryAction.ok?(memoryAction.removed==='all'?'Done — I cleared KAI’s saved memories for this browser profile.':'Done — I removed '+memoryAction.removed+' matching memory item(s).'):'I couldn’t update saved memory.',provider:'KAI 51 LOCAL · user memory',model:'browser-local memory',local:true,localModel:false,memory:{removed:memoryAction.removed,count:readUserMemory().items.length},sources:[]};
+    learnStatedPreference(prompt);
+    const memoryContext=userMemoryPrompt();
     hooks.onStage?.('understanding','KAI 51 · LOCAL is understanding the request');
     const calculation=calculateExpression(prompt);
     if(calculation){
@@ -180,7 +196,7 @@
     const grounded=evidenceAnswer(query,unique);
     if(!grounded){
       const reason=unique.length?'Retrieved evidence needs neural synthesis':'No usable web evidence was retrieved; answer transparently from local model knowledge';
-      const evidencePrompt=!wantsSearch?prompt:'You are KAI 51 LOCAL, using the browser-local neural model. Answer the user request naturally. Do not claim sources prove anything unless the evidence supports it. If evidence is missing, say so briefly.\n\nUSER REQUEST:\n'+prompt+(evidence?'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+evidence:'\n\nNo reliable retrieved evidence was available.');
+      const evidencePrompt=memoryContext+(!wantsSearch?'You are KAI 51 LOCAL. Speak naturally and conversationally, using the user memory only when relevant. Answer the user request directly.\n\nUSER REQUEST:\n'+prompt:'You are KAI 51 LOCAL, using the browser-local neural model. Answer naturally, distinguish verified evidence from uncertainty, and cite retrieved sources only when they support the claim. If evidence is missing, say so briefly.\n\nUSER REQUEST:\n'+prompt)+(evidence?'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+evidence:'\n\nNo reliable retrieved evidence was available.');
       return {lane:'local',handoff:true,reason,evidencePrompt,response:null,provider:'KAI 51 LOCAL · retrieval + neural synthesis',model:'browser-local neural synthesis',local:true,localModel:true,sources:unique.slice(0,4).map(({title,url,source})=>({title,url,source})),searchEngines:[...(web?.engine?[web.engine]:[]),...(wiki.length?['Wikipedia']:[])],retrievalMs:0};
     }
     return {
