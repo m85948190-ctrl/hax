@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v6':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v7':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -233,7 +233,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||''))
       .join('\n');
     const conditioning=isGreeting?'':[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
-    const normalizedHistory=(isGreeting?[]:(Array.isArray(history)?history:[]))
+    const isFollowUp=/^(?:why(?:\s|[?!.,]|$)|what about\b|and then\b|then\b|continue\b|go on\b|explain more\b|tell me more\b|expand on\b|what happened next\b|can you elaborate\b|what do you mean\b|(?:can you|could you) explain that\b|how do i do that\b|that\b|it\b|they\b|those\b|this\b|same\b|again\b)/i.test(userRequest);
+    // Do not let an old unrelated chat hijack a standalone new question.
+    const normalizedHistory=(isGreeting||!isFollowUp?[]:(Array.isArray(history)?history:[]))
       .filter(x=>x&&typeof x==='object')
       .map(x=>{
         const rawRole=String(x.role||x.sender||'user').toLowerCase();
@@ -281,7 +283,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     const normalizedResponse=response.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
     const offTopicGreeting=!isGreeting && /^(?:hi|hello|hey|hello there|i'?m here(?: to help)?|how can i help(?: you)?)[!. ,]*$/i.test(response);
     const echoedPrompt=!isGreeting && normalizedPrompt.length>8 && (normalizedResponse===normalizedPrompt || normalizedResponse.includes(normalizedPrompt));
-    if(offTopicGreeting||echoedPrompt){
+    const metaSummary=!isGreeting && /^(?:the )?user is asking\b|^(?:the )?user wants\b|^based on (?:the )?conversation\b|^it seems (?:like )?the user\b/i.test(response);
+    if(offTopicGreeting||echoedPrompt||metaSummary){
       const repairMessages=[
         {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it greeted the user or repeated their question. Answer the actual request now; never echo it. Be specific, useful, concise, and natural. Example: User asks “What can you help me with?” Answer: “I can help research factual questions, explain concepts, write and debug code, and plan or build apps. What are you working on?” Use this as a style example, not as a fixed response to unrelated questions.'},
         ...(conditioning?[{role:'system',content:conditioning}]:[]),
