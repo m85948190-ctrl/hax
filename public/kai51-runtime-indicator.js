@@ -22,11 +22,18 @@
     const p=x.querySelector('.hook-pct');if(p)p.textContent=pct+'%';
     const lite=x.querySelector('.hook-lite');
     if(lite){
-      lite.textContent=state.status==='ready'
-        ? '· KAI 51 READY'
-        : (state.status==='error'
-          ? '· KAI LITE ACTIVE · MODEL RETRYING'
-          : '· KAI LITE ACTIVE · MODEL DOWNLOADING');
+      const stage=String(d.status||'').toLowerCase();
+      if(d.profile==='local'){
+        lite.textContent='· LOCAL LAYER READY';
+      }else if(state.status==='error'||/failed|error/i.test(stage)){
+        lite.textContent='· MODEL ERROR';
+      }else if(/download/i.test(stage)){
+        lite.textContent='· MODEL DOWNLOADING';
+      }else if(state.status==='ready'){
+        lite.textContent='· KAI 51 READY';
+      }else{
+        lite.textContent='· LOADING NEURAL MODEL';
+      }
     }
   }
   window.addEventListener('haxbro:kai-local-progress',e=>render(e.detail||{}));

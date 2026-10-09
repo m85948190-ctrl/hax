@@ -137,9 +137,11 @@
     return unifiedBootPromise;
   }
 
-  async function generate(message,history=[]) {
-    const engine = await loadEngine();
-    return engine.generate(message,history);
+  async function generate(message,history=[],hooks={}) {
+    const forward=e=>{try{if(e?.detail?.profile==='heavy') hooks.onProgress?.(e.detail);}catch{}};
+    window.addEventListener('haxbro:kai-local-progress',forward);
+    try{ const engine=await loadEngine(); return await engine.generate(message,history); }
+    finally{ window.removeEventListener('haxbro:kai-local-progress',forward); }
   }
 
   async function chat(message,history=[]) {
@@ -160,18 +162,22 @@
   }
 
   async function unifiedGenerate(message,history=[],hooks={}){
-    /* Combined intelligence contract: LOCAL is always the first reasoning lane;
-       GITHUB is the precision neural lane; LITE is always present as final recovery. */
-    await installLocalFirst();
+    /* LOCAL is first, but a LOCAL failure must NEVER block the GITHUB neural lane. */
+    try{ await installLocalFirst(); }catch(e){ hooks.onStage?.('local-error','KAI 51 · LOCAL initialization failed — continuing to GITHUB'); }
     const local=window.HAxBROKaiLocalIntelligence;
     if(local?.run){
-      const turn=await local.run(message,history,hooks);
-      if(turn?.response&&!turn.handoff) return {...turn,lane:'local',combined:true};
-      if(turn?.handoff) hooks.onHandoff?.(turn.reason||'LOCAL requested deeper precision');
+      try{
+        const turn=await local.run(message,history,hooks);
+        if(turn?.response&&!turn.handoff) return {...turn,lane:'local',combined:true};
+        if(turn?.handoff) hooks.onHandoff?.(turn.reason||'LOCAL requested deeper precision');
+      }catch(e){
+        hooks.onStage?.('local-error','KAI 51 · LOCAL could not complete this turn — handing off to GITHUB');
+        hooks.onHandoff?.('LOCAL pipeline error; switching to GITHUB precision lane');
+      }
     }
     try{
-      hooks.onStage?.('github','KAI 51 · GITHUB is handling the precision lane');
-      const github=await generate(message,history);
+      hooks.onStage?.('github','KAI 51 · GITHUB neural lane starting');
+      const github=await generate(message,history,{onProgress:p=>hooks.onStage?.('github-progress',p?.status||('KAI 51 · GITHUB '+Math.round(Number(p?.progress)||0)+'%'))});
       if(github?.response) return {...github,lane:'github',combined:true};
     }catch(e){
       hooks.onStage?.('lite','KAI LITE remains available as the final working lane');
