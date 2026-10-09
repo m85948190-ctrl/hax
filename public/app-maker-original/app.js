@@ -26,10 +26,10 @@ function render(){result.classList.remove('hidden');if($('#resultReport')&&repor
 function showPreview(f){
  if(!f)return;
  let html=String(f.content||'');
- const css=project.files?.find(x=>/\.css$/i.test(x.path))?.content;
- const js=project.files?.find(x=>/\.js$/i.test(x.path))?.content;
- if(css)html=html.replace(/<link\b[^>]*href=["'](?:\.\/)?style\.css(?:\?[^"']*)?["'][^>]*>/i,'<style>'+css.replace(/<\/style/gi,'<\\/style')+'</style>');
- if(js)html=html.replace(/<script\b[^>]*src=["'](?:\.\/)?app\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>/i,'<script>'+js.replace(/<\/script/gi,'<\\/script')+'<\\/script>');
+ const css=project.files?.find(x=>String(x.path||'').toLowerCase().endsWith('.css'))?.content;
+ const js=project.files?.find(x=>String(x.path||'').toLowerCase().endsWith('.js'))?.content;
+ if(css)html=html.replace(/<link\b[^>]*href=["'](?:\.\/)?style\.css(?:\?[^"']*)?["'][^>]*>/i,'<style>'+String(css).replace(/<\/style/gi,'<\\/style')+'</style>');
+ if(js)html=html.replace(/<script\b[^>]*src=["'](?:\.\/)?app\.js(?:\?[^"']*)?["'][^>]*>\s*<\/script>/i,'<script>'+String(js).replace(/<\/script/gi,'<\\/script')+'</scr'+'ipt>');
  frame.srcdoc=html;
 }
 async function publishExternal(){
