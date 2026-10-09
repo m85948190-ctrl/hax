@@ -183,3 +183,5 @@
   .bubble{filter:none!important}
   *,*:before,*:after{scroll-behavior:auto!important;transition-duration:.01ms!important}
 }
+/* Desktop-only composer lift: move the text bar up by ~18px without changing mobile. */
+@media(min-width:701px){body.hax-modern #chatForm.composer{bottom:96px!important}}
