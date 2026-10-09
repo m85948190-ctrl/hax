@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-github-q4-v24-resumable-github-cache';
+  const VERSION='kai51-github-q4-v25-stream-start-fix';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -132,7 +132,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           let stopped=false;
           let chunkIndex=0;
           const stream=new ReadableStream({
-            start(controller){controllerRef=controller;},
+            start(){},
             async pull(controller){
               if(stopped)return;
               const index=chunkIndex;
