@@ -113,13 +113,40 @@ async function ddgSearch(query){
   return extractLinks(await sr.text()).slice(0,6);
 }
 
+async function wikipediaEvidence(query){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),1400);
+  try{
+    const endpoint="https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch="+encodeURIComponent(query)+"&srlimit=2&format=json";
+    const response=await fetch(endpoint,{signal:controller.signal,headers:{accept:"application/json"}});
+    if(!response.ok)return [];
+    const data=await response.json();
+    const rows=Array.isArray(data?.query?.search)?data.query.search:[];
+    const summaries=await Promise.all(rows.slice(0,2).map(async row=>{
+      try{
+        const title=String(row.title||"").replace(/ /g,"_");
+        const r=await fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(title),{signal:controller.signal,headers:{accept:"application/json"}});
+        if(!r.ok)return null;
+        const item=await r.json();
+        if(!item?.extract)return null;
+        return {title:item.title||row.title,url:item.content_urls?.desktop?.page||("https://en.wikipedia.org/wiki/"+encodeURIComponent(title)),text:clean(item.extract,1800),engine:"Wikipedia"};
+      }catch{return null}
+    }));
+    return summaries.filter(Boolean);
+  }catch{return []}
+  finally{clearTimeout(timer)}
+}
+
 export default async function(req,res){
   if(req.method!=="POST")return res.status(405).json({error:"POST required"});
   const query=clean(req.body?.query,700);
   if(!query)return res.status(400).json({error:"query required"});
   const mode=req.body?.mode==="deep"?"deep":"fast";
   try{
-    const searched=await multiSearch(query,mode);
+    const [searched,wiki]=await Promise.all([
+      multiSearch(query,mode),
+      wikipediaEvidence(query)
+    ]);
     const links=searched.links||[];
     const take=mode==="deep"?5:3;
     const pages=await Promise.all(links.slice(0,take).map(async x=>{
@@ -132,7 +159,10 @@ export default async function(req,res){
         return {...x,text:text.length>snippet.length?text:snippet};
       }catch{return {...x,text:snippet}}
     }));
-    return res.json({ok:true,engine:searched.engine,mode,query,searchQueries:queryVariants(query),sources:pages.filter(x=>x.text||x.title).slice(0,take)});
+    const combined=[...pages,...wiki].filter(x=>x.text||x.title);
+    const seen=new Set();
+    const sources=combined.filter(x=>{const key=x.url||x.title;if(!key||seen.has(key))return false;seen.add(key);return true;}).slice(0,Math.max(take,Math.min(5,wiki.length+pages.length)));
+    return res.json({ok:true,engine:wiki.length?[searched.engine,"Wikipedia"].filter(Boolean).join(" + "):searched.engine,mode,query,searchQueries:queryVariants(query),sources});
   }catch(e){
     return res.status(502).json({ok:false,error:"KAI web search unavailable",detail:clean(e?.message,300)});
   }
