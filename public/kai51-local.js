@@ -1,8 +1,8 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v16-engine-version-guard';
+  const VERSION = 'kai51-unified-controller-v17-dual-model';
   const KEY = 'haxbro:kai51:installation:v15-github-q4';
   const LOCAL_KEY = 'haxbro:kai51:local-intelligence:og-v1';
-  const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
+  const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
 
   const defaultState = () => ({
@@ -37,80 +37,76 @@
     return next;
   };
 
-  const ENGINE_VERSION='kai51-hf-q4-v29-engine-versioned-cache';
+  const ENGINE_VERSION='kai51-github-360m-q4-v30';
+  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v1';
   if(window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
     window.HAxBROKai51Engine=null;
     window.__HAxBROKai51EnginePromise=null;
   }
+  if(window.HAxBROKai51LocalFastEngine && window.HAxBROKai51LocalFastEngine.version!==LOCAL_ENGINE_VERSION){
+    window.HAxBROKai51LocalFastEngine=null;
+    window.__HAxBROKai51LocalFastEnginePromise=null;
+  }
   let state = read();
   let enginePromise = window.HAxBROKai51Engine?.version===ENGINE_VERSION ? (window.__HAxBROKai51EnginePromise||null) : null;
-  let transportPromise = null;
+  let localEnginePromise = window.HAxBROKai51LocalFastEngine?.version===LOCAL_ENGINE_VERSION ? (window.__HAxBROKai51LocalFastEnginePromise||null) : null;
 
   function emit(detail) {
     window.dispatchEvent(new CustomEvent('haxbro:kai-local-progress',{detail}));
     window.dispatchEvent(new CustomEvent('haxbro:kai51-bootstrap',{detail}));
   }
 
-  async function prepareTransport() {
-    if (transportPromise) return transportPromise;
-    transportPromise = (async()=>{
-      if (!('serviceWorker' in navigator)) return false;
-      return false; // Legacy model service-worker transport is retired; KAI 51 uses the engine's browser cache.
-      await navigator.serviceWorker.ready;
-      if (!navigator.serviceWorker.controller) {
-        await new Promise(resolve=>{
-          let finished=false;
-          const finish=()=>{if(finished)return;finished=true;resolve()};
-          navigator.serviceWorker.addEventListener('controllerchange',finish,{once:true});
-          setTimeout(finish,5000);
-        });
-      }
-      return !!navigator.serviceWorker.controller;
-    })().catch(()=>false);
-    return transportPromise;
-  }
-
-  async function loadEngine() {
-    if (window.HAxBROKai51Engine?.generate && window.HAxBROKai51Engine.version===ENGINE_VERSION) return window.HAxBROKai51Engine;
-    if (window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
-      window.HAxBROKai51Engine=null;
-      window.__HAxBROKai51EnginePromise=null;
-      enginePromise=null;
+  async function loadEngine(profile='local') {
+    const isLocal=profile==='local';
+    const expected=isLocal?LOCAL_ENGINE_VERSION:ENGINE_VERSION;
+    const globalName=isLocal?'HAxBROKai51LocalFastEngine':'HAxBROKai51Engine';
+    const promiseName=isLocal?'__HAxBROKai51LocalFastEnginePromise':'__HAxBROKai51EnginePromise';
+    let current=window[globalName];
+    let pending=isLocal?localEnginePromise:enginePromise;
+    if(current?.generate&&current.version===expected) return current;
+    if(current&&current.version!==expected){
+      window[globalName]=null;
+      window[promiseName]=null;
+      current=null;
+      pending=null;
+      if(isLocal)localEnginePromise=null;else enginePromise=null;
     }
-    if (enginePromise) return enginePromise;
+    if(pending) return pending;
 
-    const restoring=state.status==='ready' && state.verified===true;
-    state = write({status:restoring?'restoring':'installing',installed:restoring,verified:false,error:null});
-    emit({profile:'heavy',progress:restoring ? 95 : 2,status:restoring
-      ? 'KAI 51 installed · restoring from persistent browser cache'
-      : 'KAI 51 neural installation starting'});
+    const model=isLocal?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
+    const restoring=state.status==='ready'&&state.verified===true&&state.model===model;
+    state=write({status:restoring?'restoring':'installing',installed:restoring,verified:false,error:null,model});
+    emit({profile:'heavy',progress:restoring?95:2,status:isLocal
+      ?'KAI 51 LOCAL fast model starting'
+      :'KAI 51 GITHUB precision model starting'});
 
-    enginePromise = window.__HAxBROKai51EnginePromise = (async () => {
-      // The current browser-ready ONNX package is fetched directly from Hugging Face.
-      // Do not register the legacy GitHub model service worker on this path.
-      const mod = await import('/kai51-local-engine.js?v=42');
-      const engine = await mod.createKai51Engine({
-        onProgress:p => emit({profile:'heavy',...p}),
+    const job=(async()=>{
+      const mod=await import('/kai51-local-engine.js?v=43');
+      const engine=await mod.createKai51Engine({
+        profile:isLocal?'local':'github',
+        onProgress:p=>emit({profile:'heavy',...p}),
         preferCache:restoring,
-        onReady:info => {
-          state = write({status:'ready',installed:true,verified:true,model:info?.model||MODEL,error:null});
-          emit({profile:'heavy',progress:100,status:'KAI 51 installed and verified',installed:true,verified:true});
-          window.HAxBROKai51Installed = true;
-          window.HAxBRO_KAI51_LOCAL_READY = true;
+        onReady:info=>{
+          state=write({status:'ready',installed:true,verified:true,model:info?.model||model,error:null});
+          emit({profile:'heavy',progress:100,status:isLocal?'KAI 51 LOCAL fast model ready':'KAI 51 GITHUB precision model ready',installed:true,verified:true,lane:isLocal?'local':'github'});
+          window.HAxBROKai51Installed=true;
+          window.HAxBRO_KAI51_LOCAL_READY=true;
           window.dispatchEvent(new CustomEvent('haxbro:kai51-ready',{detail:info||{}}));
         }
       });
-      window.HAxBROKai51Engine = engine;
+      window[globalName]=engine;
       await engine.prepare();
       return engine;
-    })().catch(err => {
-      state = write({status:'error',installed:false,verified:false,error:safe(err?.message||err,700)});
-      emit({profile:'heavy',progress:99,status:'KAI 51 verification failed — retry required',error:state.error});
-      enginePromise = null;
+    })().catch(err=>{
+      state=write({status:'error',installed:false,verified:false,error:safe(err?.message||err,700),model});
+      emit({profile:'heavy',progress:99,status:'KAI 51 '+(isLocal?'LOCAL':'GITHUB')+' model failed — retry required',error:state.error});
+      if(isLocal){localEnginePromise=null;window[promiseName]=null;}
+      else{enginePromise=null;window[promiseName]=null;}
       throw err;
     });
-
-    return enginePromise;
+    if(isLocal){localEnginePromise=job;window[promiseName]=job;}
+    else{enginePromise=job;window[promiseName]=job;}
+    return job;
   }
 
   function localInstallState(){
@@ -145,10 +141,10 @@
     return unifiedBootPromise;
   }
 
-  async function generate(message,history=[],hooks={}) {
+  async function generate(message,history=[],hooks={},profile='local') {
     const forward=e=>{try{if(e?.detail?.profile==='heavy') hooks.onProgress?.(e.detail);}catch{}};
     window.addEventListener('haxbro:kai-local-progress',forward);
-    try{ const engine=await loadEngine(); return await engine.generate(message,history); }
+    try{ const engine=await loadEngine(profile); const result=await engine.generate(message,history); return {...result,lane:profile==='github'?'github':'local'}; }
     finally{ window.removeEventListener('haxbro:kai-local-progress',forward); }
   }
 
@@ -182,12 +178,12 @@
         hooks.onStage?.('local-error','KAI 51 LOCAL retrieval failed; continuing with local neural synthesis');
       }
     }
-    /* Greetings and other non-retrieval turns go straight to the same browser-local neural model.
-       This is genuine model inference, not a phrase table, and it is not a GitHub/provider handoff. */
+    /* Greetings and other non-retrieval turns go to the smaller, dedicated browser-local model.
+       This is genuine neural inference, not a phrase table or remote-provider handoff. */
     try{
       hooks.onStage?.('local-neural','KAI 51 LOCAL · browser-local neural synthesis');
       const neuralPrompt=turn?.evidencePrompt||message;
-      const neural=await generate(neuralPrompt,history,{onProgress:p=>hooks.onStage?.('local-neural-progress',p?.status||('KAI 51 LOCAL '+Math.round(Number(p?.progress)||0)+'%'))});
+      const neural=await generate(neuralPrompt,history,{onProgress:p=>hooks.onStage?.('local-neural-progress',p?.status||('KAI 51 LOCAL '+Math.round(Number(p?.progress)||0)+'%'))},'local');
       if(neural?.response) return {...neural,lane:'local',combined:true,sources:turn?.sources||[],searchEngines:turn?.searchEngines||[]};
     }catch(e){
       hooks.onStage?.('local-error','KAI 51 LOCAL neural inference failed');
@@ -216,9 +212,14 @@
   };
 
   try { navigator.storage?.persist?.().catch(()=>{}); } catch {}
-  /* Keep retrying the real model in the background. KAI Lite remains the user-facing
-     bridge until the neural model is actually verified. */
+  /* Register lightweight LOCAL routing immediately, then warm the smaller 135M
+     neural model in the background so the first chat turn is less likely to wait
+     for model installation. GITHUB's larger 360M model remains on-demand. */
   setTimeout(()=>maybeInstall().catch(()=>{}),250);
+  setTimeout(()=>{
+    const chosen=window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||'kai-local';
+    if(chosen==='kai-local') loadEngine('local').catch(e=>console.warn('KAI 51 LOCAL background warm-up failed',e));
+  },1800);
   setInterval(()=>{
     try{
       const s=read();

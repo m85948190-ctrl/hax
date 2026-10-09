@@ -290,7 +290,7 @@ if(input)input.value='';resize();try{if(!overdrive){
             });
           }else{
             mark('github','KAI 51 · GITHUB','Running the installed neural model directly','running');
-            result=await window.HAxBROKai51Bootstrap?.generate?.(value,history);
+            result=await window.HAxBROKai51Bootstrap?.generate?.(value,history,{},'github');
           }
           if(result?.response){
             if(result.lane==='local'){
