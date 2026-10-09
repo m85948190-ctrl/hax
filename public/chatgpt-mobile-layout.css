@@ -71,7 +71,7 @@
     display:grid!important;grid-template-columns:42px minmax(0,1fr) 42px 42px!important;
     grid-template-rows:auto 42px!important;align-items:center!important;column-gap:5px!important;row-gap:4px!important;
     position:fixed!important;left:12px!important;right:12px!important;
-    bottom:calc(8px + var(--hb-mobile-safe-bottom))!important;z-index:1400!important;
+    bottom:calc(8px + var(--hb-mobile-safe-bottom) + var(--hb-keyboard-inset, 0px))!important;z-index:1400!important;
     width:auto!important;max-width:none!important;min-width:0!important;height:auto!important;
     box-sizing:border-box!important;margin:0!important;padding:10px 9px 8px!important;
     border:1px solid #e7e7e7!important;border-radius:28px!important;background:#fff!important;
