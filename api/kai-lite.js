@@ -132,7 +132,7 @@ function groundedAnswer(query, sources, engine) {
   }
 
   const lead = usable[0];
-  const answer = "I checked the live web for that. " + lead.excerpt;
+  const answer = "Here’s what I found on the live web: " + lead.excerpt;
   const sourceLines = usable.slice(0, 3).map((s, i) =>
     (i + 1) + ". " + s.title + "\n   " + s.url
   ).join("\n");
@@ -141,7 +141,7 @@ function groundedAnswer(query, sources, engine) {
 }
 
 function liteNotice(text) {
-  return "I’m Kai Lite — this is the lightweight web layer, not the full power of HAxBRO. KAI 51 is loading in the background; when it is ready, you’ll get the real KAI 51 intelligence.\n\n" + String(text || "");
+  return String(text || "");
 }
 
 function casualAnswer(query) {

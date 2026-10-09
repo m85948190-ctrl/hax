@@ -169,12 +169,15 @@
     const socialGreeting=/^(?:a\s+)?(?:hi|hello|hey|yo|howdy|sup|what'?s up)(?:\s+bro)?$/i.test(socialText);
     const socialCombo=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:a\s+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?$/i.test(socialText);
     const socialReaction=/^(?:o+|h+m+|hmm+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)$/i.test(socialText);
-    if(socialGreeting||socialCombo||socialReaction){
-      const response=(socialGreeting||socialCombo)
-        ? ((socialCombo&&/(?:haha|lol|hehe|wow)/i.test(socialText))?'Hey bro 😄 what’s up?':'Hey bro 😊 what’s up?')
-        : /^(?:h+m+|hmm+|🤔)/i.test(socialText) ? 'What’s on your mind, bro? 🙂'
-        : /^(?:nice|cool|yay+|👍|😂|❤️|😅)/i.test(socialText) ? '😄'
-        : 'Haha 😄 what’s up, bro?';
+    const socialConversation=/^(?:what are you doing|what're you doing|what are you up to|what's going on|whats going on|how are you|how's it going|hows it going|are you there|you there)$/i.test(socialText);
+    if(socialGreeting||socialCombo||socialReaction||socialConversation){
+      const response=socialConversation
+        ? /^(?:how are you|how's it going|hows it going)$/i.test(socialText) ? 'I’m doing well and ready to help, bro 🙂 What’s on your mind?' : /^(?:are you there|you there)$/i.test(socialText) ? 'I’m here, bro 🙂 What do you need?' : 'I’m here chatting with you, bro 😄 What are you up to?'
+        : (socialGreeting||socialCombo)
+          ? ((socialCombo&&/(?:haha|lol|hehe|wow)/i.test(socialText))?'Hey bro 😄 what’s up?':'Hey bro 😊 what’s up?')
+          : /^(?:h+m+|hmm+|🤔)/i.test(socialText) ? 'What’s on your mind, bro? 🙂'
+          : /^(?:nice|cool|yay+|👍|😂|❤️|😅)/i.test(socialText) ? '😄'
+          : 'Haha 😄 what’s up, bro?';
       return {lane:'local',handoff:false,response,provider:'KAI 51 LOCAL · instant social response',model:'local deterministic social path',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
     }
     const memoryAction=memoryCommand(prompt);
@@ -219,11 +222,11 @@
     if(!grounded){
       const reason=unique.length?'Retrieved evidence needs neural synthesis':'No usable web evidence was retrieved; answer transparently from local model knowledge';
       const evidencePrompt=memoryContext+(!wantsSearch?'You are KAI 51 LOCAL. Speak naturally and conversationally, using the user memory only when relevant. Answer the user request directly.\n\nUSER REQUEST:\n'+prompt:'You are KAI 51 LOCAL, using the browser-local neural model. Answer naturally, distinguish verified evidence from uncertainty, and cite retrieved sources only when they support the claim. If evidence is missing, say so briefly.\n\nUSER REQUEST:\n'+prompt)+(evidence?'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+evidence:'\n\nNo reliable retrieved evidence was available.');
-      return {lane:'local',handoff:true,reason,evidencePrompt,response:null,provider:'KAI 51 LOCAL · retrieval + neural synthesis',model:'browser-local neural synthesis',local:true,localModel:true,sources:unique.slice(0,4).map(({title,url,source})=>({title,url,source})),searchEngines:[...(web?.engine?[web.engine]:[]),...(wiki.length?['Wikipedia']:[])],retrievalMs:0};
+      return {lane:'local',handoff:true,research:wantsSearch,reason,evidencePrompt,response:null,provider:'KAI 51 LOCAL · retrieval + neural synthesis',model:'browser-local neural synthesis',local:true,localModel:true,sources:unique.slice(0,4).map(({title,url,source})=>({title,url,source})),searchEngines:[...(web?.engine?[web.engine]:[]),...(wiki.length?['Wikipedia']:[])],retrievalMs:0};
     }
     return {
       lane:'local',handoff:false,response:grounded.response,provider:'KAI 51 LOCAL · evidence synthesis',model:'parallel web retrieval + source-grounded synthesis',
-      local:true,localModel:false,confidence:grounded.confidence,
+      local:true,localModel:false,research:wantsSearch,confidence:grounded.confidence,
       sources:unique.slice(0,4).map(({title,url,source})=>({title,url,source})),
       searchEngines:[...(web?.engine?[web.engine]:[]),...(wiki.length?['Wikipedia']:[])],
       retrievalMs:0

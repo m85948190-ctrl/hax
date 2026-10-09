@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v19-local-warmup';
+  const VERSION = 'kai51-unified-controller-v20-web-conversation-fastpath';
   const KEY = 'haxbro:kai51:installation:v15-github-q4';
   const LOCAL_KEY = 'haxbro:kai51:local-intelligence:og-v1';
   const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
@@ -173,6 +173,13 @@
       try{
         turn=await local.run(message,history,hooks);
         if(turn?.response&&!turn.handoff) return {...turn,lane:'local',combined:true};
+        if(turn?.handoff&&turn?.research&&window.HAxBROKaiLite?.respond){
+          hooks.onStage?.('searching','KAI 51 LOCAL · lightweight live web search');
+          try{
+            const webTurn=await window.HAxBROKaiLite.respond(message,history);
+            if(webTurn?.response) return {...webTurn,lane:'local',combined:true,provider:'KAI 51 LOCAL · live web retrieval',model:'Google/Bing website search',local:true,localModel:false,searchEngines:[webTurn.engine||'Google/Bing Web'],sources:webTurn.sources||[]};
+          }catch(e){console.warn('KAI 51 local live-web fallback failed',e);}
+        }
         if(turn?.handoff) hooks.onStage?.('local-neural','KAI 51 LOCAL · synthesizing retrieved evidence');
       }catch(e){
         hooks.onStage?.('local-error','KAI 51 LOCAL retrieval failed; continuing with local neural synthesis');
