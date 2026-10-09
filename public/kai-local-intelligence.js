@@ -173,17 +173,14 @@
     hooks.onStage?.('analyzing','KAI 51 · LOCAL is analyzing retrieved evidence');
     const evidence=unique.slice(0,4).map((s,i)=>'[SOURCE '+(i+1)+'] '+s.source+' — '+s.title+(s.url?' — '+s.url:'')+'\n'+s.text).join('\n\n');
     hooks.onStage?.('composing','KAI 51 · LOCAL is checking whether retrieved evidence can answer this turn');
-    /* LOCAL is intentionally a lightweight evidence-first lane. It never boots or
-       calls the 360M neural model for every request. Only return an answer when the
-       retrieved text is actually relevant; otherwise throw so the controller can
-       hand the turn to GITHUB. This is source-grounded extraction, not a canned
-       phrase-response table, and every answer includes its source. */
+    /* LOCAL is evidence-first: return source-grounded extraction when relevant,
+       otherwise preserve retrieved context for synthesis by the same browser-local
+       neural model. No phrase-response table and no separate provider handoff. */
     const grounded=evidenceAnswer(query,unique);
     if(!grounded){
-      const reason=unique.length?'No sufficiently relevant readable evidence was found':'No usable evidence was retrieved';
-      const err=new Error(reason);
-      err.code='KAI_LOCAL_EVIDENCE_INSUFFICIENT';
-      throw err;
+      const reason=unique.length?'Retrieved evidence needs neural synthesis':'No usable web evidence was retrieved; answer transparently from local model knowledge';
+      const evidencePrompt='You are KAI 51 LOCAL, using the browser-local neural model. Answer the user request naturally. Do not claim sources prove anything unless the evidence supports it. If evidence is missing, say so briefly.\n\nUSER REQUEST:\n'+prompt+(evidence?'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+evidence:'\n\nNo reliable retrieved evidence was available.');
+      return {lane:'local',handoff:true,reason,evidencePrompt,response:null,provider:'KAI 51 LOCAL · retrieval + neural synthesis',model:'browser-local neural synthesis',local:true,localModel:true,sources:unique.slice(0,4).map(({title,url,source})=>({title,url,source})),searchEngines:[...(web?.engine?[web.engine]:[]),...(wiki.length?['Wikipedia']:[])],retrievalMs:0};
     }
     return {
       lane:'local',handoff:false,response:grounded.response,provider:'KAI 51 LOCAL · evidence synthesis',model:'parallel web retrieval + source-grounded synthesis',

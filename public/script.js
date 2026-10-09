@@ -272,6 +272,8 @@ if(input)input.value='';resize();try{if(!overdrive){
                   analyzing:'KAI 51 · LOCAL · analyzing',
                   composing:'KAI 51 · LOCAL · composing',
                   github:'KAI 51 · GITHUB · precision inference',
+                  'local-neural':'KAI 51 · LOCAL · neural synthesis',
+                  'local-neural-progress':'KAI 51 · LOCAL · neural runtime',
                   lite:'KAI LITE · recovery'
                 };
                 const key=stage==='github'?'github':stage==='lite'?'lite':stage;
@@ -294,6 +296,8 @@ if(input)input.value='';resize();try{if(!overdrive){
             if(result.lane==='local'){
               kaiActivitySet('understanding','done','LOCAL understood the request');
               kaiActivitySet('composing','done','LOCAL response composed');
+              kaiActivitySet('local-neural','done','KAI 51 LOCAL generated the response on this device');
+              kaiActivitySet('local-neural-progress','done','Local inference completed');
             }else if(result.lane==='github'){
               kaiActivitySet('github','done','GITHUB produced the answer');
             }else if(result.lane==='lite'){

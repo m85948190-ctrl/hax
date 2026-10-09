@@ -160,34 +160,33 @@
   }
 
   async function unifiedGenerate(message,history=[],hooks={}){
-    /* LOCAL is first, but a LOCAL failure must NEVER block the GITHUB neural lane. */
-    try{ await installLocalFirst(); }catch(e){ hooks.onStage?.('local-error','KAI 51 · LOCAL initialization failed — continuing to GITHUB'); }
+    try{ await installLocalFirst(); }catch(e){ hooks.onStage?.('local-error','KAI 51 LOCAL initialization failed; continuing with the browser-local neural lane'); }
     const local=window.HAxBROKaiLocalIntelligence;
+    let turn=null;
     if(local?.run){
       try{
-        const turn=await local.run(message,history,hooks);
+        turn=await local.run(message,history,hooks);
         if(turn?.response&&!turn.handoff) return {...turn,lane:'local',combined:true};
-        if(turn?.handoff){
-          hooks.onHandoff?.(turn.reason||'LOCAL retrieved context for neural synthesis');
-          const neuralPrompt=turn.evidencePrompt||message;
-          hooks.onStage?.('github','KAI 51 · neural synthesis using retrieved evidence');
-          const neural=await generate(neuralPrompt,history,{onProgress:p=>hooks.onStage?.('github-progress',p?.status||('KAI 51 · neural model '+Math.round(Number(p?.progress)||0)+'%'))});
-          if(neural?.response) return {...neural,lane:'github',combined:true,sources:turn.sources||[],searchEngines:turn.searchEngines||[]};
-        }
+        if(turn?.handoff) hooks.onStage?.('local-neural','KAI 51 LOCAL · synthesizing retrieved evidence');
       }catch(e){
-        hooks.onStage?.('local-error','KAI 51 · LOCAL could not complete this turn — handing off to GITHUB');
-        hooks.onHandoff?.('LOCAL pipeline error; switching to GITHUB precision lane');
+        hooks.onStage?.('local-error','KAI 51 LOCAL retrieval failed; continuing with local neural synthesis');
       }
     }
+    /* Greetings and other non-retrieval turns go straight to the same browser-local neural model.
+       This is genuine model inference, not a phrase table, and it is not a GitHub/provider handoff. */
     try{
-      hooks.onStage?.('github','KAI 51 · GITHUB neural lane starting');
-      const github=await generate(message,history,{onProgress:p=>hooks.onStage?.('github-progress',p?.status||('KAI 51 · GITHUB '+Math.round(Number(p?.progress)||0)+'%'))});
-      if(github?.response) return {...github,lane:'github',combined:true};
+      hooks.onStage?.('local-neural','KAI 51 LOCAL · browser-local neural synthesis');
+      const neuralPrompt=turn?.evidencePrompt||message;
+      const neural=await generate(neuralPrompt,history,{onProgress:p=>hooks.onStage?.('local-neural-progress',p?.status||('KAI 51 LOCAL '+Math.round(Number(p?.progress)||0)+'%'))});
+      if(neural?.response) return {...neural,lane:'local',combined:true,sources:turn?.sources||[],searchEngines:turn?.searchEngines||[]};
     }catch(e){
-      hooks.onStage?.('lite','KAI LITE remains available as the final working lane');
+      hooks.onStage?.('local-error','KAI 51 LOCAL neural inference failed');
     }
-    const lite=await window.HAxBROKaiLite?.respond?.(message,history);
-    if(lite?.response) return {...lite,lane:'lite',combined:true};
+    try{
+      hooks.onStage?.('lite','KAI LITE remains available as the final recovery lane');
+      const lite=await window.HAxBROKaiLite?.respond?.(message,history);
+      if(lite?.response) return {...lite,lane:'lite',combined:true};
+    }catch{}
     throw new Error('No KAI intelligence lane is currently available');
   }
 
