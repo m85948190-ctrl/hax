@@ -1,7 +1,7 @@
 (() => {
   /* KAI 51 LOCAL: fast evidence retrieval + neural conversation.
      This file routes and gathers evidence; it must not fabricate a response from phrase rules. */
-  const VERSION='kai51-local-evidence-synthesis-v8-identity-fastpath';
+  const VERSION='kai51-local-evidence-synthesis-v9-fast-conversation';
   const clean=(v,n=9000)=>String(v??'').replace(/\u0000/g,'').trim().slice(0,n);
   const words=s=>clean(s,5000).toLowerCase().split(/\s+/).filter(Boolean);
 

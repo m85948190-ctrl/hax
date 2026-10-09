@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v9':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v11-fast-conversation':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -203,7 +203,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   async function runOnce(messages,generationOptions={}){
     await prepare();
     return pipe(messages,{
-      max_new_tokens:PROFILE==='local'?64:112,
+      max_new_tokens:PROFILE==='local'?40:112,
       do_sample:false,
       return_full_text:false,
       ...generationOptions
@@ -241,12 +241,12 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .filter(x=>x&&x.rule)
       .filter(x=>x.capability==='general' || x.capability===capability)
       .filter(x=>x.id!=='creator')
-      .slice(0,PROFILE==='local'?5:16)
+      .slice(0,PROFILE==='local'?3:16)
       .map(x=>'- '+x.rule)
       .join('\n');
     const examples=(trainingPack?.examples||[])
       .filter(x=>x&&(!x.capability||x.capability===capability))
-      .slice(0,PROFILE==='local'?1:3)
+      .slice(0,PROFILE==='local'?0:3)
       .map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||''))
       .join('\n');
     const conditioning=isSmallTalk?'':[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
@@ -318,7 +318,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         {role:'user',content:userRequest}
       ];
       try{
-        const retryJob=generationChain.then(()=>runOnce(repairMessages,{max_new_tokens:72,do_sample:true,temperature:0.35,top_p:0.9,repetition_penalty:1.18,no_repeat_ngram_size:3}));
+        const retryJob=generationChain.then(()=>runOnce(repairMessages,{max_new_tokens:40,do_sample:false,repetition_penalty:1.12,no_repeat_ngram_size:3}));
         generationChain=retryJob.catch(()=>{});
         const retried=await retryJob;
         generated=retried?.[0]?.generated_text;
