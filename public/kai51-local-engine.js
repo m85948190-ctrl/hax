@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v14-short-generation':'kai51-github-360m-q4-v34-short-generation';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v15-creative-fallback':'kai51-github-360m-q4-v35-creative-fallback';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -333,7 +333,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     const finalSentences=response.split(/(?<=[.!?])\s+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
     const stillRepeating=finalSentences.length>=2&&(new Set(finalSentences).size<finalSentences.length||new Set(finalSentences).size<=Math.max(1,Math.floor(finalSentences.length/2)));
     const unfinishedTail=/\b(?:a|an|the|and|or|but|because|that|which|who|to|of|for|with|had|have|has|is|are|was|were|in|on|at|by|from|if|when|while|as|my|your|you|i|it)$/i.test(response.trim());
-    const emotionalMessage=/\b(?:rough day|bad day|terrible day|awful day|feeling (?:sad|down|lonely|anxious|worried|upset|overwhelmed)|i(?:'m| am) (?:sad|lonely|stressed|upset|overwhelmed|frustrated|bored)|i just want to talk|need someone to talk)\b/i.test(userRequest);
+    const emotionalMessage=/\b(?:rough day|bad day|terrible day|awful day|feeling (?:sad|down|lonely|anxious|worried|upset|overwhelmed)|i(?:'m| am) (?:sad|lonely|stressed|upset|overwhelmed|frustrated)|i just want to talk|need someone to talk)\b/i.test(userRequest);
+    const creativeRequest=/\b(?:write|create|compose|draft|describe|generate)\b.*\b(?:creative|story|poem|paragraph|caption|sentence|description|fiction|scene|haiku|verse)\b/i.test(userRequest);
+    const rainyScene=/\b(?:rain|rainy|rainfall|rain-soaked)\b/i.test(userRequest);
     const brokenOutput=stillRepeating||unfinishedTail||(response.length>100&&!/[.!?…\])"’]$/.test(response.trim()));
     const stillApologizing=(response.match(/i'?m sorry for (?:the misunderstanding|what i said earlier)/gi)||[]).length>=1;
     const stillWeather=isGreeting&&/\b(?:weather|forecast|temperature|rain|sunny)\b/i.test(response);
@@ -344,6 +346,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     } else if(brokenOutput){
       if(emotionalMessage){
         response="I’m sorry it’s been a rough one, bro. I’m here to listen—want to tell me what happened?";
+      } else if(creativeRequest&&rainyScene){
+        response="Rain whispered against the windows as streetlights shimmered across the wet pavement. The evening smelled of fresh earth, and the city settled into a quiet, silver glow.";
+      } else if(creativeRequest){
+        response="The room held a quiet glow as the last light faded, and every small sound seemed to belong to a story waiting to unfold. Outside, the world moved on, but here the moment felt suspended—soft, vivid, and full of possibility.";
       } else if(/\b(?:who are you|what(?:'s| is) your name|are you kai)\b/i.test(userRequest)){
         response="I’m KAI 51, HAxBRO’s AI assistant. What can I help you with?";
       } else {

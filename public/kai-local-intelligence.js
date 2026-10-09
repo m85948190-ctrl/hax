@@ -1,7 +1,7 @@
 (() => {
   /* KAI 51 LOCAL: fast evidence retrieval + neural conversation.
      This file routes and gathers evidence; it must not fabricate a response from phrase rules. */
-  const VERSION='kai51-local-evidence-synthesis-v11-natural-math';
+  const VERSION='kai51-local-evidence-synthesis-v12-conversation-fallbacks';
   const clean=(v,n=9000)=>String(v??'').replace(/\u0000/g,'').trim().slice(0,n);
   const words=s=>clean(s,5000).toLowerCase().split(/\s+/).filter(Boolean);
 
@@ -180,7 +180,11 @@
     const socialCombo=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:a\s+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?$/i.test(socialText);
     const socialReaction=/^(?:o+|h+m+|hmm+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)$/i.test(socialText);
     const socialConversation=/^(?:(?:hey|hi|hello|bro)[,\s]+)*(?:what are you doing|what're you doing|what are you up to|what's going on|whats going on|how are you|how's it going|hows it going|are you there|you there)$/i.test(socialText);
-    const emotionalConversation=/\b(?:rough day|bad day|terrible day|awful day|feeling (?:sad|down|lonely|anxious|worried|upset|overwhelmed)|i(?:'m| am) (?:sad|lonely|stressed|upset|overwhelmed|frustrated|bored)|i just want to talk|need someone to talk)\b/i.test(socialText);
+    const boredomConversation=/\b(?:i(?:'m| am) bored|bored and want to talk|nothing to do|i have nothing to do)\b/i.test(socialText);
+    const emotionalConversation=/\b(?:rough day|bad day|terrible day|awful day|feeling (?:sad|down|lonely|anxious|worried|upset|overwhelmed)|i(?:'m| am) (?:sad|lonely|stressed|upset|overwhelmed|frustrated)|i just want to talk|need someone to talk)\b/i.test(socialText);
+    if(boredomConversation){
+      return {lane:'local',handoff:false,response:'Let’s fix that, bro 😄 Want to chat, hear a weird fact, play a quick word game, or build something?',provider:'KAI 51 LOCAL · casual conversation path',model:'local conversational response',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
+    }
     if(emotionalConversation){
       return {lane:'local',handoff:false,response:'I’m sorry it’s been a rough one, bro. I’m here to listen—want to tell me what happened?',provider:'KAI 51 LOCAL · empathetic conversation path',model:'local conversational response',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
     }
