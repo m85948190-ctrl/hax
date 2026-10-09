@@ -77,6 +77,15 @@ async function bingSearch(query) {
   return unique(items, 8);
 }
 
+function normalizeSearchQuery(message) {
+  let q = clean(message, 700).replace(/[?!.]+$/g, "").trim();
+  const fact = q.match(/\b(?:one|an?|some|interesting|fun|cool|random|amazing|surprising)?\s*(?:interesting\s+)?facts?\s+about\s+(.+)$/i);
+  if (fact?.[1]) return clean(fact[1], 300) + " octopus facts".replace(/^ octopus facts$/, " facts");
+  q = q.replace(/^\s*(?:please\s+)?(?:tell me|give me|share with me|find me|search for|look up|can you tell me|could you tell me)\s+/i, "");
+  q = q.replace(/^\s*(?:one|an?|some|interesting|fun|cool|random|amazing|surprising)\s+/i, "").trim();
+  return q || clean(message, 300);
+}
+
 async function searchWeb(query) {
   let engine = "Google Web";
   let results = [];
@@ -110,16 +119,14 @@ async function enrich(results) {
 function relevantExcerpt(query, text) {
   const body = clean(text, 9000);
   if (!body) return "";
-  const words = new Set(
-    clean(query, 500).toLowerCase().split(/\W+/).filter(x => x.length > 2)
-  );
+  const words = new Set(clean(query, 500).toLowerCase().split(/\W+/).filter(x => x.length > 2));
   const sentences = body.split(/(?<=[.!?])\s+/).filter(s => s.length > 35);
   const scored = sentences.map(sentence => ({
     sentence,
-    score: [...sentence.toLowerCase().matchAll(/[a-z0-9]+/g)]
-      .reduce((n, m) => n + (words.has(m[0]) ? 1 : 0), 0)
+    score: [...sentence.toLowerCase().matchAll(/[a-z0-9]+/g)].reduce((n, m) => n + (words.has(m[0]) ? 1 : 0), 0)
   })).sort((a, b) => b.score - a.score);
-  return (scored.slice(0, 2).map(x => x.sentence).join(" ") || body.slice(0, 650)).slice(0, 900);
+  const relevant = scored.filter(x => x.score >= 1).slice(0, 2);
+  return relevant.map(x => x.sentence).join(" ").slice(0, 900);
 }
 
 function groundedAnswer(query, sources, engine) {
@@ -175,12 +182,13 @@ export default async function(req, res) {
       });
     }
 
-    const searched = await searchWeb(query);
+    const searchQuery = normalizeSearchQuery(query);
+    const searched = await searchWeb(searchQuery);
     const sources = await enrich(searched.results);
 
     return res.json({
       ok: true,
-      response: liteNotice(groundedAnswer(query, sources, searched.engine)),
+      response: liteNotice(groundedAnswer(searchQuery, sources, searched.engine)),
       provider: "KAI LITE · WEB",
       model: "KAI LITE · GOOGLE/BING SCRAPER",
       lite: true,
