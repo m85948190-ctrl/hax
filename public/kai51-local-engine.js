@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v7':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v8':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -218,7 +218,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     const requestMatch=prompt.match(/USER REQUEST:\s*([\s\S]*?)(?=\n\nRETRIEVED WEB \/ WIKIPEDIA \/ HAxBRO KNOWLEDGE EVIDENCE:|\n\nNo reliable retrieved evidence was available\.|$)/i);
     const userRequest=String(requestMatch?.[1]||prompt).trim();
     const isGreeting=/^(?:hi|hello|hey|yo|howdy|good morning|good afternoon|good evening|what'?s up|sup)(?:\s+bro)?[!,.?\s]*$/i.test(userRequest);
-    const generationOptions=isGreeting?{max_new_tokens:20,do_sample:false,repetition_penalty:1.12,no_repeat_ngram_size:3}:{};
+    const isCasualReaction=/^(?:o+|h+m+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|hmm+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)[!?. ,\s]*$/i.test(userRequest);
+    const isSmallTalk=isGreeting||isCasualReaction;
+    const generationOptions=isSmallTalk?{max_new_tokens:20,do_sample:false,repetition_penalty:1.22,no_repeat_ngram_size:3}:{};
     const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
     const rules=(trainingPack?.rules||[])
       .filter(x=>x&&x.rule)
@@ -232,7 +234,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .slice(0,PROFILE==='local'?1:3)
       .map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||''))
       .join('\n');
-    const conditioning=isGreeting?'':[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
+    const conditioning=isSmallTalk?'':[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
     const isFollowUp=/^(?:why(?:\s|[?!.,]|$)|what about\b|and then\b|then\b|continue\b|go on\b|explain more\b|tell me more\b|expand on\b|what happened next\b|can you elaborate\b|what do you mean\b|(?:can you|could you) explain that\b|how do i do that\b|that\b|it\b|they\b|those\b|this\b|same\b|again\b)/i.test(userRequest);
     // Do not let an old unrelated chat hijack a standalone new question.
     const normalizedHistory=(isGreeting||!isFollowUp?[]:(Array.isArray(history)?history:[]))
@@ -245,14 +247,17 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       })
       .filter(x=>x.content && !(x.role==='user' && x.content===prompt))
       .slice(-6);
-    const messages=isGreeting?[
-      {role:'system',content:'You are KAI 51, a friendly conversational assistant. Reply to this greeting with one short, natural, warm sentence. Do not mention status, loading, time, or uncertainty.'},
+    const messages=isSmallTalk?[
+      {role:'system',content:isGreeting
+        ?'You are KAI 51, a friendly, emotionally steady conversational assistant. Reply to this greeting with exactly one short, natural, warm sentence. Do not mention weather, status, loading, time, or uncertainty unless asked.'
+        :'You are KAI 51, a friendly, emotionally steady conversational assistant. Respond to the user’s short reaction in one brief, natural sentence that fits the tone. Do not invent a topic, mention weather, apologize without a reason, repeat yourself, or claim feelings such as anger.'
+      },
       {role:'user',content:userRequest}
     ]:[
       {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
       ...normalizedHistory,
-      {role:'user',content:prompt}
+      {role:'user',content:userRequest}
     ];
 
     const job=generationChain.then(async()=>{
@@ -281,15 +286,21 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     // silently returning an unrelated greeting or switching to an external provider.
     const normalizedPrompt=userRequest.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
     const normalizedResponse=response.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-    const offTopicGreeting=!isGreeting && /^(?:hi|hello|hey|hello there|i'?m here(?: to help)?|how can i help(?: you)?)[!. ,]*$/i.test(response);
-    const echoedPrompt=!isGreeting && normalizedPrompt.length>8 && (normalizedResponse===normalizedPrompt || normalizedResponse.includes(normalizedPrompt));
-    const metaSummary=!isGreeting && /^(?:the )?user is asking\b|^(?:the )?user wants\b|^based on (?:the )?conversation\b|^it seems (?:like )?the user\b/i.test(response);
-    if(offTopicGreeting||echoedPrompt||metaSummary){
+    const offTopicGreeting=isGreeting && /\b(?:weather|forecast|temperature|rain|sunny|status check|loading|system online)\b/i.test(response);
+    const genericGreeting=!isSmallTalk && /^(?:hi|hello|hey|hello there|i'?m here(?: to help)?|how can i help(?: you)?)[!. ,]*$/i.test(response);
+    const echoedPrompt=!isSmallTalk && normalizedPrompt.length>8 && (normalizedResponse===normalizedPrompt || normalizedResponse.includes(normalizedPrompt));
+    const metaSummary=!isSmallTalk && /^(?:the )?user is asking\b|^(?:the )?user wants\b|^based on (?:the )?conversation\b|^it seems (?:like )?the user\b/i.test(response);
+    const sentences=response.split(/(?<=[.!?])\s+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
+    const repeatedSentence=sentences.length>=2&&new Set(sentences).size<=Math.max(1,Math.floor(sentences.length/2));
+    const apologyLoop=(response.match(/i'?m sorry for the misunderstanding/gi)||[]).length>=2;
+    if(offTopicGreeting||genericGreeting||echoedPrompt||metaSummary||repeatedSentence||apologyLoop){
       const repairMessages=[
-        {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it greeted the user or repeated their question. Answer the actual request now; never echo it. Be specific, useful, concise, and natural. Example: User asks “What can you help me with?” Answer: “I can help research factual questions, explain concepts, write and debug code, and plan or build apps. What are you working on?” Use this as a style example, not as a fixed response to unrelated questions.'},
+        {role:'system',content:isSmallTalk
+          ?'You are KAI 51. Your last response was irrelevant or repetitive. Respond to the user’s actual short message with one warm, simple sentence. Do not mention weather unless asked. Do not apologize unless there was a real mistake. Never repeat a sentence.'
+          :'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it greeted the user, repeated their question, or looped. Answer the actual request now; never echo it. Be specific, useful, concise, and natural. Example: User asks “What can you help me with?” Answer: “I can help research factual questions, explain concepts, write and debug code, and plan or build apps. What are you working on?” Use this as a style example, not as a fixed response to unrelated questions.'},
         ...(conditioning?[{role:'system',content:conditioning}]:[]),
         ...normalizedHistory,
-        {role:'user',content:prompt}
+        {role:'user',content:userRequest}
       ];
       try{
         const retryJob=generationChain.then(()=>runOnce(repairMessages,{max_new_tokens:72,do_sample:true,temperature:0.35,top_p:0.9,repetition_penalty:1.18,no_repeat_ngram_size:3}));
@@ -299,6 +310,14 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         const repaired=(Array.isArray(generated)?String(generated.at(-1)?.content||''):String(generated||retried?.[0]?.text||'')).trim();
         if(repaired)response=repaired;
       }catch(error){console.warn('KAI 51 answer-repair retry failed',error);}
+    }
+    // Final safety guard: never expose a loop or an irrelevant weather answer for small talk.
+    const finalSentences=response.split(/(?<=[.!?])\s+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
+    const stillRepeating=finalSentences.length>=2&&new Set(finalSentences).size<=Math.max(1,Math.floor(finalSentences.length/2));
+    const stillApologizing=(response.match(/i'?m sorry for the misunderstanding/gi)||[]).length>=2;
+    const stillWeather=isGreeting&&/\b(?:weather|forecast|temperature|rain|sunny)\b/i.test(response);
+    if(isSmallTalk&&(stillRepeating||stillApologizing||stillWeather)){
+      response=isGreeting?"Hey! 😊 What’s up?":/^(?:o+|h+e+h+|l+o+l+|haha+|wow+|whoa+)[!?. ,\s]*$/i.test(userRequest)?"Haha, what’s up? 😄":"I’m listening, bro. What’s on your mind?";
     }
     if(!response) throw new Error('KAI 51 neural model returned an empty response');
     return {
