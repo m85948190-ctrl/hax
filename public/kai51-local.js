@@ -127,13 +127,11 @@
 
   let unifiedBootPromise=null;
   async function maybeInstall() {
+    /* Boot only the lightweight LOCAL intelligence. Do not download the 386 MB
+       neural model at page startup; GITHUB is loaded on demand only if LOCAL
+       cannot answer with sufficiently relevant evidence or the user selects it. */
     if(unifiedBootPromise) return unifiedBootPromise;
-    unifiedBootPromise=(async()=>{
-      /* HARD ORDER: LOCAL first. Only after LOCAL is initialized do we start GITHUB. */
-      await installLocalFirst();
-      emit({profile:'heavy',progress:0,status:'KAI 51 · GITHUB installation starting after LOCAL'});
-      return loadEngine();
-    })().catch(e=>{unifiedBootPromise=null;throw e;});
+    unifiedBootPromise=installLocalFirst().catch(e=>{unifiedBootPromise=null;throw e;});
     return unifiedBootPromise;
   }
 
