@@ -296,14 +296,19 @@ if(input)input.value='';resize();try{if(!overdrive){
             if(result.lane==='local'){
               kaiActivitySet('understanding','done','LOCAL understood the request');
               kaiActivitySet('composing','done','LOCAL response composed');
-              kaiActivitySet('local-neural','done','KAI 51 LOCAL generated the response on this device');
+              if(result.fallbackLane==='github'){
+                kaiActivitySet('github','done','GITHUB is warming in the background; LOCAL answered this turn');
+                kaiActivitySet('local-neural','done','KAI 51 LOCAL generated this response while GITHUB installs');
+              }else{
+                kaiActivitySet('local-neural','done','KAI 51 LOCAL generated the response on this device');
+              }
               kaiActivitySet('local-neural-progress','done','Local inference completed');
             }else if(result.lane==='github'){
               kaiActivitySet('github','done','GITHUB produced the answer');
             }else if(result.lane==='lite'){
               kaiActivitySet('lite','done','KAI LITE response delivered');
             }
-            finish({sources:result.sources||[],local:result.lane==='local',github:result.lane==='github',lite:result.lane==='lite'});
+            finish({sources:result.sources||[],local:result.lane==='local',github:result.lane==='github',lite:result.lane==='lite',fallbackLane:result.fallbackLane||null,provider:result.provider||null});
             addMessage(result.response,'bot');
             return true;
           }
