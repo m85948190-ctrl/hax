@@ -311,7 +311,11 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     const sentences=response.split(/(?<=[.!?])\s+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
     const repeatedSentence=sentences.length>=2&&new Set(sentences).size<=Math.max(1,Math.floor(sentences.length/2));
     const apologyLoop=(response.match(/i'?m sorry for the misunderstanding/gi)||[]).length>=2;
-    if(offTopicGreeting||genericGreeting||echoedPrompt||metaSummary||repeatedSentence||apologyLoop){
+    // A truncated answer is a recoverable draft failure too. Retry it before the final
+    // guard can replace it with the generic fallback message.
+    const draftUnfinishedTail=/\b(?:a|an|the|and|or|but|because|that|which|who|to|of|for|with|had|have|has|is|are|was|were|in|on|at|by|from|if|when|while|as|my|your|you|i|it)$/i.test(response.trim());
+    const draftBrokenOutput=draftUnfinishedTail||(response.length>100&&!/[.!?…\])\"’]$/.test(response.trim()));
+    if(offTopicGreeting||genericGreeting||echoedPrompt||metaSummary||repeatedSentence||apologyLoop||draftBrokenOutput){
       const repairMessages=[
         {role:'system',content:isSmallTalk
           ?'You are KAI 51. Your last response was irrelevant or repetitive. Respond to the user’s actual short message with one warm, simple sentence. Do not mention weather unless asked. Do not apologize unless there was a real mistake. Never repeat a sentence.'
