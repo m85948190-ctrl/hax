@@ -1,7 +1,7 @@
 (() => {
   /* KAI 51 LOCAL: fast evidence retrieval + neural conversation.
      This file routes and gathers evidence; it must not fabricate a response from phrase rules. */
-  const VERSION='kai51-local-evidence-synthesis-v4';
+  const VERSION='kai51-local-evidence-synthesis-v5';
   const clean=(v,n=9000)=>String(v??'').replace(/\u0000/g,'').trim().slice(0,n);
   const words=s=>clean(s,5000).toLowerCase().split(/\s+/).filter(Boolean);
 
@@ -107,10 +107,51 @@
     }catch{return []}
   }
 
+  function calculateExpression(message){
+    const candidates=String(message||'').match(/[+-]?\d[\d,]*(?:\.\d+)?(?:\s*(?:\+|-|\*|\/|×|÷|\^)\s*[+-]?\d[\d,]*(?:\.\d+)?)+/g)||[];
+    const expression=candidates.sort((a,b)=>b.length-a.length)[0];
+    if(!expression)return null;
+    const tokens=expression.replace(/,/g,'').replace(/×/g,'*').replace(/÷/g,'/').match(/\d+(?:\.\d+)?|[()+\-*/^]/g)||[];
+    if(!tokens.length)return null;
+    const values=[],ops=[];
+    const precedence={'+':1,'-':1,'*':2,'/':2,'^':3};
+    const apply=()=>{
+      const op=ops.pop(),b=values.pop(),a=values.pop();
+      if(a===undefined||b===undefined)throw new Error('invalid expression');
+      let v;
+      if(op==='+')v=a+b;else if(op==='-')v=a-b;else if(op==='*')v=a*b;else if(op==='/')v=a/b;else if(op==='^')v=Math.pow(a,b);else throw new Error('invalid operator');
+      if(!Number.isFinite(v))throw new Error('non-finite result');
+      values.push(v);
+    };
+    try{
+      let expectNumber=true;
+      for(const token of tokens){
+        if(/^\d/.test(token)){if(!expectNumber)return null;values.push(Number(token));expectNumber=false;continue;}
+        if(token==='('){if(!expectNumber)return null;ops.push(token);continue;}
+        if(token===')'){while(ops.length&&ops.at(-1)!=='(')apply();if(ops.pop()!=='('||expectNumber)return null;expectNumber=false;continue;}
+        if('+-*/^'.includes(token)){
+          if(expectNumber){if(token==='-'){values.push(0);ops.push('-');continue;}return null;}
+          while(ops.length&&ops.at(-1)!=='('&&(precedence[ops.at(-1)]>precedence[token]||(precedence[ops.at(-1)]===precedence[token]&&token!=='^')))apply();
+          ops.push(token);expectNumber=true;continue;
+        }
+        return null;
+      }
+      if(expectNumber)return null;
+      while(ops.length){if(ops.at(-1)==='(')return null;apply();}
+      if(values.length!==1)return null;
+      return {expression,result:values[0]};
+    }catch{return null;}
+  }
+
   async function run(message,history=[],hooks={}){
     const prompt=clean(message);
     if(!prompt) throw new Error('empty request');
     hooks.onStage?.('understanding','KAI 51 · LOCAL is understanding the request');
+    const calculation=calculateExpression(prompt);
+    if(calculation){
+      const formatted=Number.isInteger(calculation.result)?calculation.result.toLocaleString('en-US') : String(Number(calculation.result.toPrecision(12)));
+      return {lane:'local',handoff:false,response:calculation.expression.replace(/,/g,'')+' = '+formatted,provider:'KAI 51 LOCAL · calculator tool',model:'local arithmetic evaluation',local:true,localModel:false,tool:'calculator',sources:[],searchEngines:[],retrievalMs:0};
+    }
     const query=queryFor(prompt);
     let web=null,wiki=[],files=[];
     if(shouldSearch(prompt)){

@@ -279,10 +279,20 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||''))
       .join('\n');
     const conditioning=[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
+    const normalizedHistory=(Array.isArray(history)?history:[])
+      .filter(x=>x&&typeof x==='object')
+      .map(x=>{
+        const rawRole=String(x.role||x.sender||'user').toLowerCase();
+        const role=rawRole==='bot'||rawRole==='ai'||rawRole==='model'||rawRole==='assistant'?'assistant':'user';
+        const content=String(x.content||x.text||x.message||'').trim().slice(0,1200);
+        return {role,content};
+      })
+      .filter(x=>x.content && !(x.role==='user' && x.content===prompt))
+      .slice(-6);
     const messages=[
-      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer only the user request. Do not repeat internal rules, training examples, creator information, or implementation details unless the user explicitly asks for them. Be accurate and concise.'},
+      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
-      ...(history||[]).slice(-4).map(x=>({role:String(x?.role||'user'),content:String(x?.content||x?.text||'').slice(0,1200)})),
+      ...normalizedHistory,
       {role:'user',content:prompt}
     ];
 
