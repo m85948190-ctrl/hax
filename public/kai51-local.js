@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v17-dual-model';
+  const VERSION = 'kai51-unified-controller-v18-dual-model';
   const KEY = 'haxbro:kai51:installation:v15-github-q4';
   const LOCAL_KEY = 'haxbro:kai51:local-intelligence:og-v1';
   const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
@@ -37,8 +37,8 @@
     return next;
   };
 
-  const ENGINE_VERSION='kai51-github-360m-q4-v30';
-  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v1';
+  const ENGINE_VERSION='kai51-github-360m-q4-v31';
+  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v2';
   if(window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
     window.HAxBROKai51Engine=null;
     window.__HAxBROKai51EnginePromise=null;
@@ -81,7 +81,7 @@
       :'KAI 51 GITHUB precision model starting'});
 
     const job=(async()=>{
-      const mod=await import('/kai51-local-engine.js?v=43');
+      const mod=await import('/kai51-local-engine.js?v=44');
       const engine=await mod.createKai51Engine({
         profile:isLocal?'local':'github',
         onProgress:p=>emit({profile:'heavy',...p}),

@@ -237,7 +237,7 @@ if(!opts.internalRetry&&window.HAxBROSelectedModel==='kai-lite'&&window.HAxBROKa
   finally{setBusy(false);sendInFlight=false;}
 }
 /* No hard-coded creator/identity response. Every normal question is handled by the selected KAI intelligence/fallback chain. */
-if(!opts.fromChoice&&!overdrive&&kaiChoiceSearchLike(value)){
+if(!opts.fromChoice&&!overdrive&&(window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||'kai-local')==='kai-lite'&&kaiChoiceSearchLike(value)){
   addMessage(value,'user');updateKaiMemory(value);if(input)input.value='';resize();showSearchChoices(value);sendInFlight=false;return true;
 }
 if(!opts.fromChoice&&!overdrive&&value.length>0&&!kaiChoiceSearchLike(value)&&/\b(?:what|who|when|where|why|how|which|can|does|do|is|are|explain|define|meaning|latest|recent|news|search|find|look\s*(?:up|for)|price|cost|weather|version|release|update)\b/i.test(value)){

@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v1':'kai51-github-360m-q4-v30';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v2':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -95,18 +95,19 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           if(headers.has('range')) return nativeFetch(endpoint,{...init,headers});
           const size=name==='model_q4.onnx'?386495938:272000000;
           const chunkSize=8*1024*1024;
-          let start=0;
+          let start=0,downloaded=0;
           const stream=new ReadableStream({
             async pull(controller){
               if(start>=size){controller.close();return;}
               const end=Math.min(size-1,start+chunkSize-1);
               try{
-                const response=await nativeFetch(endpoint,{headers:{Range:'bytes='+start+'-'+end},cache:'force-cache'});
+                const response=await nativeFetch(endpoint,{headers:{Range:'bytes='+start+'-'+end},cache:'no-store'});
                 if(!response.ok) throw new Error('GitHub model range '+start+'-'+end+' failed: HTTP '+response.status);
                 const bytes=await response.arrayBuffer();
                 if(!bytes.byteLength) throw new Error('GitHub model range returned an empty chunk');
                 controller.enqueue(new Uint8Array(bytes));
-                start+=bytes.byteLength;
+                start+=bytes.byteLength;downloaded+=bytes.byteLength;
+                progress(Math.min(94,15+Math.floor(downloaded/size*78)),'Downloading KAI 51 GITHUB model '+Math.round(downloaded/size*100)+'%');
               }catch(error){controller.error(error);}
             }
           });
@@ -201,7 +202,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   async function runOnce(messages,generationOptions={}){
     await prepare();
     return pipe(messages,{
-      max_new_tokens:PROFILE==='local'?56:96,
+      max_new_tokens:PROFILE==='local'?64:112,
       do_sample:false,
       return_full_text:false,
       ...generationOptions
@@ -212,7 +213,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     const prompt=String(message||'').trim();
     if(!prompt) throw new Error('KAI 51 received an empty request');
     const isGreeting=/^(?:hi|hello|hey|yo|howdy|good morning|good afternoon|good evening|what'?s up|sup)(?:\s+bro)?[!,.?\s]*$/i.test(prompt);
-    const generationOptions=isGreeting?{max_new_tokens:32,do_sample:true,temperature:0.7,top_p:0.9,repetition_penalty:1.18,no_repeat_ngram_size:4}:{};
+    const generationOptions=isGreeting?{max_new_tokens:20,do_sample:false,repetition_penalty:1.12,no_repeat_ngram_size:3}:{};
     const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
     const rules=(trainingPack?.rules||[])
       .filter(x=>x&&x.rule)
@@ -226,7 +227,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .slice(0,PROFILE==='local'?1:3)
       .map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||''))
       .join('\n');
-    const conditioning=[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
+    const conditioning=isGreeting?'':[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
     const normalizedHistory=(isGreeting?[]:(Array.isArray(history)?history:[]))
       .filter(x=>x&&typeof x==='object')
       .map(x=>{
@@ -239,7 +240,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .slice(-6);
     const messages=[
       {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. When the user greets you, greet them warmly and naturally in one short sentence, then invite them to continue if appropriate; never say you are unsure what they are asking in response to a greeting. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
-      ...(isGreeting?[{role:'system',content:'The latest message is a simple greeting. Reply with one natural, friendly sentence. Do not say "I am not sure what you are asking" or "I\'m not sure what you\'re asking". Do not repeat phrases. Do not explain the task; simply greet the user conversationally.'}]:[]),
+      ...(isGreeting?[]:[]),
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
       ...normalizedHistory,
       {role:'user',content:prompt}
