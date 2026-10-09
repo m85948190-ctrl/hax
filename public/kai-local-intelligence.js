@@ -1,7 +1,7 @@
 (() => {
   /* KAI 51 LOCAL: fast evidence retrieval + neural conversation.
      This file routes and gathers evidence; it must not fabricate a response from phrase rules. */
-  const VERSION='kai51-local-evidence-synthesis-v7-instant-social';
+  const VERSION='kai51-local-evidence-synthesis-v8-identity-fastpath';
   const clean=(v,n=9000)=>String(v??'').replace(/\u0000/g,'').trim().slice(0,n);
   const words=s=>clean(s,5000).toLowerCase().split(/\s+/).filter(Boolean);
 
@@ -162,6 +162,10 @@
     // Social turns must return before retrieval or neural-model loading. The UI's elapsed
     // time measures the complete turn, so never hand these messages to the model bootstrap.
     const socialText=prompt.toLowerCase().replace(/[!?.,]+$/,'').trim();
+    const identityQuestion=/^(?:who are you|what(?:'s| is) your name|are you kai(?:\s*51)?|tell me about yourself|what is haxbro)$/i.test(socialText);
+    if(identityQuestion){
+      return {lane:'local',handoff:false,response:'I’m KAI 51, the AI assistant inside HAxBRO. I can help you chat, research, write code, and build things.',provider:'KAI 51 LOCAL · identity response',model:'local identity guard',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
+    }
     const socialGreeting=/^(?:a\s+)?(?:hi|hello|hey|yo|howdy|sup|what'?s up)(?:\s+bro)?$/i.test(socialText);
     const socialCombo=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:a\s+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?$/i.test(socialText);
     const socialReaction=/^(?:o+|h+m+|hmm+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)$/i.test(socialText);
