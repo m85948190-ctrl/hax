@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-hf-q4-v27-greeting-quality';
+  const VERSION='kai51-hf-q4-v28-greeting-detector-fix';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -163,18 +163,21 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     return loading;
   }
 
-  async function runOnce(messages){
+  async function runOnce(messages,generationOptions={}){
     await prepare();
     return pipe(messages,{
       max_new_tokens:96,
       do_sample:false,
-      return_full_text:false
+      return_full_text:false,
+      ...generationOptions
     });
   }
 
   async function generate(message,history=[]){
     const prompt=String(message||'').trim();
     if(!prompt) throw new Error('KAI 51 received an empty request');
+    const isGreeting=/^(?:hi|hello|hey|yo|howdy|good morning|good afternoon|good evening|what'?s up|sup)(?:\s+bro)?[!,.?\s]*$/i.test(prompt);
+    const generationOptions=isGreeting?{max_new_tokens:32,do_sample:true,temperature:0.7,top_p:0.9,repetition_penalty:1.18,no_repeat_ngram_size:4}:{};
     const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
     const rules=(trainingPack?.rules||[])
       .filter(x=>x&&x.rule)
@@ -201,6 +204,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .slice(-6);
     const messages=[
       {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. When the user greets you, greet them warmly and naturally in one short sentence, then invite them to continue if appropriate; never say you are unsure what they are asking in response to a greeting. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
+      ...(isGreeting?[{role:'system',content:'The latest message is a simple greeting. Reply with one natural, friendly sentence. Do not say "I am not sure what you are asking" or "I\'m not sure what you\'re asking". Do not repeat phrases. Do not explain the task; simply greet the user conversationally.'}]:[]),
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
       ...normalizedHistory,
       {role:'user',content:prompt}
@@ -208,12 +212,12 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
 
     const job=generationChain.then(async()=>{
       try{
-        return await runOnce(messages);
+        return await runOnce(messages,generationOptions);
       }catch(firstError){
         await disposePipe();
         try{
           await prepare();
-          return await runOnce(messages);
+          return await runOnce(messages,generationOptions);
         }catch(secondError){
           const e=new Error('KAI 51 local inference failed twice: '+String(secondError?.message||firstError?.message||secondError));
           e.cause=secondError;
