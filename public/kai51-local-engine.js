@@ -336,6 +336,14 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     if(isSmallTalk&&(stillRepeating||stillApologizing||stillWeather||stalePoliteReply||unfinishedSmallTalk)){
       response=isGreeting?"Hey! 😊 What’s up?":/^(?:o+|h+e+h+|l+o+l+|haha+|wow+|whoa+)[!?. ,\s]*$/i.test(userRequest)?"Haha 😄 what’s up?":"I’m listening. What’s on your mind?";
     }
+    // Identity integrity guard: the small base model can hallucinate numbered KAI identities.
+    // Never expose a KAI 52/53/etc. sequence or repeated self-identification as a valid answer.
+    const identityDrift=/\bKAI\s*(?:5[2-9]|[6-9]\d|\d{3,})\b/i.test(response)||(/\bKAI\s*51\b/i.test(response)&&(/\bKAI\s*5[2-9]\b/i.test(response)||(/\bI(?:'m| am) KAI\s*51\b/ig.test(response)&&((response.match(/\bI(?:'m| am) KAI\s*51\b/ig)||[]).length>1))));
+    if(identityDrift){
+      response=/\b(?:who are you|what is your name|your name)\b/i.test(userRequest)
+        ? 'I’m KAI 51, HAxBRO’s AI assistant. What can I help you with?'
+        : 'I’m KAI 51. Let me give you a clear answer without the repeated identity text.';
+    }
     if(!response) throw new Error('KAI 51 neural model returned an empty response');
     return {
       response,

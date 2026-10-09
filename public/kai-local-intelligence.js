@@ -1,7 +1,7 @@
 (() => {
   /* KAI 51 LOCAL: fast evidence retrieval + neural conversation.
      This file routes and gathers evidence; it must not fabricate a response from phrase rules. */
-  const VERSION='kai51-local-evidence-synthesis-v6';
+  const VERSION='kai51-local-evidence-synthesis-v7-instant-social';
   const clean=(v,n=9000)=>String(v??'').replace(/\u0000/g,'').trim().slice(0,n);
   const words=s=>clean(s,5000).toLowerCase().split(/\s+/).filter(Boolean);
 
@@ -159,6 +159,20 @@
   async function run(message,history=[],hooks={}){
     const prompt=clean(message);
     if(!prompt) throw new Error('empty request');
+    // Social turns must return before retrieval or neural-model loading. The UI's elapsed
+    // time measures the complete turn, so never hand these messages to the model bootstrap.
+    const socialText=prompt.toLowerCase().replace(/[!?.,]+$/,'').trim();
+    const socialGreeting=/^(?:a\s+)?(?:hi|hello|hey|yo|howdy|sup|what'?s up)(?:\s+bro)?$/i.test(socialText);
+    const socialCombo=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:a\s+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?$/i.test(socialText);
+    const socialReaction=/^(?:o+|h+m+|hmm+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)$/i.test(socialText);
+    if(socialGreeting||socialCombo||socialReaction){
+      const response=(socialGreeting||socialCombo)
+        ? ((socialCombo&&/(?:haha|lol|hehe|wow)/i.test(socialText))?'Hey bro 😄 what’s up?':'Hey bro 😊 what’s up?')
+        : /^(?:h+m+|hmm+|🤔)/i.test(socialText) ? 'What’s on your mind, bro? 🙂'
+        : /^(?:nice|cool|yay+|👍|😂|❤️|😅)/i.test(socialText) ? '😄'
+        : 'Haha 😄 what’s up, bro?';
+      return {lane:'local',handoff:false,response,provider:'KAI 51 LOCAL · instant social response',model:'local deterministic social path',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
+    }
     const memoryAction=memoryCommand(prompt);
     if(memoryAction?.type==='remember') return {lane:'local',handoff:false,response:memoryAction.ok?'Got it — I’ll remember that: '+memoryAction.text:'I couldn’t save that memory. Please avoid storing passwords, keys, or other secrets.',provider:'KAI 51 LOCAL · user memory',model:'browser-local memory',local:true,localModel:false,memory:{saved:!!memoryAction.ok,count:readUserMemory().items.length},sources:[]};
     if(memoryAction?.type==='forget') return {lane:'local',handoff:false,response:memoryAction.ok?(memoryAction.removed==='all'?'Done — I cleared KAI’s saved memories for this browser profile.':'Done — I removed '+memoryAction.removed+' matching memory item(s).'):'I couldn’t update saved memory.',provider:'KAI 51 LOCAL · user memory',model:'browser-local memory',local:true,localModel:false,memory:{removed:memoryAction.removed,count:readUserMemory().items.length},sources:[]};
