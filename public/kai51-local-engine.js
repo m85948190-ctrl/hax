@@ -219,8 +219,23 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     const userRequest=String(requestMatch?.[1]||prompt).trim();
     const isGreeting=/^(?:hi|hello|hey|yo|howdy|good morning|good afternoon|good evening|what'?s up|sup)(?:\s+bro)?[!,.?\s]*$/i.test(userRequest);
     const isCasualReaction=/^(?:o+|h+m+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|hmm+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)[!?. ,\s]*$/i.test(userRequest);
-    const isSmallTalk=isGreeting||isCasualReaction;
-    const generationOptions=isSmallTalk?{max_new_tokens:20,do_sample:false,repetition_penalty:1.22,no_repeat_ngram_size:3}:{};
+    const isCombinedCasual=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?[!?. ,\s]*$/i.test(userRequest);
+    const isSmallTalk=isGreeting||isCasualReaction||isCombinedCasual;
+    // Instant local fast path: social one-liners must never wait for neural model startup/inference.
+    // Real questions still use the neural model below; no web research or external inference is used here.
+    if(isSmallTalk){
+      const response=isGreeting||isCombinedCasual
+        ? (isCombinedCasual && /(?:haha|lol|hehe|wow)/i.test(userRequest) ? 'Hey! 😄 What’s up?' : 'Hey! 😊 What’s up?')
+        : /^(?:o+|h+e+h+|l+o+l+|haha+|wow+|whoa+)/i.test(userRequest)
+          ? 'Haha 😄 what’s up?'
+          : /^(?:h+m+|hmm+|🤔)/i.test(userRequest)
+            ? 'What’s on your mind? 🙂'
+            : /^(?:nice|cool|yay+|👍|😂|❤️|😅)/i.test(userRequest)
+              ? '😄'
+              : 'I’m listening. What’s up?';
+      return {response,provider:'KAI 51 LOCAL INSTANT SOCIAL FAST PATH',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,quantization:'q4',provenance:PROFILE==='local'?'Public Hugging Face ONNX weights; browser-local inference':'HAxBRO GitHub release kai51-model-latest; browser-local inference',lane:PROFILE};
+    }
+    const generationOptions={};
     const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
     const rules=(trainingPack?.rules||[])
       .filter(x=>x&&x.rule)
