@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v18-dual-model';
+  const VERSION = 'kai51-unified-controller-v19-local-warmup';
   const KEY = 'haxbro:kai51:installation:v15-github-q4';
   const LOCAL_KEY = 'haxbro:kai51:local-intelligence:og-v1';
   const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
@@ -38,7 +38,7 @@
   };
 
   const ENGINE_VERSION='kai51-github-360m-q4-v31';
-  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v2';
+  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v3';
   if(window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
     window.HAxBROKai51Engine=null;
     window.__HAxBROKai51EnginePromise=null;
@@ -81,7 +81,7 @@
       :'KAI 51 GITHUB precision model starting'});
 
     const job=(async()=>{
-      const mod=await import('/kai51-local-engine.js?v=44');
+      const mod=await import('/kai51-local-engine.js?v=45');
       const engine=await mod.createKai51Engine({
         profile:isLocal?'local':'github',
         onProgress:p=>emit({profile:'heavy',...p}),
@@ -216,10 +216,13 @@
      neural model in the background so the first chat turn is less likely to wait
      for model installation. GITHUB's larger 360M model remains on-demand. */
   setTimeout(()=>maybeInstall().catch(()=>{}),250);
-  setTimeout(()=>{
+  const warmSelectedLocal=()=>{
     const chosen=window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||'kai-local';
     if(chosen==='kai-local') loadEngine('local').catch(e=>console.warn('KAI 51 LOCAL background warm-up failed',e));
-  },1800);
+  };
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',warmSelectedLocal,{once:true});
+  else warmSelectedLocal();
+  window.addEventListener('haxbro:model-selected',e=>{if(e?.detail?.model==='kai-local') warmSelectedLocal();});
   setInterval(()=>{
     try{
       const s=read();

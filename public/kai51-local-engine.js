@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v2':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v3':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -120,7 +120,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       env.cacheKey='haxbro-kai51-q4-dual-model-v43';
 
       await resolveRuntime();
-      await loadTrainingPack();
+      /* The training pack is optional prompt conditioning; never block model startup on its network request. */
+      if(PROFILE!=='local') await loadTrainingPack();
       progress(15,preferCache
         ? 'Restoring available KAI 51 neural chunks from browser cache'
         : (PROFILE==='local'?'Installing the KAI 51 LOCAL 135M Q4 fast model':'Installing the KAI 51 GITHUB 360M Q4 precision model'));
@@ -238,9 +239,11 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       })
       .filter(x=>x.content && !(x.role==='user' && x.content===prompt))
       .slice(-6);
-    const messages=[
-      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. When the user greets you, greet them warmly and naturally in one short sentence, then invite them to continue if appropriate; never say you are unsure what they are asking in response to a greeting. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
-      ...(isGreeting?[]:[]),
+    const messages=isGreeting?[
+      {role:'system',content:'You are KAI 51, a friendly conversational assistant. Reply to this greeting with one short, natural, warm sentence. Do not mention status, loading, time, or uncertainty.'},
+      {role:'user',content:prompt}
+    ]:[
+      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
       ...normalizedHistory,
       {role:'user',content:prompt}
