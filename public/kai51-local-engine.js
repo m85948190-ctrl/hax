@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v12-quality-guard':'kai51-github-360m-q4-v32-quality-guard';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v13-math-format-guard':'kai51-github-360m-q4-v33-math-format-guard';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -270,7 +270,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       },
       {role:'user',content:userRequest}
     ]:[
-      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
+      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Follow explicit output constraints exactly, including requested sentence counts, formats, and lengths. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
       ...normalizedHistory,
       {role:'user',content:userRequest}
@@ -313,7 +313,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       const repairMessages=[
         {role:'system',content:isSmallTalk
           ?'You are KAI 51. Your last response was irrelevant or repetitive. Respond to the user’s actual short message with one warm, simple sentence. Do not mention weather unless asked. Do not apologize unless there was a real mistake. Never repeat a sentence.'
-          :'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it greeted the user, repeated their question, or looped. Answer the actual request now; never echo it. Be specific, useful, concise, and natural. Example: User asks “What can you help me with?” Answer: “I can help research factual questions, explain concepts, write and debug code, and plan or build apps. What are you working on?” Use this as a style example, not as a fixed response to unrelated questions.'},
+          :'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it greeted the user, repeated their question, or looped. Answer the actual request now; never echo it. Follow explicit sentence-count and formatting instructions exactly. Be specific, useful, concise, and natural. Example: User asks “What can you help me with?” Answer: “I can help research factual questions, explain concepts, write and debug code, and plan or build apps. What are you working on?” Use this as a style example, not as a fixed response to unrelated questions.'},
         ...(conditioning?[{role:'system',content:conditioning}]:[]),
         ...normalizedHistory,
         {role:'user',content:userRequest}

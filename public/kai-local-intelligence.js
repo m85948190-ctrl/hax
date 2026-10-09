@@ -1,7 +1,7 @@
 (() => {
   /* KAI 51 LOCAL: fast evidence retrieval + neural conversation.
      This file routes and gathers evidence; it must not fabricate a response from phrase rules. */
-  const VERSION='kai51-local-evidence-synthesis-v10-empathy-and-quality';
+  const VERSION='kai51-local-evidence-synthesis-v11-natural-math';
   const clean=(v,n=9000)=>String(v??'').replace(/\u0000/g,'').trim().slice(0,n);
   const words=s=>clean(s,5000).toLowerCase().split(/\s+/).filter(Boolean);
 
@@ -121,7 +121,17 @@
   }
 
   function calculateExpression(message){
-    const candidates=String(message||'').match(/[+-]?\d[\d,]*(?:\.\d+)?(?:\s*(?:\+|-|\*|\/|×|÷|\^)\s*[+-]?\d[\d,]*(?:\.\d+)?)+/g)||[];
+    const raw=String(message||'');
+    const number='[+-]?\\d[\\d,]*(?:\\.\\d+)?';
+    const natural=raw.match(new RegExp('(?:what\\s+is|calculate|compute|work\\s+out)?\\s*('+number+')\\s*(times|multiplied\\s+by|plus|added\\s+to|minus|subtracted\\s+by|divided\\s+by|over|to\\s+the\\s+power\\s+of|[x×])\\s*('+number+')','i'));
+    if(natural){
+      const a=natural[1].replace(/,/g,''),opText=natural[2].toLowerCase(),b=natural[3].replace(/,/g,'');
+      const op=/^(?:times|multiplied by|x|×)$/.test(opText)?'*':/^(?:plus|added to)$/.test(opText)?'+':opText==='minus'||opText==='subtracted by'?'-':opText==='divided by'||opText==='over'?'/':'^';
+      const expression=a+' '+op+' '+b;
+      const av=Number(a),bv=Number(b);let result=op==='*'?av*bv:op==='+'?av+bv:op==='-'?av-bv:op==='/'?av/bv:Math.pow(av,bv);
+      if(Number.isFinite(result))return {expression,result};
+    }
+    const candidates=raw.match(/[+-]?\d[\d,]*(?:\.\d+)?(?:\s*(?:\+|-|\*|\/|×|÷|\^)\s*[+-]?\d[\d,]*(?:\.\d+)?)+/g)||[];
     const expression=candidates.sort((a,b)=>b.length-a.length)[0];
     if(!expression)return null;
     const tokens=expression.replace(/,/g,'').replace(/×/g,'*').replace(/÷/g,'/').match(/\d+(?:\.\d+)?|[()+\-*/^]/g)||[];
