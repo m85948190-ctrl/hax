@@ -61,21 +61,33 @@
   }
 
   async function searchWikipedia(query){
-    const url='https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch='+encodeURIComponent(query)+'&srlimit=3&format=json&origin=*';
-    const r=await fetch(url,{mode:'cors',cache:'no-store'});
-    if(!r.ok) throw new Error('Wikipedia HTTP '+r.status);
-    const d=await r.json();
-    const rows=Array.isArray(d?.query?.search)?d.query.search:[];
-    const summaries=await Promise.all(rows.slice(0,2).map(async row=>{
+    const title=clean(query,220).replace(/^\s*(?:please\s+)?(?:what is|what are|who is|who are|where is|where are|tell me about|explain)\s+/i,'').replace(/^\s*(?:the\s+)?(?:current|latest|recent)\s+/i,'').replace(/[?!.]+$/,'').trim();
+    const summary=async(name,timeout=1100)=>{
+      const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeout);
       try{
-        const p=await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(String(row.title||'').replace(/ /g,'_')),{cache:'no-store'});
+        const p=await fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(name.replace(/\s+/g,'_')),{mode:'cors',cache:'no-store',signal:controller.signal});
         if(!p.ok)return null;
         const x=await p.json();
-        if(!x?.extract)return null;
-        return {title:x.title||row.title,url:x.content_urls?.desktop?.page||('https://en.wikipedia.org/wiki/'+encodeURIComponent(String(row.title||'').replace(/ /g,'_'))),text:clean(x.extract,2200),source:'Wikipedia'};
-      }catch{return null}
-    }));
-    return summaries.filter(Boolean);
+        if(!x?.extract||x.type==='disambiguation')return null;
+        return {title:x.title||name,url:x.content_urls?.desktop?.page||('https://en.wikipedia.org/wiki/'+encodeURIComponent(String(x.title||name).replace(/ /g,'_'))),text:clean(x.extract,2200),source:'Wikipedia'};
+      }catch{return null}finally{clearTimeout(timer)}
+    };
+    /* Exact-topic summaries are faster and more relevant than broad search results. */
+    if(title&&title.split(/\s+/).length<=5){
+      const direct=await summary(title,1000);
+      if(direct)return [direct];
+    }
+    const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),1300);
+    try{
+      const url='https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch='+encodeURIComponent(title||query)+'&srlimit=4&format=json&origin=*';
+      const r=await fetch(url,{mode:'cors',cache:'no-store',signal:controller.signal});
+      if(!r.ok)throw new Error('Wikipedia HTTP '+r.status);
+      const d=await r.json();
+      const rows=Array.isArray(d?.query?.search)?d.query.search:[];
+      const terms=words(title).filter(w=>w.length>2&&!STOP_WORDS.has(w));
+      const summaries=await Promise.all(rows.slice(0,3).map(row=>summary(String(row.title||''),1300)));
+      return summaries.filter(Boolean).map(x=>({...x,_score:terms.filter(t=>(x.title+' '+x.text).toLowerCase().includes(t)).length})).filter(x=>x._score>0).sort((a,b)=>b._score-a._score).map(({_score,...x})=>x).slice(0,2);
+    }finally{clearTimeout(timer)}
   }
 
   async function searchFast(query){
