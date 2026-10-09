@@ -462,8 +462,9 @@ async function kai51WorkspaceRoute(value){
     window.dispatchEvent(new CustomEvent('haxbro:open-decoder',{detail:{input:payload}}));return true;
   }
   if(encode){
-    if(window.HAxBRODecodingPartner?.open){await window.HAxBRODecodingPartner.open();return true}
-    window.dispatchEvent(new CustomEvent('haxbro:open-decoder',{detail:{input:'',mode:'encrypt'}}));return true;
+    const payload=t.replace(/^.*?\b(?:encode|encrypt|encryption)\b[:\s-]*/i,'').trim();
+    if(window.HAxBRODecodingPartner?.openEncrypt){await window.HAxBRODecodingPartner.openEncrypt(payload);return true}
+    window.dispatchEvent(new CustomEvent('haxbro:open-decoder',{detail:{input:payload,mode:'encrypt'}}));return true;
   }
   if(xpro||investigate){
     const match=t.match(/https?:\/\/[^\s<>"']+/i);

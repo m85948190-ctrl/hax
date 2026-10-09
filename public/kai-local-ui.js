@@ -95,8 +95,9 @@
     if(/\b(decode|decrypt)\b/.test(lower) && window.HAxBRODecodingPartner?.openWithInput){
       window.HAxBRODecodingPartner.openWithInput(value.replace(/^.*?\b(decode|decrypt)\b/i,'').trim()||''); return true;
     }
-    if(/\b(encode|encrypt)\b/.test(lower) && window.HAxBRODecodingPartner?.open){
-      window.HAxBRODecodingPartner.open(); return true;
+    if(/\b(encode|encrypt)\b/.test(lower) && (window.HAxBRODecodingPartner?.openEncrypt||window.HAxBRODecodingPartner?.open)){
+      const payload=String(value).replace(/^.*?\b(encode|encrypt|encryption)\b/i,'').trim();
+      if(window.HAxBRODecodingPartner?.openEncrypt) window.HAxBRODecodingPartner.openEncrypt(payload); else window.HAxBRODecodingPartner.open(); return true;
     }
     if(/\b(app maker|build me an app|build an app|create an app|make an app)\b/.test(lower) && window.HAxBROFutureMaker?.open){
       await window.HAxBROFutureMaker.open(value,true); return true;
