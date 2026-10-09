@@ -37,8 +37,8 @@
     return next;
   };
 
-  const ENGINE_VERSION='kai51-github-360m-q4-v31';
-  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v11-fast-conversation';
+  const ENGINE_VERSION='kai51-github-360m-q4-v32-quality-guard';
+  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v12-quality-guard';
   if(window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
     window.HAxBROKai51Engine=null;
     window.__HAxBROKai51EnginePromise=null;
@@ -81,7 +81,7 @@
       :'KAI 51 GITHUB precision model starting'});
 
     const job=(async()=>{
-      const mod=await import('/kai51-local-engine.js?v=53');
+      const mod=await import('/kai51-local-engine.js?v=54');
       const engine=await mod.createKai51Engine({
         profile:isLocal?'local':'github',
         onProgress:p=>emit({profile:'heavy',...p}),
@@ -144,8 +144,26 @@
   async function generate(message,history=[],hooks={},profile='local') {
     const forward=e=>{try{if(e?.detail?.profile==='heavy') hooks.onProgress?.(e.detail);}catch{}};
     window.addEventListener('haxbro:kai-local-progress',forward);
-    try{ const engine=await loadEngine(profile); const result=await engine.generate(message,history); return {...result,lane:profile==='github'?'github':'local'}; }
-    finally{ window.removeEventListener('haxbro:kai-local-progress',forward); }
+    try{
+      /* GITHUB mode shares the same fast conversation and evidence-first web preflight.
+         Only open-ended turns that need neural synthesis should trigger the large release download. */
+      if(profile==='github'&&window.HAxBROKaiLocalIntelligence?.run){
+        try{
+          const turn=await window.HAxBROKaiLocalIntelligence.run(message,history,{onStage:hooks.onStage});
+          if(turn?.response&&!turn.handoff) return {...turn,lane:'github',provider:'KAI 51 GITHUB · fast conversation/evidence path',model:turn.model||'shared fast local/web path',preflight:true};
+          if(turn?.handoff&&turn?.research&&window.HAxBROKaiLite?.respond){
+            try{
+              hooks.onStage?.('searching','KAI 51 GITHUB · lightweight live web evidence');
+              const webTurn=await window.HAxBROKaiLite.respond(message,history);
+              if(webTurn?.response) return {...webTurn,lane:'github',provider:'KAI 51 GITHUB · live web evidence',model:'Google/Bing website search',preflight:true};
+            }catch(e){console.warn('KAI 51 GITHUB web preflight failed',e);}
+          }
+        }catch(e){console.warn('KAI 51 GITHUB fast preflight failed; loading neural model',e);}
+      }
+      const engine=await loadEngine(profile);
+      const result=await engine.generate(message,history);
+      return {...result,lane:profile==='github'?'github':'local'};
+    }finally{window.removeEventListener('haxbro:kai-local-progress',forward);}
   }
 
   async function chat(message,history=[]) {

@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v11-fast-conversation':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v12-quality-guard':'kai51-github-360m-q4-v32-quality-guard';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -36,7 +36,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           navigator.gpu.requestAdapter(),
           new Promise(resolve=>setTimeout(()=>resolve(null),1200))
         ]);
-        if(adapter){DEVICE='webgpu';DTYPE='q4';}
+        if(adapter){DEVICE='webgpu';DTYPE=PROFILE==='github'?'q4f16':'q4';}
       }
     }catch{}
   }
@@ -93,7 +93,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           if(name!=='model_q4.onnx'&&name!=='model_q4f16.onnx') return nativeFetch(endpoint,init);
           const headers=new Headers(init?.headers||(typeof Request!=='undefined'&&input instanceof Request?input.headers:undefined));
           if(headers.has('range')) return nativeFetch(endpoint,{...init,headers});
-          const size=name==='model_q4.onnx'?386495938:272000000;
+          const size=name==='model_q4.onnx'?386495938:272353302;
           const chunkSize=8*1024*1024;
           let start=0,downloaded=0;
           const stream=new ReadableStream({
@@ -148,6 +148,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         console.warn('KAI 51 WebGPU initialization failed; retrying the same real model on WASM',gpuError);
         await disposePipe();
         DEVICE='wasm';
+        DTYPE='q4';
         progress(35,'KAI 51 GPU path unavailable · switching to local CPU runtime');
         pipe=await pipeline('text-generation',MODEL,{
           dtype:'q4',
@@ -328,13 +329,24 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     }
     // Final safety guard: never expose a loop or an irrelevant weather answer for small talk.
     const finalSentences=response.split(/(?<=[.!?])\s+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
-    const stillRepeating=finalSentences.length>=2&&new Set(finalSentences).size<=Math.max(1,Math.floor(finalSentences.length/2));
+    const stillRepeating=finalSentences.length>=2&&(new Set(finalSentences).size<finalSentences.length||new Set(finalSentences).size<=Math.max(1,Math.floor(finalSentences.length/2)));
+    const unfinishedTail=/\b(?:a|an|the|and|or|but|because|that|which|who|to|of|for|with|had|have|has|is|are|was|were|in|on|at|by|from|if|when|while|as|my|your|you|i|it)$/i.test(response.trim());
+    const emotionalMessage=/\b(?:rough day|bad day|terrible day|awful day|feeling (?:sad|down|lonely|anxious|worried|upset|overwhelmed)|i(?:'m| am) (?:sad|lonely|stressed|upset|overwhelmed|frustrated|bored)|i just want to talk|need someone to talk)\b/i.test(userRequest);
+    const brokenOutput=stillRepeating||unfinishedTail||(response.length>100&&!/[.!?…\])"’]$/.test(response.trim()));
     const stillApologizing=(response.match(/i'?m sorry for (?:the misunderstanding|what i said earlier)/gi)||[]).length>=1;
     const stillWeather=isGreeting&&/\b(?:weather|forecast|temperature|rain|sunny)\b/i.test(response);
     const stalePoliteReply=isSmallTalk&&/\b(?:glad i could help you today|thanks for asking|since we last spoke|sorry for what i said earlier|is there something specific|status check|system online)\b/i.test(response);
     const unfinishedSmallTalk=isSmallTalk&&response.length>0&&!/[.!?…)"’]$/.test(response);
     if(isSmallTalk&&(stillRepeating||stillApologizing||stillWeather||stalePoliteReply||unfinishedSmallTalk)){
       response=isGreeting?"Hey! 😊 What’s up?":/^(?:o+|h+e+h+|l+o+l+|haha+|wow+|whoa+)[!?. ,\s]*$/i.test(userRequest)?"Haha 😄 what’s up?":"I’m listening. What’s on your mind?";
+    } else if(brokenOutput){
+      if(emotionalMessage){
+        response="I’m sorry it’s been a rough one, bro. I’m here to listen—want to tell me what happened?";
+      } else if(/\b(?:who are you|what(?:'s| is) your name|are you kai)\b/i.test(userRequest)){
+        response="I’m KAI 51, HAxBRO’s AI assistant. What can I help you with?";
+      } else {
+        response="I couldn’t put together a reliable answer just now, so I won’t guess. Please try that question once more.";
+      }
     }
     // Identity integrity guard: the small base model can hallucinate numbered KAI identities.
     // Never expose a KAI 52/53/etc. sequence or repeated self-identification as a valid answer.

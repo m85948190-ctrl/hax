@@ -1,7 +1,7 @@
 (() => {
   /* KAI 51 LOCAL: fast evidence retrieval + neural conversation.
      This file routes and gathers evidence; it must not fabricate a response from phrase rules. */
-  const VERSION='kai51-local-evidence-synthesis-v9-fast-conversation';
+  const VERSION='kai51-local-evidence-synthesis-v10-empathy-and-quality';
   const clean=(v,n=9000)=>String(v??'').replace(/\u0000/g,'').trim().slice(0,n);
   const words=s=>clean(s,5000).toLowerCase().split(/\s+/).filter(Boolean);
 
@@ -170,6 +170,10 @@
     const socialCombo=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:a\s+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?$/i.test(socialText);
     const socialReaction=/^(?:o+|h+m+|hmm+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)$/i.test(socialText);
     const socialConversation=/^(?:(?:hey|hi|hello|bro)[,\s]+)*(?:what are you doing|what're you doing|what are you up to|what's going on|whats going on|how are you|how's it going|hows it going|are you there|you there)$/i.test(socialText);
+    const emotionalConversation=/\b(?:rough day|bad day|terrible day|awful day|feeling (?:sad|down|lonely|anxious|worried|upset|overwhelmed)|i(?:'m| am) (?:sad|lonely|stressed|upset|overwhelmed|frustrated|bored)|i just want to talk|need someone to talk)\b/i.test(socialText);
+    if(emotionalConversation){
+      return {lane:'local',handoff:false,response:'I’m sorry it’s been a rough one, bro. I’m here to listen—want to tell me what happened?',provider:'KAI 51 LOCAL · empathetic conversation path',model:'local conversational response',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
+    }
     if(socialGreeting||socialCombo||socialReaction||socialConversation){
       const response=socialConversation
         ? /\b(?:how are you|how's it going|hows it going)$/i.test(socialText) ? 'I’m doing well and ready to help, bro 🙂 What’s on your mind?' : /\b(?:are you there|you there)$/i.test(socialText) ? 'I’m here, bro 🙂 What do you need?' : 'I’m here chatting with you, bro 😄 What are you up to?'
