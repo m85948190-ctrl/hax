@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-github-q4-v25-stream-start-fix';
+  const VERSION='kai51-hf-q4-v26-direct-cors-loader';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -73,106 +73,16 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       const {env,pipeline}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
-      // Transformers.js still needs a model id for architecture/config resolution,
-      // but every model asset request is rewritten to HAxBRO's same-origin proxy.
-      // This keeps the authoritative bytes on the GitHub release behind /api/kai-model.
-      /* The GitHub copy remains the pinned HAxBRO release/provenance artifact, but
-         browser inference must not consume the Hatchable Free-plan bandwidth budget.
-         The release was built from this browser-ready Transformers.js package, so load
-         the same SmolLM2-360M-Instruct Q4 neural weights directly from Hugging Face. */
+      // Keep browser-side inference local after the public ONNX weights are downloaded.
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
-      // KAI 51 model assets come ONLY from the pinned HAxBRO GitHub release.
-      // Transformers.js still resolves the model using its Hugging Face-style model id,
-      // but the actual bytes are served by HAxBRO's same-origin proxy from that release.
-      // This preserves Range requests and avoids browser-side GitHub redirect/CORS variance.
-      const nativeFetch=globalThis.fetch.bind(globalThis);
-      const MODEL_CACHE_NAME='haxbro-kai51-model-v2';
-      const MODEL_SIZES=Object.freeze({'model_q4.onnx':386495938,'model_q4f16.onnx':272353302});
-      const CHUNK_SIZE=8*1024*1024;
-      const modelCacheKey=(file,range)=>{
-        const key='/__haxbro_kai51_cache_v2__/'+encodeURIComponent(file);
-        return new Request(key+(range?'?range='+encodeURIComponent(range):''));
-      };
-      const cacheOpen=()=>caches.open(MODEL_CACHE_NAME);
-
-      /* IMPORTANT: never use local_files_only for a browser installation.
-         A verified cache is used automatically, but a missing chunk must be fetched
-         from the pinned GitHub release rather than turning into a permanent CACHE_MISS.
-         This makes interrupted/partial downloads resumable. */
-      env.fetch=async (input,init)=>{
-        const raw=typeof input==='string'?input:(input?.url||String(input));
-        const u=new URL(raw,location.href);
-        const file=decodeURIComponent(u.pathname.split('/').pop()||'');
-        if(!MODEL_ASSETS.has(file)) return nativeFetch(input,init);
-
-        const requestedRange=init?.headers?.Range||init?.headers?.range||(
-          typeof input!=='string' && input?.headers ? input.headers.get?.('Range') : ''
-        )||'';
-        const cache=await cacheOpen();
-
-        /* Normal ranged request: cache the exact range and resume missing pieces. */
-        if(requestedRange){
-          const key=modelCacheKey(file,requestedRange);
-          const cached=await cache.match(key);
-          if(cached) return cached;
-          const headers=new Headers(init?.headers||{});
-          headers.set('Range',requestedRange);
-          const network=await nativeFetch(MODEL_PROXY+'?file='+encodeURIComponent(file),{...init,headers,cache:'no-store'});
-          if(!network.ok) throw new Error('KAI51_MODEL_HTTP_'+network.status+'_'+file);
-          try{await cache.put(key,network.clone());}catch{}
-          return network;
-        }
-
-        /* Some ONNX/runtime paths request the entire .onnx file without a Range.
-           Do not ask Hatchable to buffer 386 MB. Stream the same GitHub release
-           through small ranged requests directly to the browser, caching every chunk. */
-        if(MODEL_SIZES[file]){
-          const total=MODEL_SIZES[file];
-          let stopped=false;
-          let chunkIndex=0;
-          const stream=new ReadableStream({
-            start(){},
-            async pull(controller){
-              if(stopped)return;
-              const index=chunkIndex;
-              const start=index*CHUNK_SIZE;
-              if(start>=total){stopped=true;controller.close();return;}
-              const end=Math.min(total-1,start+CHUNK_SIZE-1);
-              const range='bytes='+start+'-'+end;
-              const key=modelCacheKey(file,range);
-              try{
-                let part=await cache.match(key);
-                if(!part){
-                  const headers=new Headers(init?.headers||{});
-                  headers.set('Range',range);
-                  part=await nativeFetch(MODEL_PROXY+'?file='+encodeURIComponent(file),{...init,headers,cache:'no-store'});
-                  if(!part.ok) throw new Error('KAI51_MODEL_HTTP_'+part.status+'_'+range);
-                  try{await cache.put(key,part.clone());}catch{}
-                }
-                const bytes=new Uint8Array(await part.arrayBuffer());
-                controller.enqueue(bytes);
-                chunkIndex=index+1;
-                const pct=15+Math.min(80,Math.round(((end+1)/total)*80));
-                progress(pct,'Downloading KAI 51 neural model · '+Math.round(((end+1)/total)*100)+'%');
-              }catch(e){
-                stopped=true;
-                controller.error(e);
-              }
-            },
-            cancel(){stopped=true;}
-          });
-          const headers=new Headers();
-          headers.set('Content-Type','application/octet-stream');
-          headers.set('Content-Length',String(total));
-          headers.set('Accept-Ranges','bytes');
-          return new Response(stream,{status:200,headers});
-        }
-
-        return nativeFetch(input,init);
-      };
+      /* Use the model's public CORS-enabled Hugging Face ONNX distribution directly.
+         The same pinned SmolLM2-360M weights remain browser-local at inference time.
+         The previous GitHub range-proxy wrapper could stall before the first progress
+         callback on some browsers, leaving KAI permanently at 0%. */
+      env.fetch=globalThis.fetch.bind(globalThis);
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-github-q4-v24';
+      env.cacheKey='haxbro-kai51-huggingface-q4-v1';
 
       await resolveRuntime();
       await loadTrainingPack();

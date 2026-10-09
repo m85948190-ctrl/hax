@@ -80,7 +80,7 @@
 .hero-capabilities>div span{font:400 11px 'DM Sans',sans-serif;color:#8799ba}
 .bubble{
   position:relative;border-radius:18px!important;padding:14px 17px!important;
-  font:400 14px/1.75 'DM Sans',sans-serif!important;letter-spacing:.002em;
+  font:400 14.5px/1.75 'DM Sans',sans-serif!important;letter-spacing:.002em;
   border:1px solid rgba(126,160,220,.17)!important;
   background:linear-gradient(145deg,rgba(22,31,54,.96),rgba(13,20,38,.97))!important;
   box-shadow:0 8px 26px rgba(0,0,0,.12),inset 0 1px rgba(255,255,255,.035)!important;
@@ -105,7 +105,7 @@
   box-shadow:0 20px 70px rgba(0,0,0,.4),0 0 0 3px rgba(53,164,255,.08),0 0 42px rgba(32,166,255,.16)!important;
 }
 .composer .input-wrap{background:transparent}
-.input-wrap textarea{font:400 14px/1.55 'DM Sans',sans-serif!important;color:#f2f6ff!important;caret-color:#68ddff}
+.input-wrap textarea{font:400 15px/1.55 'DM Sans',sans-serif!important;color:#f2f6ff!important;caret-color:#68ddff}
 .input-wrap textarea::placeholder{color:#7789ad!important}
 .composer .float-tool{
   background:rgba(32,49,83,.78);border:1px solid rgba(118,160,230,.2);color:#b9d5ff;
@@ -171,7 +171,7 @@
   .hero-capabilities>div{padding:12px 10px;border-radius:12px}
   .hero-capabilities>div b{font-size:8px}
   .hero-capabilities>div span{font-size:10px}
-  .bubble{padding:12px 14px!important;font-size:13px!important;border-radius:16px!important}
+  .bubble{padding:12px 14px!important;font-size:13.5px!important;border-radius:16px!important}
   .composer{bottom:max(10px,env(safe-area-inset-bottom))!important;width:calc(100% - 16px)!important;left:8px!important;right:8px!important;gap:5px!important;padding:6px!important;border-radius:20px!important}
   .composer .input-wrap{padding:8px 5px!important;gap:5px!important}
   .input-wrap textarea{font-size:16px!important;max-height:140px!important}
