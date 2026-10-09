@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v13-math-format-guard':'kai51-github-360m-q4-v33-math-format-guard';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v14-short-generation':'kai51-github-360m-q4-v34-short-generation';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -204,8 +204,10 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   async function runOnce(messages,generationOptions={}){
     await prepare();
     return pipe(messages,{
-      max_new_tokens:PROFILE==='local'?40:112,
+      max_new_tokens:PROFILE==='local'?32:56,
       do_sample:false,
+      repetition_penalty:1.15,
+      no_repeat_ngram_size:3,
       return_full_text:false,
       ...generationOptions
     });
