@@ -443,7 +443,8 @@ async function kai51WorkspaceRoute(value){
   /* Casual chat must never wait on workspace intent detection. Only inspect app/developer/workspace commands. */
   if(!/\b(?:make|build|create|develop|design|generate|forge|ship|open|launch|show|decode|decrypt|decipher|encode|encrypt|expert|investigate|inspect|scan|security|analy[sz]e|code|program|script|app\s*maker|decoding)\b/i.test(t)) return false;
   const build=/\b(?:make|build|create|develop|design|generate|forge|ship)\b/i.test(t);
-  const app=build&&/\b(?:app|application|website|web\s*app|web\s*application|dashboard|portal|platform|saas|pwa|mobile\s+app|desktop\s+app|tool|game|assistant|agent|bot|analyzer|analyser|tracker|calculator|converter|monitor|generator)\b/i.test(t);
+  const namedAiProduct=build&&/\b(?:make|build|create|develop|design|generate)\b[\s\S]{0,45}\b(?:[a-z][a-z0-9_-]*\s+){0,3}ai\b/i.test(t);
+  const app=build&&(/\b(?:app|application|website|web\s*app|web\s*application|dashboard|portal|platform|saas|pwa|mobile\s+app|desktop\s+app|tool|game|assistant|agent|bot|analyzer|analyser|tracker|calculator|converter|monitor|generator)\b/i.test(t)||namedAiProduct);
   const openApp=/\b(?:open|launch|show)\b[\s,]*(?:the\s+)?app\s*maker\b/i.test(t)||(/\bapp\s*maker\b/i.test(t)&&!/^(what|why|how|tell|explain)\b/i.test(t));
   const decode=/\b(?:decode|decrypt|decipher|decoding|ciphertext|encoded|rot13|base64|hex|morse|binary|atbash|caesar|vigenere|rail\s*fence|a1z26)\b/i.test(t);
   const encode=/\b(?:encode|encrypt)\b/i.test(t);
