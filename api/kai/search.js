@@ -116,15 +116,36 @@ async function ddgSearch(query){
 async function wikipediaEvidence(query){
   const normalized=clean(query,300).replace(/^\s*(?:please\s+)?(?:what is|what are|who is|who are|where is|where are|tell me about|explain)\s+/i,"").replace(/[?!.]+$/,"").trim();
   const fetchSummary=async(title,timeout=1350)=>{
+    const normalizedTitle=title.replace(/\s+/g,"_");
     const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),timeout);
     try{
-      const endpoint="https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(title.replace(/\s+/g,"_"));
+      const endpoint="https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(normalizedTitle);
       const r=await fetch(endpoint,{signal:controller.signal,headers:{accept:"application/json"}});
-      if(!r.ok)return null;
-      const item=await r.json();
-      if(!item?.extract||item.type==="disambiguation")return null;
-      return {title:item.title||title,url:item.content_urls?.desktop?.page||("https://en.wikipedia.org/wiki/"+encodeURIComponent(String(item.title||title).replace(/ /g,"_"))),text:clean(item.extract,1800),engine:"Wikipedia"};
-    }catch{return null}finally{clearTimeout(timer)}
+      if(r.ok){
+        const item=await r.json();
+        if(item?.extract&&item.type!=="disambiguation")return {title:item.title||title,url:item.content_urls?.desktop?.page||("https://en.wikipedia.org/wiki/"+encodeURIComponent(String(item.title||title).replace(/ /g,"_"))),text:clean(item.extract,1800),engine:"Wikipedia"};
+      }
+    }catch{}finally{clearTimeout(timer)}
+    /* Some server runtimes block direct Wikipedia API fetches. Use the managed
+       browser session as a second retrieval transport rather than returning a
+       page title with an empty body. */
+    try{
+      const pageResult=await Promise.race([
+        browser.session(async page=>{
+          await page.goto("https://en.wikipedia.org/wiki/"+encodeURIComponent(normalizedTitle),{waitUntil:"domcontentloaded"});
+          return await page.evaluate(()=>{
+            const title=document.querySelector("#firstHeading")?.innerText||document.title||"";
+            const paragraphs=Array.from(document.querySelectorAll("#mw-content-text .mw-parser-output > p"))
+              .map(p=>(p.innerText||p.textContent||"").replace(/\s+/g," ").trim())
+              .filter(t=>t.length>45&&!/may refer to|disambiguation/i.test(t));
+            return {title,text:paragraphs.slice(0,3).join(" ")};
+          });
+        }),
+        new Promise(resolve=>setTimeout(()=>resolve(null),1800))
+      ]);
+      if(pageResult?.text&&pageResult.text.length>45)return {title:clean(pageResult.title||title,220),url:"https://en.wikipedia.org/wiki/"+encodeURIComponent(normalizedTitle),text:clean(pageResult.text,1800),engine:"Wikipedia"};
+    }catch{}
+    return null;
   };
   /* Try the exact article first; this is faster and more accurate for clean topics. */
   if(normalized&&normalized.split(/\s+/).length<=4){
