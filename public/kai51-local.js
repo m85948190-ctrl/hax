@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v15-local-first-stable';
+  const VERSION = 'kai51-unified-controller-v16-engine-version-guard';
   const KEY = 'haxbro:kai51:installation:v15-github-q4';
   const LOCAL_KEY = 'haxbro:kai51:local-intelligence:og-v1';
   const MODEL = 'HuggingFaceTB/SmolLM2-360M-Instruct';
@@ -37,8 +37,13 @@
     return next;
   };
 
+  const ENGINE_VERSION='kai51-hf-q4-v29-engine-versioned-cache';
+  if(window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
+    window.HAxBROKai51Engine=null;
+    window.__HAxBROKai51EnginePromise=null;
+  }
   let state = read();
-  let enginePromise = window.__HAxBROKai51EnginePromise || null;
+  let enginePromise = window.HAxBROKai51Engine?.version===ENGINE_VERSION ? (window.__HAxBROKai51EnginePromise||null) : null;
   let transportPromise = null;
 
   function emit(detail) {
@@ -66,7 +71,12 @@
   }
 
   async function loadEngine() {
-    if (window.HAxBROKai51Engine?.generate) return window.HAxBROKai51Engine;
+    if (window.HAxBROKai51Engine?.generate && window.HAxBROKai51Engine.version===ENGINE_VERSION) return window.HAxBROKai51Engine;
+    if (window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
+      window.HAxBROKai51Engine=null;
+      window.__HAxBROKai51EnginePromise=null;
+      enginePromise=null;
+    }
     if (enginePromise) return enginePromise;
 
     const restoring=state.status==='ready' && state.verified===true;
@@ -78,7 +88,7 @@
     enginePromise = window.__HAxBROKai51EnginePromise = (async () => {
       // The current browser-ready ONNX package is fetched directly from Hugging Face.
       // Do not register the legacy GitHub model service worker on this path.
-      const mod = await import('/kai51-local-engine.js?v=41');
+      const mod = await import('/kai51-local-engine.js?v=42');
       const engine = await mod.createKai51Engine({
         onProgress:p => emit({profile:'heavy',...p}),
         preferCache:restoring,

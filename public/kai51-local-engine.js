@@ -7,7 +7,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL_RELEASE='kai51-model-latest';
   const MODEL_PROXY='/api/kai-model';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION='kai51-hf-q4-v28-greeting-detector-fix';
+  const VERSION='kai51-hf-q4-v29-engine-versioned-cache';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -246,6 +246,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   }
 
   return {
+    version:VERSION,
     model:MODEL,
     prepare,
     generate,
