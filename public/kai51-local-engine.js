@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v4':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v5':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -273,10 +273,13 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     // Tiny local models sometimes emit a generic greeting for a real question.
     // Retry that failure with a more explicit native-model instruction instead of
     // silently returning an unrelated greeting or switching to an external provider.
+    const normalizedPrompt=prompt.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+    const normalizedResponse=response.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
     const offTopicGreeting=!isGreeting && /^(?:hi|hello|hey|hello there|i'?m here(?: to help)?|how can i help(?: you)?)[!. ,]*$/i.test(response);
-    if(offTopicGreeting){
+    const echoedPrompt=!isGreeting && normalizedPrompt.length>8 && (normalizedResponse===normalizedPrompt || normalizedResponse.includes(normalizedPrompt));
+    if(offTopicGreeting||echoedPrompt){
       const repairMessages=[
-        {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it only greeted the user. Answer the actual request now. Never answer a question with just a greeting. Be specific, useful, concise, and natural. If asked what you can do, explain that you can chat, explain topics, help with coding and app building, and research factual questions using web sources when requested.'},
+        {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it greeted the user or repeated their question. Answer the actual request now; never echo it. Be specific, useful, concise, and natural. Example: User asks “What can you help me with?” Answer: “I can help research factual questions, explain concepts, write and debug code, and plan or build apps. What are you working on?” Use this as a style example, not as a fixed response to unrelated questions.'},
         ...(conditioning?[{role:'system',content:conditioning}]:[]),
         ...normalizedHistory,
         {role:'user',content:prompt}

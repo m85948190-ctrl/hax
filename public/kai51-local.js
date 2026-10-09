@@ -38,7 +38,7 @@
   };
 
   const ENGINE_VERSION='kai51-github-360m-q4-v31';
-  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v4';
+  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v5';
   if(window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
     window.HAxBROKai51Engine=null;
     window.__HAxBROKai51EnginePromise=null;
@@ -81,7 +81,7 @@
       :'KAI 51 GITHUB precision model starting'});
 
     const job=(async()=>{
-      const mod=await import('/kai51-local-engine.js?v=46');
+      const mod=await import('/kai51-local-engine.js?v=47');
       const engine=await mod.createKai51Engine({
         profile:isLocal?'local':'github',
         onProgress:p=>emit({profile:'heavy',...p}),
