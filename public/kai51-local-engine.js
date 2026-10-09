@@ -6,7 +6,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
   const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v3':'kai51-github-360m-q4-v31';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v4':'kai51-github-360m-q4-v31';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -266,10 +266,30 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     });
     generationChain=job.catch(()=>{});
     const result=await job;
-    const generated=result?.[0]?.generated_text;
-    const response=(Array.isArray(generated)
+    let generated=result?.[0]?.generated_text;
+    let response=(Array.isArray(generated)
       ? String(generated.at(-1)?.content||'')
       : String(generated||result?.[0]?.text||'')).trim();
+    // Tiny local models sometimes emit a generic greeting for a real question.
+    // Retry that failure with a more explicit native-model instruction instead of
+    // silently returning an unrelated greeting or switching to an external provider.
+    const offTopicGreeting=!isGreeting && /^(?:hi|hello|hey|hello there|i'?m here(?: to help)?|how can i help(?: you)?)[!. ,]*$/i.test(response);
+    if(offTopicGreeting){
+      const repairMessages=[
+        {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it only greeted the user. Answer the actual request now. Never answer a question with just a greeting. Be specific, useful, concise, and natural. If asked what you can do, explain that you can chat, explain topics, help with coding and app building, and research factual questions using web sources when requested.'},
+        ...(conditioning?[{role:'system',content:conditioning}]:[]),
+        ...normalizedHistory,
+        {role:'user',content:prompt}
+      ];
+      try{
+        const retryJob=generationChain.then(()=>runOnce(repairMessages,{max_new_tokens:72,do_sample:true,temperature:0.35,top_p:0.9,repetition_penalty:1.18,no_repeat_ngram_size:3}));
+        generationChain=retryJob.catch(()=>{});
+        const retried=await retryJob;
+        generated=retried?.[0]?.generated_text;
+        const repaired=(Array.isArray(generated)?String(generated.at(-1)?.content||''):String(generated||retried?.[0]?.text||'')).trim();
+        if(repaired)response=repaired;
+      }catch(error){console.warn('KAI 51 answer-repair retry failed',error);}
+    }
     if(!response) throw new Error('KAI 51 neural model returned an empty response');
     return {
       response,
