@@ -1,5 +1,8 @@
 const $=s=>document.querySelector(s);
 let project={name:'Untitled project',summary:'',files:[],publicUrl:''};
+const PROJECT_KEY='haxbro:app-maker:project:v1';
+function persistProject(){try{const value=JSON.stringify(project);if(value.length<3500000)localStorage.setItem(PROJECT_KEY,value)}catch{}}
+function restoreProject(){try{const saved=JSON.parse(localStorage.getItem(PROJECT_KEY)||'null');if(saved&&Array.isArray(saved.files)&&saved.files.length){project=saved;return true}}catch{}return false}
 const prompt=$('#prompt'),status=$('#status'),result=$('#result'),filesEl=$('#files'),frame=$('#frame'),canvas=$('#space');
 const reportStream=$('#reportStream'),reportState=$('#reportState');
 let reportItems=[];
@@ -11,7 +14,7 @@ function enterPreviewMode(){document.body.classList.add('preview-mode');document
 function leavePreviewMode(){document.body.classList.remove('preview-mode','building-mode')}
 
 document.querySelectorAll('.chips button').forEach(b=>b.addEventListener('click',()=>{prompt.value=b.dataset.prompt;prompt.focus();leavePreviewMode();reportReset();setScene('READY')}));
-$('#newProject').addEventListener('click',()=>{project={name:'Untitled project',summary:'',files:[],publicUrl:''};prompt.value='';result.classList.add('hidden');leavePreviewMode();reportReset();status.className='status';status.innerHTML='<span class="status-dot"></span>Ready when you are.';$('#projectInfo').innerHTML='Untitled project<br><span>Describe an app to begin.</span>';setScene('READY')});
+$('#newProject').addEventListener('click',()=>{project={name:'Untitled project',summary:'',files:[],publicUrl:''};try{localStorage.removeItem(PROJECT_KEY)}catch{}prompt.value='';result.classList.add('hidden');leavePreviewMode();reportReset();status.className='status';status.innerHTML='<span class="status-dot"></span>Ready when you are.';$('#projectInfo').innerHTML='Untitled project<br><span>Describe an app to begin.</span>';setScene('READY')});
 function setFlow(n){document.querySelectorAll('#flow li').forEach((x,i)=>x.classList.toggle('active',i===n))}
 function setScene(label){
   $('#sceneState').textContent=label;
@@ -22,7 +25,7 @@ function setScene(label){
   const names=['SIGNAL','UNDERSTANDING','PONDERING','ARCHITECTING','BUILDING','INSPECTING','REPAIRING','BUILD READY'];
   $('#activityMode').textContent=names[idx]||String(label||'STANDBY');
 }
-function render(){result.classList.remove('hidden');if($('#resultReport')&&reportStream)$('#resultReport').innerHTML=reportStream.innerHTML;$('#resultName').textContent=project.name;$('#resultSummary').textContent=project.summary;$('#publishBadge').textContent=project.published?'● PUBLISHED':'● READY';$('#publishExternal').disabled=false;$('#publishExternal').textContent=project.published?'Republish externally':'Publish externally';$('#projectInfo').innerHTML=`${project.name}<br><span>${project.published?'Published':'Ready'} · ${project.files.length} artifact</span>`;const link=$('#publicUrl');link.href=project.publicUrl;link.textContent=project.publicUrl;filesEl.innerHTML='';project.files.forEach((f,i)=>{const el=document.createElement('div');el.className='file'+(i===0?' active':'');el.textContent=f.path;el.addEventListener('click',()=>{document.querySelectorAll('.file').forEach(x=>x.classList.remove('active'));el.classList.add('active');showPreview(f)});filesEl.appendChild(el)});showPreview(project.files[0])}
+function render(){result.classList.remove('hidden');if($('#resultReport')&&reportStream)$('#resultReport').innerHTML=reportStream.innerHTML;$('#resultName').textContent=project.name;$('#resultSummary').textContent=project.summary;$('#publishBadge').textContent=project.published?'● PUBLISHED':'● READY';$('#publishExternal').disabled=false;$('#publishExternal').textContent=project.published?'Republish externally':'Publish externally';$('#projectInfo').innerHTML=`${project.name}<br><span>${project.published?'Published':'Ready'} · ${project.files.length} artifact</span>`;const link=$('#publicUrl');link.href=project.publicUrl;link.textContent=project.publicUrl;filesEl.innerHTML='';project.files.forEach((f,i)=>{const el=document.createElement('div');el.className='file'+(i===0?' active':'');el.textContent=f.path;el.addEventListener('click',()=>{document.querySelectorAll('.file').forEach(x=>x.classList.remove('active'));el.classList.add('active');showPreview(f)});filesEl.appendChild(el)});showPreview(project.files[0]);persistProject()}
 function showPreview(f){
  if(!f)return;
  let html=String(f.content||'');
@@ -42,7 +45,7 @@ async function publishExternal(){
     const r=await fetch('/api/appmaker-original-publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({html:f.content})});
     const d=await r.json();
     if(!r.ok||!d.url)throw new Error(d.error||'External host rejected the deployment');
-    project.publicUrl=String(d.url); project.published=true; project.publishExpiresAt=d.expires_at||null;
+    project.publicUrl=String(d.url); project.published=true; project.publishExpiresAt=d.expires_at||null; persistProject();
     $('#publishBadge').textContent='● PUBLISHED'; $('#publicUrl').href=project.publicUrl; $('#publicUrl').textContent=project.publicUrl;
     btn.textContent='Published ✓';
     $('#openPreview').disabled=false;
@@ -217,3 +220,4 @@ $('#build').addEventListener('click',build);prompt.addEventListener('keydown',e=
 const ctx=canvas.getContext('2d');let W=0,H=0,dpr=1,t=0,particles=[];
 function resize(){const r=canvas.getBoundingClientRect();dpr=Math.min(devicePixelRatio||1,2);W=Math.max(1,r.width);H=Math.max(1,r.height);canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);particles=Array.from({length:95},()=>({x:Math.random()*W,y:Math.random()*H,z:.15+Math.random()*.85,s:.4+Math.random()*1.8,a:.15+Math.random()*.7}))}window.addEventListener('resize',resize);resize();
 function draw(){t+=.008;ctx.clearRect(0,0,W,H);const cx=W*.53,cy=H*.49;for(const p of particles){p.y-=p.s*(.25+p.z);if(p.y<-10)p.y=H+10;const pulse=(Math.sin(t*2+p.x*.01)+1)*.5;ctx.globalAlpha=p.a*(.3+p.z*.7);ctx.beginPath();ctx.arc(p.x+(cx-p.x)*.02*p.z,p.y,pulse*.7+p.z,0,Math.PI*2);ctx.fillStyle='rgba(150,180,255,1)';ctx.fill()}ctx.globalAlpha=.28;for(let i=0;i<12;i++){const a=t+i*.52,rx=42+i*7,ry=18+i*4;ctx.beginPath();for(let j=0;j<=64;j++){const q=j/64*Math.PI*2,x=cx+Math.cos(q+a)*rx,y=cy+Math.sin(q+a)*ry;j?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle='rgba(125,155,255,.18)';ctx.lineWidth=1;ctx.stroke()}ctx.globalAlpha=1;const core=42+Math.sin(t*3)*4;const g=ctx.createRadialGradient(cx,cy,2,cx,cy,core*2.2);g.addColorStop(0,'rgba(220,232,255,.95)');g.addColorStop(.16,'rgba(123,158,255,.55)');g.addColorStop(1,'rgba(70,105,255,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,core*2.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(190,210,255,.55)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cx,cy,core,0,Math.PI*2);ctx.stroke();for(let i=0;i<8;i++){const a=t*.7+i*Math.PI/4,r=core+18+Math.sin(t*2+i)*5,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.58;ctx.fillStyle='rgba(155,190,255,.75)';ctx.beginPath();ctx.arc(x,y,2.2,0,Math.PI*2);ctx.fill()}requestAnimationFrame(draw)}draw();
+if(restoreProject()){render();enterPreviewMode();setScene('PREVIEW');status.className='status';status.innerHTML='<span class="status-dot"></span>Restored your saved project. Review the preview before publishing.';}
