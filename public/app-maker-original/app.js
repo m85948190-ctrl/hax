@@ -69,7 +69,7 @@ window.addEventListener('message',async event=>{
     if(bridge?.unified){
       const turn=await Promise.race([
         bridge.unified(String(d.message||''),Array.isArray(d.history)?d.history:[],{onStage:(stage,detail)=>{reportAdd('CHAT · '+String(stage).toUpperCase(),detail||'');}}),
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error('KAI 51 response timed out after 90 seconds')),90000))
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('KAI 51 response timed out after 180 seconds')),180000))
       ]);
       response=String(turn?.response||'').trim();provider=String(turn?.provider||turn?.model||'KAI 51');
       if(!response)throw new Error('KAI 51 returned an empty response');
@@ -81,11 +81,19 @@ window.addEventListener('message',async event=>{
     }
   }catch(e){
     error=String(e?.message||'KAI could not answer this turn');
-    try{
-      const r=await fetch('/api/kai-lite',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:String(d.message||''),history:Array.isArray(d.history)?d.history:[]})});
-      const turn=await r.json().catch(()=>({}));
-      if(r.ok&&turn.response){response=String(turn.response);provider=String(turn.provider||turn.engine||'KAI Lite recovery');error='';}
-    }catch{}
+    const userText=String(d.message||'').trim();
+    const explicitResearch=/\\b(?:latest|recent|news|price|cost|weather|forecast|statistics|research|look up|search|sources?|according to|current|today|compare|verify|who is|what is|where is|when did|when was|how to|why does|how does)\\b/i.test(userText);
+    const smallTalk=/^(?:hi|hello|hey|yo|thanks|thank you|how are you|who are you|what can you do|let'?s talk)[!.?,\\s]*$/i.test(userText);
+    if(explicitResearch&&!smallTalk){
+      try{
+        const r=await fetch('/api/kai-lite',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:userText,history:Array.isArray(d.history)?d.history:[]})});
+        const turn=await r.json().catch(()=>({}));
+        const answer=String(turn.response||'');
+        const terms=userText.toLowerCase().split(/[^a-z0-9]+/).filter(w=>w.length>3&&!['what','when','where','which','does','with','from','about','latest','current','today'].includes(w));
+        const relevant=terms.length===0||terms.some(w=>(answer+' '+(turn.sources||[]).map(s=>s.title||'').join(' ')).toLowerCase().includes(w));
+        if(r.ok&&answer&&relevant){response=answer;provider=String(turn.provider||turn.engine||'KAI Lite recovery');error='';}
+      }catch{}
+    }
   }finally{
     try{event.source.postMessage({type:'haxbro:kai-chat-response',requestId:d.requestId,response,provider,error:error||(!response?'No response was returned.':'')},'*')}catch{}
     kaiChatRequests.delete(d.requestId);
