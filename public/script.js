@@ -317,7 +317,7 @@ if(input)input.value='';resize();try{if(!overdrive){
           console.warn('KAI unified lane failed',e);
           if(selectedModel==='kai-local') kaiActivitySet('understanding','error','LOCAL/GITHUB intelligence pipeline failed');
           else kaiActivitySet('github','error','GITHUB neural lane unavailable');
-          if((selectedModel==='kai-local'||selectedModel==='kai-github')&&isExplicitWebLookup(value)&&window.HAxBROKaiLite?.respond){
+          if((selectedModel==='kai-local'||selectedModel==='kai-github')&&window.HAxBROKaiLite?.respond){
             try{
               kaiActivityStep('lite','KAI LITE · recovery','Both KAI 51 lanes were unavailable; using the web-only recovery lane','','running');
               const lite=await withChatTimeout(()=>window.HAxBROKaiLite.respond(value,history),12000,'KAI LITE recovery');

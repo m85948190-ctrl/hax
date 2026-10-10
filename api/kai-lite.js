@@ -87,7 +87,7 @@ function normalizeSearchQuery(message) {
   q = q.replace(/^\s*(?:please\s+)?(?:can you|could you|would you)\s+/i, "");
   q = q.replace(/^\s*(?:search\s+(?:the\s+)?(?:web|internet|online)\s+(?:for\s+)?|search\s+for\s+|compare\s+|comparison\s+|what(?:'s| is)\s+the\s+difference\s+between\s+)/i, "");
   q = q.replace(/^\s*(?:the\s+)?(?:latest|current|recent)\s+(?:official\s+)?/i, "");
-  q = q.replace(/\s+(?:and\s+)?(?:cite|include|provide|give|show)\s+(?:the\s+)?(?:source|sources|example|examples|use case|details)[\s\S]*$/i, "");
+  q = q.replace(/\s+(?:and\s+)?(?:cite|include|provide|give|show)\s+(?:(?:the|a|an|suitable|short|concrete|quick)\s+){0,2}(?:source|sources|example|examples|use case|details)[\s\S]*$/i, "");
   q = q.replace(/^\s*(?:tell me|give me|share with me|find me|search for|look up|can you tell me|could you tell me)\s+/i, "");
   q = q.replace(/^\s*(?:what is|what are|who is|who are|define|explain|describe|meaning of|tell me about|how does|how do|why does|why is)\s+/i, "");
   q = q.replace(/^\s*(?:one|an?|some|interesting|fun|cool|random|amazing|surprising)\s+/i, "").trim();
@@ -144,7 +144,8 @@ function groundedAnswer(query, sources, engine) {
     .filter(s => s.excerpt);
 
   if (!usable.length) {
-    return "I searched the public web, but the returned pages did not contain enough readable text to answer that reliably. Try a more specific question.";
+    const sourceLines = (sources || []).slice(0, 3).map((s, i) => (i + 1) + ". " + s.title + "\n   " + s.url).join("\n");
+    return "I found relevant search results, but could not read enough page text to summarize them reliably. Here are the pages to verify:\n\nSources (" + engine + "):\n" + sourceLines;
   }
 
   const lead = usable[0];

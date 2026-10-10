@@ -227,7 +227,7 @@
     }
     try{
       hooks.onStage?.('lite','KAI LITE remains available as the final recovery lane');
-      if(!explicitWebRequest(message)) throw new Error('KAI 51 LOCAL neural model is still initializing; refusing an unrelated web answer');
+      // If the local neural runtime is not ready, use the bounded KAI LITE recovery lane rather than leaving the user's message unanswered.
       const lite=await withTimeout(()=>window.HAxBROKaiLite?.respond?.(message,history),12000,'KAI LITE recovery');
       if(lite?.response) return {...lite,lane:'lite',combined:true};
     }catch{}
