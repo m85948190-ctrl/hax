@@ -85,6 +85,7 @@ function normalizeSearchQuery(message) {
   // "in one sentence, what is" in a search query can return unrelated pages.
   q = q.replace(/^\s*(?:please\s+)?(?:in\s+(?:one|a|two)\s+sentences?[, ]*|briefly[, ]*|simply[, ]*)?/i, "");
   q = q.replace(/^\s*(?:please\s+)?(?:can you|could you|would you)\s+/i, "");
+  q = q.replace(/^\s*(?:search\s+(?:the\s+)?(?:web|internet|online)\s+(?:for\s+)?|search\s+for\s+|compare\s+|comparison\s+|what(?:'s| is)\s+the\s+difference\s+between\s+)/i, "");
   q = q.replace(/^\s*(?:tell me|give me|share with me|find me|search for|look up|can you tell me|could you tell me)\s+/i, "");
   q = q.replace(/^\s*(?:what is|what are|who is|who are|define|explain|describe|meaning of|tell me about|how does|how do|why does|why is)\s+/i, "");
   q = q.replace(/^\s*(?:one|an?|some|interesting|fun|cool|random|amazing|surprising)\s+/i, "").trim();
