@@ -253,11 +253,22 @@
   setTimeout(()=>maybeInstall().catch(()=>{}),250);
   const warmSelectedLocal=()=>{
     const chosen=window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||'kai-local';
-    if(chosen==='kai-local') loadEngine('local').catch(e=>console.warn('KAI 51 LOCAL background warm-up failed',e));
+    if(chosen==='kai-local'){
+      loadEngine('local').catch(e=>console.warn('KAI 51 LOCAL background warm-up failed',e));
+      return;
+    }
+    if(chosen==='kai-github'){
+      // Warm the small local fallback first so a first-turn request can answer quickly,
+      // then begin the larger GitHub model download while the user is already in the workspace.
+      loadEngine('local').then(()=>{
+        const current=window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||chosen;
+        if(current==='kai-github') return loadEngine('github');
+      }).catch(e=>console.warn('KAI 51 GitHub prewarm failed',e));
+    }
   };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',warmSelectedLocal,{once:true});
   else warmSelectedLocal();
-  window.addEventListener('haxbro:model-selected',e=>{if(e?.detail?.model==='kai-local') warmSelectedLocal();});
+  window.addEventListener('haxbro:model-selected',e=>{if(e?.detail?.model==='kai-local'||e?.detail?.model==='kai-github') warmSelectedLocal();});
   setInterval(()=>{
     try{
       const s=read();
