@@ -66,8 +66,8 @@
     return /\b(?:what is|what are|who is|who are|where is|where are|when did|when was|when is|why could|how could|how can|latest|recent|today|news|price|cost|version|release|update|current|weather|comparing|comparisons|evidence|sources?|research|look up|find out|verify|check|search|according to|statistics|study|paper|official|explains|tell me about|meanings|history|fact|facts|population|capital|definition|calculation|conversion)\b/i.test(t);
   }
 
-  async function searchWeb(query,mode='fast'){
-    const r=await fetch('/api/kai/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query,mode})});
+  async function searchWeb(query,mode='fast',signal){
+    const r=await fetch('/api/kai/search',{method:'POST',headers:{'Content-Type':'application/json'},signal,body:JSON.stringify({query,mode})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok||!d.ok) throw new Error(d.error||'web search unavailable');
     return d;
@@ -103,18 +103,18 @@
     }finally{clearTimeout(timer)}
   }
 
-  async function searchFast(query){
+  async function searchFast(query,signal){
     const deadline=new Promise(resolve=>setTimeout(()=>resolve({web:null,wiki:[]}),3100));
     const retrieval=Promise.all([
-      searchWeb(query,'fast').catch(()=>null),
+      searchWeb(query,'fast',signal).catch(()=>null),
       searchWikipedia(query).catch(()=>[])
     ]).then(([web,wiki])=>({web,wiki}));
     return Promise.race([retrieval,deadline]);
   }
 
-  async function searchKnowledge(query){
+  async function searchKnowledge(query,signal){
     try{
-      const r=await fetch('/api/knowledge/search?q='+encodeURIComponent(query),{cache:'no-store'});
+      const r=await fetch('/api/knowledge/search?q='+encodeURIComponent(query),{cache:'no-store',signal});
       const d=await r.json().catch(()=>({}));
       return r.ok&&Array.isArray(d.results)?d.results:[];
     }catch{return []}
@@ -167,6 +167,7 @@
   }
 
   async function run(message,history=[],hooks={}){
+    const ensureActive=()=>{if(hooks?.signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};ensureActive();
     const prompt=clean(message);
     if(!prompt) throw new Error('empty request');
     // Social turns must return before retrieval or neural-model loading. The UI's elapsed
@@ -217,9 +218,9 @@
     if(wantsSearch){
       hooks.onStage?.('searching','KAI 51 · LOCAL is searching Google, Bing and Wikipedia in parallel');
       const [retrieved,knowledge]=await Promise.all([
-        searchFast(query),
-        searchKnowledge(query)
-      ]);
+        searchFast(query,hooks?.signal),
+        searchKnowledge(query,hooks?.signal)
+      ]);ensureActive();
       web=retrieved.web;wiki=retrieved.wiki;files=knowledge;
     }
     const sources=[];
@@ -230,7 +231,7 @@
     for(const x of files) if(x?.content)sources.push({title:clean(x.title||'HAxBRO Knowledge',220),url:clean(x.url,700),text:clean(x.content,1800),source:'HAxBRO Knowledge'});
     const unique=[];const seen=new Set();
     for(const s of sources){const key=s.url||s.title;if(!key||seen.has(key))continue;seen.add(key);unique.push(s);}
-    hooks.onStage?.('analyzing','KAI 51 · LOCAL is analyzing retrieved evidence');
+    ensureActive();hooks.onStage?.('analyzing','KAI 51 · LOCAL is analyzing retrieved evidence');
     const evidence=unique.slice(0,4).map((s,i)=>'[SOURCE '+(i+1)+'] '+s.source+' — '+s.title+(s.url?' — '+s.url:'')+'\n'+s.text).join('\n\n');
     hooks.onStage?.('composing','KAI 51 · LOCAL is checking whether retrieved evidence can answer this turn');
     /* LOCAL is evidence-first: return source-grounded extraction when relevant,
