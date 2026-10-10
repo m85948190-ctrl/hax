@@ -239,10 +239,13 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       return {response,provider:'KAI 51 LOCAL INSTANT SOCIAL FAST PATH',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,quantization:'q4',provenance:PROFILE==='local'?'Public Hugging Face ONNX weights; browser-local inference':'HAxBRO GitHub release kai51-model-latest; browser-local inference',lane:PROFILE};
     }
     const generationOptions={};
-    const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
-    // App Maker must generate a complete artifact, not a short conversational reply.
-    // Keep ordinary chat fast while giving build requests a bounded code-generation budget.
-    if(capability==='app-maker') generationOptions.max_new_tokens=PROFILE==='local'?768:1536;
+    // The App Maker's first pass is only a short analysis brief, not the application itself.
+    // Classify the actual user request rather than wrapper instructions, otherwise analysis
+    // turns were incorrectly granted the full 768/1536-token code-generation budget.
+    const appAnalysis=/^\s*APP MAKER ANALYSIS ONLY\b/i.test(userRequest);
+    const capability=!appAnalysis&&/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(userRequest)?'app-maker':'general';
+    if(appAnalysis) generationOptions.max_new_tokens=96;
+    else if(capability==='app-maker') generationOptions.max_new_tokens=PROFILE==='local'?768:1536;
     const rules=(trainingPack?.rules||[])
       .filter(x=>x&&x.rule)
       .filter(x=>x.capability==='general' || x.capability===capability)
