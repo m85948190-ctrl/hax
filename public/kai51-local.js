@@ -266,9 +266,12 @@
       }).catch(e=>console.warn('KAI 51 GitHub prewarm failed',e));
     }
   };
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',warmSelectedLocal,{once:true});
-  else warmSelectedLocal();
-  window.addEventListener('haxbro:model-selected',e=>{if(e?.detail?.model==='kai-local'||e?.detail?.model==='kai-github') warmSelectedLocal();});
+  /* App Maker must stay interactive on first paint. Heavy ONNX model warm-up is on-demand there; other HAxBRO pages retain the normal background warm-up. */
+  if(!window.HAxBRODisableKAI51Warmup){
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',warmSelectedLocal,{once:true});
+    else warmSelectedLocal();
+    window.addEventListener('haxbro:model-selected',e=>{if(e?.detail?.model==='kai-local'||e?.detail?.model==='kai-github') warmSelectedLocal();});
+  }
   setInterval(()=>{
     try{
       const s=read();
