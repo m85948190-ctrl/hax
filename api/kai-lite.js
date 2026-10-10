@@ -98,15 +98,20 @@ function normalizeSearchQuery(message) {
 }
 
 async function searchWeb(query) {
-  const tryEngine = (engine, fn) => fn(query).then(results => {
-    if (!Array.isArray(results) || !results.length) throw new Error(engine + " returned no results");
-    return { engine, results };
-  });
-  // Return the first usable engine instead of waiting for the slower engine's timeout.
-  return Promise.any([
-    tryEngine("Google Web", googleSearch),
-    tryEngine("Bing Web", bingSearch)
+  const outcomes = await Promise.allSettled([
+    googleSearch(query).then(results => ({ engine: "Google Web", results })),
+    bingSearch(query).then(results => ({ engine: "Bing Web", results }))
   ]);
+  const candidates = outcomes.filter(x => x.status === "fulfilled" && Array.isArray(x.value.results) && x.value.results.length).map(x => x.value);
+  if (!candidates.length) throw new Error("Google and Bing returned no usable results");
+  const stopWords = new Set(["the","and","for","with","from","what","who","when","where","which","give","include","provide","explain","compare","comparison","difference","differences","trade","off","use","case","example","examples","latest","official","release","source","sources","search","web","database","flow","main","suitable","short","concrete"]);
+  const terms = clean(query, 500).toLowerCase().split(/\\W+/).filter(x => x.length > 2 && !stopWords.has(x));
+  const score = candidate => candidate.results.reduce((sum, item) => {
+    const text = (String(item.title || "") + " " + String(item.text || "")).toLowerCase();
+    return sum + terms.reduce((n, term) => n + (text.includes(term) ? 2 : 0), 0) + (String(item.text || "").length > 100 ? 1 : 0);
+  }, 0);
+  candidates.sort((a, b) => score(b) - score(a));
+  return candidates[0];
 }
 
 async function enrich(results) {
