@@ -171,7 +171,7 @@
     if(!prompt) throw new Error('empty request');
     // Social turns must return before retrieval or neural-model loading. The UI's elapsed
     // time measures the complete turn, so never hand these messages to the model bootstrap.
-    const socialText=prompt.toLowerCase().replace(/[!?.,]+$/,'').trim();
+    const socialText=prompt.toLowerCase().replace(/[’‘]/g,"'").replace(/[!?.,]+$/,'').trim();
     const identityQuestion=/^(?:who are you|what(?:'s| is) your name|are you kai(?:\s*51)?|tell me about yourself|what is haxbro)$/i.test(socialText);
     if(identityQuestion){
       return {lane:'local',handoff:false,response:'I’m KAI 51, the AI assistant inside HAxBRO. I can help you chat, research, write code, and build things.',provider:'KAI 51 LOCAL · identity response',model:'local identity guard',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};

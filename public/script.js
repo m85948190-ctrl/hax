@@ -325,8 +325,8 @@ if(input)input.value='';resize();try{if(!overdrive){
             }catch{}
           }
           addMessage(selectedModel==='kai-github'
-            ? 'KAI 51 · GITHUB could not complete this turn. The installed neural runtime reported an error.'
-            : 'KAI 51 could not complete this turn. The local intelligence and precision neural lanes reported an error.','bot');
+            ? 'KAI 51 · GITHUB is still initializing or could not complete this turn. The send control has been reset; retry when the model is ready, or choose KAI LITE for a live-web answer.'
+            : 'KAI 51 · LOCAL is still initializing or could not complete this turn. The send control has been reset; retry when the local model is ready, or choose KAI LITE for a live-web answer.','bot');
           return true;
         }
       }
