@@ -116,6 +116,7 @@ $('#build').addEventListener('click',build);prompt.addEventListener('keydown',e=
   }
   function setBusy(v){btn.disabled=v;input.disabled=v;btn.classList.toggle('working',v)}
   function resizeComposer(){input.style.height='auto';input.style.height=Math.min(input.scrollHeight,110)+'px'}
+  function withTimeout(promise,ms,message){return new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error(message)),ms);Promise.resolve(promise).then(value=>{clearTimeout(timer);resolve(value)},error=>{clearTimeout(timer);reject(error)})})}
   input.addEventListener('input',resizeComposer); resizeComposer();
   async function sendToKai(){
     const change=input.value.trim();
@@ -134,9 +135,16 @@ $('#build').addEventListener('click',build);prompt.addEventListener('keydown',e=
     let i=0; const pulse=setInterval(()=>{if(i<stages.length){sideAdd(stages[i][0],stages[i][1]);i++;}},850);
     try{
       const existing={name:project.name,summary:project.summary,files:project.files.map(f=>({path:f.path,content:f.content}))};
-      const bridge=window.parent?.HAxBROKaiCapabilityBridge;if(!bridge?.appMaker)throw new Error('KAI 51 LOCAL + GITHUB capability bridge is unavailable');
-      const data=await bridge.appMaker('Modify the EXISTING application in place. Preserve the existing name, identity, features and working behavior. Apply ONLY this requested modification: '+change,window.parent?.HAxBROChatHistory||[],{onStage:(stage,detail)=>sideAdd('KAI 51 · '+String(stage).toUpperCase(),detail||'')},{existing});
-      if(!Array.isArray(data.files)||!data.files[0]?.content)throw new Error('KAI returned no updated application');
+      const bridge=window.parent?.HAxBROKaiCapabilityBridge;let neuralTimedOut=false,data=null,neuralError=null;
+      const request='Modify the EXISTING application in place. Preserve the existing name, identity, features and working behavior. Apply ONLY this requested modification: '+change;
+      if(bridge?.appMaker){try{data=await withTimeout(bridge.appMaker(request,window.parent?.HAxBROChatHistory||[],{onStage:(stage,detail)=>{if(!neuralTimedOut)sideAdd('KAI 51 · '+String(stage).toUpperCase(),detail||'')}},{existing}),12000,'KAI 51 neural modification timed out after 12 seconds')}catch(e){neuralError=e;neuralTimedOut=true}}
+      if(!Array.isArray(data?.files)||!data.files.some(f=>f&&typeof f.content==='string'&&f.content.trim())){
+        sideAdd('RECOVERY','Using the fast local modification path'+(neuralError?' after neural build delay: '+String(neuralError.message||neuralError):' because the neural bridge did not return an artifact')+'.');
+        const r=await fetch('/api/appmaker-original-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:change,appName:existing.name,existing})});
+        const recovered=await r.json().catch(()=>({}));
+        if(!r.ok||!recovered.ok||!Array.isArray(recovered.files)||!recovered.files.some(f=>f&&typeof f.content==='string'&&f.content.trim()))throw new Error(recovered.error||'KAI could not safely modify the existing app. The original preview was preserved.');
+        data={...recovered,fallback:true,recoveryReason:neuralError?.message||'Neural artifact unavailable'};
+      }
       clearInterval(pulse);
       const logs=Array.isArray(data.agent?.logs)?data.agent.logs:[];
       side.innerHTML='';
@@ -152,7 +160,7 @@ $('#build').addEventListener('click',build);prompt.addEventListener('keydown',e=
         sideAdd('READY','Modification applied to the existing app. Review the preview before publishing.',true);
       }
       setScene('PREVIEW');setFlow(4);
-      status.className='status';status.innerHTML='<span class="status-dot"></span>KAI 51 modified the existing application. The new preview is live.';
+      status.className='status';status.innerHTML='<span class="status-dot"></span>'+(data.fallback?'KAI 51 applied a supported local modification. Review the updated preview before publishing.':'KAI 51 modified the existing application. The new preview is live.');
     }catch(e){
       clearInterval(pulse); sideAdd('ERROR',e.message||'KAI modification failed'); status.className='status';status.innerHTML='<span class="status-dot"></span>KAI stopped: '+esc(e.message||'Modification failed');
     }finally{setBusy(false);input.focus()}
