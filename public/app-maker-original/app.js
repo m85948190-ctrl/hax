@@ -56,6 +56,41 @@ async function copyText(text,button){try{await navigator.clipboard.writeText(tex
 $('#publishExternal').addEventListener('click',publishExternal);$('#copyUrl').addEventListener('click',()=>copyText(project.publicUrl,$('#copyUrl')));
 $('#copyAll').addEventListener('click',()=>copyText(project.files.map(f=>`===== ${f.path} =====\\n${f.content}`).join('\\n\\n'),$('#copyAll')));
 $('#openPreview').addEventListener('click',()=>{if(project.publicUrl)window.open(project.publicUrl,'_blank','noopener')});
+// Bridge sandboxed app previews to the parent KAI runtime. The preview cannot directly access parent globals.
+const kaiChatRequests=new Set();
+window.addEventListener('message',async event=>{
+  const d=event.data;
+  if(!d||d.type!=='haxbro:kai-chat-request'||!d.requestId||!frame||event.source!==frame.contentWindow)return;
+  if(kaiChatRequests.has(d.requestId))return;
+  kaiChatRequests.add(d.requestId);
+  let response='',provider='',error='';
+  try{
+    const bridge=window.HAxBROKaiCapabilityBridge||(window.parent&&window.parent.HAxBROKaiCapabilityBridge);
+    if(bridge?.unified){
+      const turn=await Promise.race([
+        bridge.unified(String(d.message||''),Array.isArray(d.history)?d.history:[],{onStage:(stage,detail)=>{reportAdd('CHAT · '+String(stage).toUpperCase(),detail||'');}}),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('KAI 51 response timed out after 90 seconds')),90000))
+      ]);
+      response=String(turn?.response||'').trim();provider=String(turn?.provider||turn?.model||'KAI 51');
+      if(!response)throw new Error('KAI 51 returned an empty response');
+    }else{
+      const r=await fetch('/api/kai-lite',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:String(d.message||''),history:Array.isArray(d.history)?d.history:[]})});
+      const turn=await r.json().catch(()=>({}));
+      if(!r.ok||!turn.response)throw new Error(turn.error||'KAI runtime is unavailable and KAI Lite did not answer');
+      response=String(turn.response);provider=String(turn.provider||turn.engine||'KAI Lite recovery');
+    }
+  }catch(e){
+    error=String(e?.message||'KAI could not answer this turn');
+    try{
+      const r=await fetch('/api/kai-lite',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({message:String(d.message||''),history:Array.isArray(d.history)?d.history:[]})});
+      const turn=await r.json().catch(()=>({}));
+      if(r.ok&&turn.response){response=String(turn.response);provider=String(turn.provider||turn.engine||'KAI Lite recovery');error='';}
+    }catch{}
+  }finally{
+    try{event.source.postMessage({type:'haxbro:kai-chat-response',requestId:d.requestId,response,provider,error:error||(!response?'No response was returned.':'')},'*')}catch{}
+    kaiChatRequests.delete(d.requestId);
+  }
+});
 async function build(){
  const q=String(prompt?.value||'').trim(),btn=$('#build');
  if(!q){status.className='status';status.innerHTML='<span class="status-dot"></span>Describe the app you want to build first.';prompt?.focus();return}
