@@ -159,6 +159,7 @@ $('#build').addEventListener('click',build);prompt.addEventListener('keydown',e=
   }
   btn.addEventListener('click',e=>{e.preventDefault();sendToKai()});
   input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendToKai()}});
+  if(window.HAxBROAppMaker)window.HAxBROAppMaker.modify=change=>{input.value=String(change||'');resizeComposer();return sendToKai()};
 })();
 
 // Native 3D-style WebGL-free spatial renderer: reliable on constrained browsers, with real depth motion.
