@@ -36,7 +36,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           navigator.gpu.requestAdapter(),
           new Promise(resolve=>setTimeout(()=>resolve(null),1200))
         ]);
-        if(adapter){DEVICE='webgpu';DTYPE=PROFILE==='github'?'q4f16':'q4';}
+        /* Only select WebGPU when the adapter supports the half-float feature required by the model kernels. Some GPUs expose WebGPU but reject ShaderF16 during device creation; those devices must use WASM directly instead of stalling chat startup. */
+        if(adapter&&adapter.features?.has('shader-f16')){DEVICE='webgpu';DTYPE=PROFILE==='github'?'q4f16':'q4';}
+        else{DEVICE='wasm';DTYPE='q4';}
       }
     }catch{}
   }
