@@ -262,6 +262,14 @@ if(input)input.value='';resize();try{if(!overdrive){
         const finish=payload=>{try{kaiActivityFinish(payload||{});}catch{}};
         try{
           let result=null;
+          const runtimeState=window.HAxBROKai51Bootstrap?.state?.()||{};
+          /* Never start a heavy model download on the chat's foreground turn. If the browser-local neural runtime is not already ready, answer through the bounded web lane and keep the composer interactive. */
+          if(!runtimeState.runtimeReady&&window.HAxBROKaiLite?.respond){
+            mark('lite','KAI LITE · responsive recovery','Neural runtime is not ready; using the live-web recovery lane so chat stays responsive','running');
+            const lite=await withChatTimeout(()=>window.HAxBROKaiLite.respond(value,history),10000,'KAI LITE responsive recovery');
+            if(lite?.response){kaiActivitySet('lite','done','KAI LITE response delivered while neural runtime is unavailable');finish({...lite,lane:'lite',fallbackLane:selectedModel});addMessage(lite.response,'bot');return true;}
+            throw new Error('KAI LITE recovery returned no response; skipped foreground neural startup');
+          }
           if(selectedModel==='kai-local'){
             mark('understanding','KAI 51 · LOCAL · understanding','Reading intent and context','running');
             result=await window.HAxBROKai51Bootstrap?.unifiedGenerate?.(value,history,{
