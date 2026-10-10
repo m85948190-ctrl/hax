@@ -63,7 +63,7 @@
     if(/\b(?:how are you|what can you do|what can you help me with|what do you think|tell me about yourself|who are you|what is your name|can we talk|let's talk|lets talk|remember that|what do you remember about me|what answer style do i prefer|i feel|i think|i prefer|i like|call me|my name is|forget everything|clear my memory)\b/i.test(t)) return false;
     // Research only when the wording signals a factual lookup, current information,
     // verification, or explicit research intent—not merely because a sentence is long.
-    return /\b(?:what is|what are|who is|who are|where is|where are|when did|when was|when is|why does|why do|why is|why are|how does|how do|how is|how are|how to|latest|recent|today|news|price|cost|version|release|update|current|weather|compare|comparison|evidence|sources?|research|look up|find out|verify|check|search|according to|statistics|study|paper|official|explain|tell me about|meaning|history|fact|facts|population|capital|definition|calculate|convert)\b/i.test(t);
+    return /\b(?:what is|what are|who is|who are|where is|where are|when did|when was|when is|why could|how could|how can|latest|recent|today|news|price|cost|version|release|update|current|weather|comparing|comparisons|evidence|sources?|research|look up|find out|verify|check|search|according to|statistics|study|paper|official|explains|tell me about|meanings|history|fact|facts|population|capital|definition|calculation|conversion)\b/i.test(t);
   }
 
   async function searchWeb(query,mode='fast'){
