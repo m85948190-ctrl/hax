@@ -87,7 +87,9 @@ function normalizeSearchQuery(message) {
   q = q.replace(/^\s*(?:please\s+)?(?:can you|could you|would you)\s+/i, "");
   q = q.replace(/^\s*(?:search\s+(?:the\s+)?(?:web|internet|online)\s+(?:for\s+)?|search\s+for\s+|compare\s+|comparison\s+|what(?:'s| is)\s+the\s+difference\s+between\s+)/i, "");
   q = q.replace(/^\s*(?:the\s+)?(?:latest|current|recent)\s+(?:official\s+)?/i, "");
-  q = q.replace(/\s+(?:and\s+)?(?:cite|include|provide|give|show)\s+(?:(?:the|a|an|suitable|short|concrete|quick)\s+){0,2}(?:source|sources|example|examples|use case|details)[\s\S]*$/i, "");
+  q = q.replace(/\s+(?:and\s+)?(?:cite|include|provide|give|show|explain|describe|discuss)\s+(?:(?:the|a|an|suitable|short|concrete|quick|main)\s+){0,3}(?:source|sources|example|examples|use case|details|trade-?off|difference|differences|reason|reasons|how it works)[\s\S]*$/i, "");
+  q = q.replace(/\boptimistic locking and pessimistic locking\b/i, "optimistic locking vs pessimistic locking");
+  q = q.replace(/\bauthorization code flow with client credentials flow\b/i, "authorization code flow vs client credentials flow");
   q = q.replace(/^\s*(?:tell me|give me|share with me|find me|search for|look up|can you tell me|could you tell me)\s+/i, "");
   q = q.replace(/^\s*(?:what is|what are|who is|who are|define|explain|describe|meaning of|tell me about|how does|how do|why does|why is)\s+/i, "");
   q = q.replace(/^\s*(?:one|an?|some|interesting|fun|cool|random|amazing|surprising)\s+/i, "").trim();
@@ -127,7 +129,8 @@ async function enrich(results) {
 function relevantExcerpt(query, text) {
   const body = clean(text, 9000);
   if (!body) return "";
-  const words = new Set(clean(query, 500).toLowerCase().split(/\W+/).filter(x => x.length > 2));
+  const stopWords = new Set(["the","and","for","with","from","what","who","when","where","which","give","include","provide","explain","compare","comparison","difference","differences","trade","off","use","case","example","examples","latest","official","release","source","sources","search","web","database","flow","main","suitable","short","concrete"]);
+  const words = new Set(clean(query, 500).toLowerCase().split(/\W+/).filter(x => x.length > 2 && !stopWords.has(x)));
   const sentences = body.split(/(?<=[.!?])\s+/).filter(s => s.length > 35);
   const scored = sentences.map(sentence => ({
     sentence,
