@@ -70,7 +70,7 @@ async function build(){
    if(bridge?.appMaker){
      try{
        const neural=bridge.appMaker(q,window.parent?.HAxBROChatHistory||[],{onStage:(stage,detail)=>{reportAdd('KAI 51 · '+String(stage).toUpperCase(),detail||'');setScene(stage);setFlow(stage==='understanding'?0:stage==='github'?2:stage==='repair'?3:1);}});
-       data=await Promise.race([neural,new Promise((_,reject)=>setTimeout(()=>reject(new Error('Neural build did not return a usable artifact within 25 seconds')),25000))]);
+       data=await Promise.race([neural,new Promise((_,reject)=>setTimeout(()=>reject(new Error('Neural build did not return a usable artifact within 90 seconds')),25000))]);
      }catch(e){reportAdd('RECOVERY','Switching to the native builder because the neural build did not complete: '+(e.message||'build unavailable'));data=null;}
    }
    if(!data||!Array.isArray(data.files)||!data.files.some(f=>f&&typeof f.content==='string'&&f.content.trim())){

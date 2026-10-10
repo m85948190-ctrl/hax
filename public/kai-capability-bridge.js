@@ -28,7 +28,7 @@
     hooks.onStage?.('github','KAI 51 · GITHUB · generating the application artifact');
     try{
       const generationPrompt='You are the KAI 51 application build lane. Generate the COMPLETE application requested below as one self-contained HTML document. Return ONLY the HTML document, beginning with <!doctype html>. Use inline CSS and JavaScript only. No markdown fences. It must be a real working app, not a mockup or explanation. Preserve the requested product identity and implement the primary interaction end-to-end with visible states and error handling. Make it responsive on phone and desktop.\n\nUSER REQUEST:\n'+q+'\n\nLOCAL KAI 51 IMPLEMENTATION BRIEF:\n'+brief.slice(0,10000);
-      const github=await window.HAxBROKai51Bootstrap?.generate?.(generationPrompt,history);
+      const github=await window.HAxBROKai51Bootstrap?.generate?.(generationPrompt,history,{onStage:hooks.onStage},'github');
       if(!github?.response) throw new Error('KAI 51 GITHUB did not return an application artifact');
       let html=stripCode(github.response);
       if(!/^<!doctype html>/i.test(html)){const start=html.search(/<!doctype html>/i);if(start>=0)html=html.slice(start);}

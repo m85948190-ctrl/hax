@@ -240,6 +240,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     }
     const generationOptions={};
     const capability=/\b(?:app|application|calculator|chatbot|dashboard|website|web\s*app|build|publish|export)\b/i.test(prompt)?'app-maker':'general';
+    // App Maker must generate a complete artifact, not a short conversational reply.
+    // Keep ordinary chat fast while giving build requests a bounded code-generation budget.
+    if(capability==='app-maker') generationOptions.max_new_tokens=PROFILE==='local'?768:1536;
     const rules=(trainingPack?.rules||[])
       .filter(x=>x&&x.rule)
       .filter(x=>x.capability==='general' || x.capability===capability)
