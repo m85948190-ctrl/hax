@@ -224,7 +224,7 @@ function showAppPlatformChoices(value){
     {icon:'📱',label:'Mobile App',detail:'Mobile-first application experience',onClick:async()=>{if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value+'\n\nSELECTED PLATFORM: Mobile App',true)}else window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value+'\n\nSELECTED PLATFORM: Mobile App',autoBuild:true}}));}}
   ]);
 }
-async function sendChat(text,opts={}){let value=String(text||'').trim();if(!value)return false;if(sendInFlight&&!opts.internalRetry)return true;const now=Date.now();if(value===lastSendValue&&now-lastSendAt<5000&&!opts.internalRetry)return true;const attemptId=opts.internalRetry?sendAttemptId:sendAttemptId+1;if(!opts.internalRetry){sendAttemptId=attemptId;activeChatController=new AbortController();window.HAxBROActiveChatSignal=activeChatController.signal;clearTimeout(sendWatchdogTimer);sendInFlight=true;lastSendValue=value;lastSendAt=now;sendWatchdogTimer=setTimeout(()=>{if(sendInFlight&&sendAttemptId===attemptId){try{activeChatController?.abort()}catch{}try{activeRealtimeClient?.close?.()}catch{}try{activeStreamReader?.cancel?.()}catch{}sendInFlight=false;setBusy(false);addMessage('KAI took too long, so I stopped this run and released the composer. You can retry now.','bot');}},30000)}if(await checkAdmin69(value)){sendInFlight=false;return true}ensureChat();
+async function sendChat(text,opts={}){let value=String(text||'').trim();if(!value)return false;if(sendInFlight&&!opts.internalRetry)return true;const now=Date.now();if(value===lastSendValue&&now-lastSendAt<5000&&!opts.internalRetry)return true;const attemptId=opts.internalRetry?sendAttemptId:sendAttemptId+1;if(!opts.internalRetry){sendAttemptId=attemptId;activeChatController=new AbortController();window.HAxBROActiveChatSignal=activeChatController.signal;clearTimeout(sendWatchdogTimer);sendInFlight=true;lastSendValue=value;lastSendAt=now;sendWatchdogTimer=setTimeout(()=>{if(sendInFlight&&sendAttemptId===attemptId){try{activeChatController?.abort()}catch{}try{activeRealtimeClient?.close?.()}catch{}try{activeStreamReader?.cancel?.()}catch{}sendInFlight=false;setBusy(false);addMessage('KAI did not finish within 120 seconds. The selected model run was stopped; no web-only substitute was used. You can retry or check the selected model.','bot');}},120000)}if(await checkAdmin69(value)){sendInFlight=false;return true}ensureChat();
 /* Explicit model picker: KAI 51 LOCAL, KAI 51 GITHUB, or KAI LITE. */
 if(!opts.internalRetry&&window.HAxBROSelectedModel==='kai-lite'&&window.HAxBROKaiLite?.respond){
   addMessage(value,'user');updateKaiMemory(value);if(input){input.value='';resize();}
@@ -263,13 +263,8 @@ if(input)input.value='';resize();try{if(!overdrive){
         try{
           let result=null;
           const runtimeState=window.HAxBROKai51Bootstrap?.state?.()||{};if(activeChatController?.signal.aborted||sendAttemptId!==attemptId)return true;
-          /* Never start a heavy model download on the chat's foreground turn. If the browser-local neural runtime is not already ready, answer through the bounded web lane and keep the composer interactive. */
-          if((window.HAxBRODisableKAI51Warmup||!runtimeState.runtimeReady)&&window.HAxBROKaiLite?.respond){
-            mark('lite','KAI LITE · responsive recovery','Neural runtime is not ready; using the live-web recovery lane so chat stays responsive','running');
-            const lite=await withChatTimeout(()=>window.HAxBROKaiLite.respond(value,history,{signal:activeChatController?.signal}),10000,'KAI LITE responsive recovery');
-            if(lite?.response){kaiActivitySet('lite','done','KAI LITE response delivered while neural runtime is unavailable');finish({...lite,lane:'lite',fallbackLane:selectedModel});addMessage(lite.response,'bot');return true;}
-            throw new Error('KAI LITE recovery returned no response; skipped foreground neural startup');
-          }
+          /* Never substitute KAI LITE just because a neural model is not ready. Start the selected KAI 51 lane and let its bounded model loader report real progress/failure. */
+          if(activeChatController?.signal.aborted)throw new DOMException('Response stopped by user','AbortError');
           if(selectedModel==='kai-local'){
             mark('understanding','KAI 51 · LOCAL · understanding','Reading intent and context','running');
             result=await window.HAxBROKai51Bootstrap?.unifiedGenerate?.(value,history,{
@@ -328,16 +323,9 @@ if(input)input.value='';resize();try{if(!overdrive){
           console.warn('KAI unified lane failed',e);
           if(selectedModel==='kai-local') kaiActivitySet('understanding','error','LOCAL/GITHUB intelligence pipeline failed');
           else kaiActivitySet('github','error','GITHUB neural lane unavailable');
-          if((selectedModel==='kai-local'||selectedModel==='kai-github')&&window.HAxBROKaiLite?.respond){
-            try{
-              kaiActivityStep('lite','KAI LITE · recovery','Both KAI 51 lanes were unavailable; using the web-only recovery lane','','running');
-              const lite=await withChatTimeout(()=>window.HAxBROKaiLite.respond(value,history,{signal:activeChatController?.signal}),12000,'KAI LITE recovery');
-              if(lite?.response){kaiActivitySet('lite','done','KAI LITE response delivered');finish(lite);addMessage(lite.response,'bot');return true;}
-            }catch{}
-          }
           addMessage(selectedModel==='kai-github'
-            ? 'KAI 51 · GITHUB is still initializing or could not complete this turn. The send control has been reset; retry when the model is ready, or choose KAI LITE for a live-web answer.'
-            : 'KAI 51 · LOCAL is still initializing or could not complete this turn. The send control has been reset; retry when the local model is ready, or choose KAI LITE for a live-web answer.','bot');
+            ? 'KAI 51 · GITHUB could not initialize or complete this turn. No KAI LITE substitution was made. Check the model status and retry after it is ready.'
+            : 'KAI 51 · LOCAL could not initialize or complete this turn. No KAI LITE substitution was made. Check the local model status and retry.','bot');
           return true;
         }
       }

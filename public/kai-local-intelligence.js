@@ -174,7 +174,7 @@
     // time measures the complete turn, so never hand these messages to the model bootstrap.
     const socialText=prompt.toLowerCase().replace(/[’‘]/g,"'").replace(/[!?.,]+$/,'').trim();
     const identityQuestion=/^(?:who are you|what(?:'s| is) your name|are you kai(?:\s*51)?|tell me about yourself|what is haxbro)$/i.test(socialText);
-    if(identityQuestion){
+    if(false&&identityQuestion){
       return {lane:'local',handoff:false,response:'I’m KAI 51, the AI assistant inside HAxBRO. I can help you chat, research, write code, and build things.',provider:'KAI 51 LOCAL · identity response',model:'local identity guard',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
     }
     const socialGreeting=/^(?:a\s+)?(?:hi|hello|hey|yo|howdy|sup|what'?s up)(?:\s+bro)?$/i.test(socialText);
@@ -183,13 +183,13 @@
     const socialConversation=/^(?:(?:hey|hi|hello|bro)[,\s]+)*(?:what'?s up|what are you doing|what're you doing|what are you up to|what's going on|whats going on|how are you|how's it going|hows it going|are you there|you there)$/i.test(socialText);
     const boredomConversation=/\b(?:i(?:'m| am) bored|bored and want to talk|nothing to do|i have nothing to do)\b/i.test(socialText);
     const emotionalConversation=/\b(?:rough day|bad day|terrible day|awful day|feeling (?:sad|down|lonely|anxious|worried|upset|overwhelmed)|i(?:'m| am) (?:sad|lonely|stressed|upset|overwhelmed|frustrated)|i just want to talk|need someone to talk)\b/i.test(socialText);
-    if(boredomConversation){
+    if(false&&boredomConversation){
       return {lane:'local',handoff:false,response:'Let’s fix that, bro 😄 Want to chat, hear a weird fact, play a quick word game, or build something?',provider:'KAI 51 LOCAL · casual conversation path',model:'local conversational response',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
     }
-    if(emotionalConversation){
+    if(false&&emotionalConversation){
       return {lane:'local',handoff:false,response:'I’m sorry it’s been a rough one, bro. I’m here to listen—want to tell me what happened?',provider:'KAI 51 LOCAL · empathetic conversation path',model:'local conversational response',local:true,localModel:false,sources:[],searchEngines:[],retrievalMs:0};
     }
-    if(socialGreeting||socialCombo||socialReaction||socialConversation){
+    if(false&&(socialGreeting||socialCombo||socialReaction||socialConversation)){
       const response=socialConversation
         ? /\b(?:how are you|how's it going|hows it going)$/i.test(socialText) ? 'I’m doing well and ready to help, bro 🙂 What’s on your mind?' : /\b(?:are you there|you there)$/i.test(socialText) ? 'I’m here, bro 🙂 What do you need?' : 'I’m here chatting with you, bro 😄 What are you up to?'
         : (socialGreeting||socialCombo)
@@ -238,7 +238,7 @@
        otherwise preserve retrieved context for synthesis by the same browser-local
        neural model. No phrase-response table and no separate provider handoff. */
     const grounded=evidenceAnswer(query,unique);
-    if(!grounded){
+    if(!grounded||wantsSearch){
       const reason=unique.length?'Retrieved evidence needs neural synthesis':'No usable web evidence was retrieved; answer transparently from local model knowledge';
       const evidencePrompt=memoryContext+(!wantsSearch?'You are KAI 51 LOCAL. Speak naturally and conversationally, using the user memory only when relevant. Answer the user request directly.\n\nUSER REQUEST:\n'+prompt:'You are KAI 51 LOCAL, using the browser-local neural model. Answer naturally, distinguish verified evidence from uncertainty, and cite retrieved sources only when they support the claim. If evidence is missing, say so briefly.\n\nUSER REQUEST:\n'+prompt)+(evidence?'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+evidence:'\n\nNo reliable retrieved evidence was available.');
       return {lane:'local',handoff:true,research:wantsSearch,reason,evidencePrompt,response:null,provider:'KAI 51 LOCAL · retrieval + neural synthesis',model:'browser-local neural synthesis',local:true,localModel:true,sources:unique.slice(0,4).map(({title,url,source})=>({title,url,source})),searchEngines:[...(web?.engine?[web.engine]:[]),...(wiki.length?['Wikipedia']:[])],retrievalMs:0};
