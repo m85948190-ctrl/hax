@@ -175,7 +175,7 @@
     return {
       ...state,
       ready: state.status === 'ready',
-      runtimeReady: !!(window.HAxBROKai51Engine && typeof window.HAxBROKai51Engine.isReady==='function' && window.HAxBROKai51Engine.isReady()),
+      runtimeReady: !!((window.HAxBROKai51Engine && typeof window.HAxBROKai51Engine.isReady==='function' && window.HAxBROKai51Engine.isReady()) || (window.HAxBROKai51LocalFastEngine && typeof window.HAxBROKai51LocalFastEngine.isReady==='function' && window.HAxBROKai51LocalFastEngine.isReady())),
       local:true,
       externalChatProviders:false,
       model:state.model||MODEL,

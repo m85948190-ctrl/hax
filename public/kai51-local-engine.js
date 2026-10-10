@@ -198,7 +198,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   async function runOnce(messages,generationOptions={}){
     await prepare();
     return pipe(messages,{
-      max_new_tokens:PROFILE==='local'?32:56,
+      max_new_tokens:PROFILE==='local'?128:192,
       do_sample:false,
       repetition_penalty:1.15,
       no_repeat_ngram_size:3,
@@ -325,7 +325,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         {role:'user',content:userRequest}
       ];
       try{
-        const retryJob=generationChain.then(()=>runOnce(repairMessages,{max_new_tokens:40,do_sample:false,repetition_penalty:1.12,no_repeat_ngram_size:3}));
+        const retryJob=generationChain.then(()=>runOnce(repairMessages,{max_new_tokens:PROFILE==='local'?96:144,do_sample:false,repetition_penalty:1.12,no_repeat_ngram_size:3}));
         generationChain=retryJob.catch(()=>{});
         const retried=await retryJob;
         generated=retried?.[0]?.generated_text;
