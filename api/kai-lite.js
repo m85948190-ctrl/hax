@@ -92,12 +92,15 @@ function normalizeSearchQuery(message) {
 }
 
 async function searchWeb(query) {
-  const [google, bing] = await Promise.allSettled([googleSearch(query), bingSearch(query)]);
-  const googleResults = google.status === "fulfilled" && Array.isArray(google.value) ? google.value : [];
-  const bingResults = bing.status === "fulfilled" && Array.isArray(bing.value) ? bing.value : [];
-  if (googleResults.length) return { engine: "Google Web", results: googleResults };
-  if (bingResults.length) return { engine: "Bing Web", results: bingResults };
-  throw new Error("No public web results were returned.");
+  const tryEngine = (engine, fn) => fn(query).then(results => {
+    if (!Array.isArray(results) || !results.length) throw new Error(engine + " returned no results");
+    return { engine, results };
+  });
+  // Return the first usable engine instead of waiting for the slower engine's timeout.
+  return Promise.any([
+    tryEngine("Google Web", googleSearch),
+    tryEngine("Bing Web", bingSearch)
+  ]);
 }
 
 async function enrich(results) {
@@ -109,7 +112,7 @@ async function enrich(results) {
       try {
         const html = await Promise.race([
           browser.html(item.url),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("source timeout")), 1800))
+          new Promise((_, reject) => setTimeout(() => reject(new Error("source timeout")), 1000))
         ]);
         text = strip(html);
       } catch {}
@@ -187,7 +190,7 @@ export default async function(req, res) {
 
     const searchQuery = normalizeSearchQuery(query);
     const searched = await searchWeb(searchQuery);
-    const sources = await enrich(searched.results);
+    const sources = await enrich(searched.results.slice(0, 3));
 
     return res.json({
       ok: true,
