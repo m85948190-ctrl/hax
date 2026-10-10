@@ -104,21 +104,21 @@ async function searchWeb(query) {
 }
 
 async function enrich(results) {
-  const out = [];
-  for (const item of results.slice(0, 5)) {
+  // Fetch source pages concurrently. The previous sequential loop could wait
+  // 2.5 seconds per source and make a single KAI Lite answer take 10–13 seconds.
+  return Promise.all(results.slice(0, 4).map(async item => {
     let text = item.text || "";
     if (!text || text.length < 180) {
       try {
         const html = await Promise.race([
           browser.html(item.url),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("source timeout")), 2500))
+          new Promise((_, reject) => setTimeout(() => reject(new Error("source timeout")), 1800))
         ]);
         text = strip(html);
       } catch {}
     }
-    out.push({ ...item, text });
-  }
-  return out;
+    return { ...item, text };
+  }));
 }
 
 function relevantExcerpt(query, text) {
