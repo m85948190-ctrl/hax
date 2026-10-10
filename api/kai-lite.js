@@ -43,7 +43,7 @@ function unique(list, limit = 8) {
 
 async function googleSearch(query) {
   const url = "https://www.google.com/search?gbv=1&hl=en&q=" + encodeURIComponent(query);
-  const html = String(await browser.html(url));
+  const html = String(await Promise.race([browser.html(url), new Promise((_, reject) => setTimeout(() => reject(new Error("Google search timeout")), 1800))]));
   if (/unusual traffic|captcha|enable javascript on your web browser/i.test(html)) return [];
   const results = [];
   const re = /<a[^>]+href="(https?:\/\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
@@ -63,7 +63,7 @@ async function googleSearch(query) {
 
 async function bingSearch(query) {
   const url = "https://www.bing.com/search?format=rss&q=" + encodeURIComponent(query);
-  const html = String(await browser.html(url));
+  const html = String(await Promise.race([browser.html(url), new Promise((_, reject) => setTimeout(() => reject(new Error("Bing search timeout")), 1800))]));
   const items = html.split("<item>").slice(1).map(block => {
     const readTag = name => {
       const a = block.indexOf("<" + name + ">");
@@ -92,15 +92,12 @@ function normalizeSearchQuery(message) {
 }
 
 async function searchWeb(query) {
-  let engine = "Google Web";
-  let results = [];
-  try { results = await googleSearch(query); } catch {}
-  if (!results.length) {
-    engine = "Bing Web";
-    results = await bingSearch(query);
-  }
-  if (!results.length) throw new Error("No public web results were returned.");
-  return { engine, results };
+  const [google, bing] = await Promise.allSettled([googleSearch(query), bingSearch(query)]);
+  const googleResults = google.status === "fulfilled" && Array.isArray(google.value) ? google.value : [];
+  const bingResults = bing.status === "fulfilled" && Array.isArray(bing.value) ? bing.value : [];
+  if (googleResults.length) return { engine: "Google Web", results: googleResults };
+  if (bingResults.length) return { engine: "Bing Web", results: bingResults };
+  throw new Error("No public web results were returned.");
 }
 
 async function enrich(results) {
@@ -130,7 +127,8 @@ function relevantExcerpt(query, text) {
     sentence,
     score: [...sentence.toLowerCase().matchAll(/[a-z0-9]+/g)].reduce((n, m) => n + (words.has(m[0]) ? 1 : 0), 0)
   })).sort((a, b) => b.score - a.score);
-  const relevant = scored.filter(x => x.score >= 1).slice(0, 2);
+  const requiredMatches = words.size >= 2 ? 2 : 1;
+  const relevant = scored.filter(x => x.score >= requiredMatches).slice(0, 2);
   return relevant.map(x => x.sentence).join(" ").slice(0, 900);
 }
 
