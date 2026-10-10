@@ -1,7 +1,7 @@
 export const access = "public";
 export const methods = ["POST"];
 
-import { runAppMakerAgent } from 'lib/appmaker-agent';
+// Browser-local KAI performs the neural build; this endpoint is native recovery only.
 import { buildNativeProduct } from 'lib/kai-native-builder';
 
 function simpleInteractiveRecovery(prompt,appName){
@@ -15,30 +15,22 @@ export default async function(req,res){
   const prompt=String(req.body?.prompt||"").trim();
   if(!prompt) return res.status(400).json({error:"Describe the app you want to build."});
   const existing=req.body?.existing&&typeof req.body.existing==='object'?req.body.existing:null;
+  const requestedName=String(req.body?.appName||existing?.name||'').trim();
   try{
-    const result=await runAppMakerAgent(prompt,{appName:String(req.body?.appName||existing?.name||'').trim(),existing});
-    return res.json({ok:true,...result});
-  }catch(e){
-    console.error("App Maker agent error",e);
-    const requestedName=String(req.body?.appName||existing?.name||'').trim();
+    // The server-side model path is intentionally disabled; the browser-local KAI lane
+    // is attempted by the client first. This endpoint is its fast, truthful recovery path.
+    // Do not wait for web research or knowledge retrieval before returning a usable artifact.
+    if(existing){
+      const modified=buildNativeProduct(prompt,{existing,appName:requestedName});
+      return res.json({ok:true,...modified,published:false,publicUrl:'',fallback:true,recovery:'targeted-local-modification',agent:{name:'KAI 51 Native Modification Recovery',authority:'KAI 51',compute:'local-deterministic',provider:null},export:{route:'/api/app-export',downloadRoute:'/api/app-download',formats:['html','bundle']}});
+    }
     if(/\bbutton\b/i.test(prompt)&&/\b(?:chang(?:e|es|ing)|update|switch|replace|toggle)\b/i.test(prompt)&&/\b(?:message|text|label|word)\b/i.test(prompt)){
       const simple=simpleInteractiveRecovery(prompt,requestedName);
       return res.json({ok:true,...simple,published:false,publicUrl:'',fallback:true,recovery:'first-party-interactive-recovery',agent:{name:'KAI 51 Native Interactive Recovery',authority:'KAI 51',compute:'local-deterministic',provider:null},export:{route:'/api/app-export',downloadRoute:'/api/app-download',formats:['html','bundle']}});
     }
-    try{
-      const native=buildNativeProduct(prompt,{existing,appName:requestedName});
-      return res.json({
-        ok:true,
-        ...native,
-        published:false,
-        publicUrl:'',
-        fallback:true,
-        recovery:'first-party-local-app-maker',
-        agent:{name:'KAI 51 Native App Maker Recovery',authority:'KAI 51',compute:'local-deterministic',provider:null},
-        export:{route:'/api/app-export',downloadRoute:'/api/app-download',formats:['html','bundle']}
-      });
-    }catch(nativeError){
-      return res.status(500).json({error:e?.message||'KAI App Maker agent failed',recoveryError:nativeError?.message||'Local recovery failed'});
-    }
+    const native=buildNativeProduct(prompt,{appName:requestedName});
+    return res.json({ok:true,...native,published:false,publicUrl:'',fallback:true,recovery:'first-party-local-app-maker',agent:{name:'KAI 51 Native App Maker Recovery',authority:'KAI 51',compute:'local-deterministic',provider:null},export:{route:'/api/app-export',downloadRoute:'/api/app-download',formats:['html','bundle']}});
+  }catch(e){
+    return res.status(500).json({error:e?.message||'KAI App Maker recovery failed'});
   }
 }
