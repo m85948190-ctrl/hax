@@ -272,21 +272,33 @@ if(input)input.value='';resize();try{if(!overdrive){
                 const labels={
                   understanding:'Thinking',
                   searching:'Searching the web',
-                  analyzing:'Thinking',
+                  analyzing:'Checking the gathered information',
                   composing:'Preparing an answer',
                   github:'Routing to GitHub model',
-                  'local-neural':'Thinking',
+                  'local-neural':'Running KAI 51 LOCAL',
                   'local-neural-progress':'Loading local model',
                   lite:'Recovering with KAI Lite'
                 };
+                const isMathPrompt=/[0-9].*(?:[+*/×÷−-]|\\b(?:calculate|solve|arithmetic|multiply|divide|add|subtract)\\b)|\\b(?:calculate|solve|arithmetic)\\b/i.test(String(value||''));
+                const stageDetails={
+                  understanding:isMathPrompt?'Reading the numbers and operators in your expression.':'Identifying the request type and relevant context.',
+                  searching:'Searching for sources relevant to your question.',
+                  analyzing:isMathPrompt?'Working through the requested calculation.':'Reviewing the information gathered so far.',
+                  composing:'Organizing the result into a clear response.',
+                  github:'Starting the selected GitHub model lane.',
+                  'local-neural':'Running local neural inference in this browser.',
+                  'local-neural-progress':'Waiting for the local model to report its next progress update.',
+                  lite:'Using KAI Lite as the recovery lane.'
+                };
                 const key=stage==='understanding'?'thinking':stage==='github'?'github':stage==='lite'?'lite':stage;
                 const label=labels[stage]||'KAI 51 · '+String(stage||'working');
+                const progressDetail=String(detail||stageDetails[stage]||'Processing this step.');
                 if(stage==='searching'){kaiActivitySet('thinking','done');}
                 if(stage==='analyzing'){kaiActivitySet('searching','done');}
                 if(stage==='composing'){kaiActivitySet('analyzing','done');}
                 if(stage==='github'){kaiActivitySet('thinking','done');}
                 if(stage==='local-neural'||stage==='local-neural-progress'){kaiActivitySet('thinking','done');}
-                mark(key,label,detail,'running');
+                mark(key,label,progressDetail,'running');
               },
               onHandoff:reason=>{
                 kaiActivitySet('understanding','done','LOCAL → GITHUB handoff');
