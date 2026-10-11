@@ -164,7 +164,7 @@
     try{
       /* GITHUB mode shares the same fast conversation and evidence-first web preflight.
          Only open-ended turns that need neural synthesis should trigger the large release download. */
-      if(profile==='github'&&window.HAxBROKaiLocalIntelligence?.run){
+      if(profile==='github'&&!hooks?.forceNeural&&window.HAxBROKaiLocalIntelligence?.run){
         try{
           const turn=await window.HAxBROKaiLocalIntelligence.run(message,history,{onStage:hooks.onStage,signal});ensureActive();
           if(turn?.response&&!turn.handoff) return {...turn,lane:'github',provider:'KAI 51 GITHUB · fast conversation/evidence path',model:turn.model||'shared fast local/web path',preflight:true};
@@ -195,6 +195,7 @@
     const labels={largest:'KAI 51 Largest 1.7B',github:'KAI 51 GitHub 360M',local:'KAI 51 LOCAL',lite:'KAI Lite'};
     const errors=[];
     const timeouts={largest:240000,github:120000,local:90000,lite:15000};
+    const bounded=(promise,ms,label,abortSignal)=>new Promise((resolve,reject)=>{let timer;const cleanup=()=>{clearTimeout(timer);abortSignal?.removeEventListener('abort',onAbort)};const onAbort=()=>{cleanup();reject(new DOMException('Response stopped by user','AbortError'))};timer=setTimeout(()=>{cleanup();reject(new Error(label+' timed out after '+Math.round(ms/1000)+' seconds'))},ms);if(abortSignal){if(abortSignal.aborted)return onAbort();abortSignal.addEventListener('abort',onAbort,{once:true})}Promise.resolve(promise).then(value=>{cleanup();resolve(value)},error=>{cleanup();reject(error)})});
     for(const name of names){
       ensureActive();
       const label=labels[name];
@@ -203,17 +204,13 @@
         let result;
         const run=async()=>{
           if(name==='largest') return generate(message,history,{signal,onProgress:hooks.onProgress,onStage:hooks.onStage},'largest');
-          if(name==='github') return generate(message,history,{signal,onProgress:hooks.onProgress,onStage:hooks.onStage},'github');
-          if(name==='local') return unifiedGenerate(message,history,{signal,onProgress:hooks.onProgress,onStage:hooks.onStage});
+          if(name==='github') return generate(message,history,{signal,onProgress:hooks.onProgress,onStage:hooks.onStage,forceNeural:true},'github');
+          if(name==='local') return generate(message,history,{signal,onProgress:hooks.onProgress,onStage:hooks.onStage},'local');
           const lite=window.HAxBROKaiLite;
           if(!lite?.respond) throw new Error('KAI Lite runtime is unavailable');
           return lite.respond(message,history,{signal});
         };
-        result=await Promise.race([
-          run(),
-          new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' timed out after '+Math.round(timeouts[name]/1000)+' seconds')),timeouts[name])),
-          ...(signal?[new Promise((_,reject)=>{if(signal.aborted)reject(new DOMException('Response stopped by user','AbortError'));else signal.addEventListener('abort',()=>reject(new DOMException('Response stopped by user','AbortError')),{once:true})})]:[])
-        ]);
+        result=await bounded(run(),timeouts[name],label,signal);
         ensureActive();
         const response=String(result?.response||'').trim();
         if(!response) throw new Error(label+' returned an empty response');
