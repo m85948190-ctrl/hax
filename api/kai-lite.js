@@ -1,7 +1,7 @@
 import { browser } from "hatchable";
 
 export const access = "public";
-export const methods = ["POST"];
+export const methods = ["POST", "OPTIONS"];
 
 const clean = (v, n = 5000) =>
   String(v ?? "").replace(/\u0000/g, "").replace(/\s+/g, " ").trim().slice(0, n);
@@ -213,6 +213,13 @@ function casualAnswer(query) {
 }
 
 export default async function(req, res) {
+  // Generated apps may be hosted on a separate static domain. This public endpoint
+  // accepts anonymous chat requests and does not use cookies or credentialed CORS.
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Max-Age", "86400");
+  if (req.method === "OPTIONS") return res.status(204).send("");
   if (req.method !== "POST") return res.status(405).json({ error: "POST required" });
 
   const query = clean(req.body?.message, 1800);
