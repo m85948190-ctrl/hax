@@ -59,8 +59,12 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     if(trainingPack) return trainingPack;
     if(trainingPromise) return trainingPromise;
     trainingPromise=(async()=>{
+      const controller=new AbortController();
+      let timer;
       try{
-        const r=await fetch(TRAINING_SYNC,{headers:{Accept:'application/json'},cache:'no-store'});
+        const request=fetch(TRAINING_SYNC,{headers:{Accept:'application/json'},cache:'no-store',signal:controller.signal});
+        const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('training sync timed out after 3.5 seconds'));},3500);});
+        const r=await Promise.race([request,timeout]);
         if(!r.ok) throw new Error('training sync HTTP '+r.status);
         const d=await r.json();
         if(!d?.ok||!d?.canonical) throw new Error('invalid Hatchable training pack');
@@ -69,8 +73,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         return d;
       }catch(e){
         try{const cached=JSON.parse(localStorage.getItem('haxbro:kai51:training-pack')||'null'); if(cached?.pack) return trainingPack=cached.pack;}catch{}
-        return trainingPack={ok:true,canonical:true,source:'HATCHABLE',rules:[] ,examples:[]};
-      }finally{trainingPromise=null;}
+        return trainingPack={ok:true,canonical:true,source:'HATCHABLE',rules:[] ,examples:[],warning:String(e?.message||e).slice(0,180)};
+      }finally{clearTimeout(timer);trainingPromise=null;}
     })();
     return trainingPromise;
   }
