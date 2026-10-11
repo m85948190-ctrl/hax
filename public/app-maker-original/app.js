@@ -37,14 +37,15 @@ function showPreview(f){
 }
 async function publishExternal(){
   reportAdd('PUBLISH','Publishing the current application to external static hosting…');
-  const f=project.files&&project.files[0];
-  if(!f)return;
+  const files=Array.isArray(project.files)?project.files.filter(f=>f&&typeof f.path==='string'&&typeof f.content==='string'):[];
+  if(!files.length)return;
   const btn=$('#publishExternal');
   btn.disabled=true; btn.textContent=project.published?'Republishing…':'Publishing…';
   try{
-    const r=await fetch('/api/appmaker-original-publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({html:f.content})});
+    // Publish the complete app bundle, not only index.html; CSS and JS must travel with it.
+    const r=await fetch('/api/app-publish',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:project.name,files})});
     const d=await r.json();
-    if(!r.ok||!d.url)throw new Error(d.error||'External host rejected the deployment');
+    if(!r.ok||!d.url||d.ok===false)throw new Error(d.error||'External host rejected the deployment');
     project.publicUrl=String(d.url); project.published=true; project.publishExpiresAt=d.expires_at||null; persistProject();
     $('#publishBadge').textContent='● PUBLISHED'; $('#publicUrl').href=project.publicUrl; $('#publicUrl').textContent=project.publicUrl;
     btn.textContent='Published ✓';
@@ -121,7 +122,7 @@ async function build(){
    }
    if(!data||!Array.isArray(data.files)||!data.files.some(f=>f&&typeof f.content==='string'&&f.content.trim())){
      setScene('BUILDING');setFlow(2);kaiWorkStep('build','Native recovery','Generating a working local artifact.','running');
-     const r=await fetch('/api/appmaker-original-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:q,appName:(q.match(/\b(?:called|named|titled|name it|call it)\s+["']?([^"'\n,.!?]{1,60})/i)||[])[1]?.trim()||''})});
+     const r=await fetch('/api/appmaker-original-generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:q,appName:(q.match(/\b(?:called|named|titled|name it|call it)\s+["']?([^"'\n,.!?]{1,60}?)(?=\s+(?:that|which|who)\b|[,\n.!?]|$)/i)||[])[1]?.trim()||''})});
      const d=await r.json().catch(()=>({}));
      if(!r.ok||!d.ok||!Array.isArray(d.files)||!d.files.some(f=>f&&typeof f.content==='string'&&f.content.trim()))throw new Error(d.error||d.recoveryError||'No working app artifact was returned.');
      data=d;
