@@ -279,7 +279,7 @@ if(input)input.value='';resize();try{if(!overdrive){
                   'local-neural-progress':'Loading local model',
                   lite:'Recovering with KAI Lite'
                 };
-                const isMathPrompt=/[0-9].*(?:[+*/×÷−-]|\\b(?:calculate|solve|arithmetic|multiply|divide|add|subtract)\\b)|\\b(?:calculate|solve|arithmetic)\\b/i.test(String(value||''));
+                const isMathPrompt=/[0-9].*(?:[+*/×÷−-]|\b(?:calculate|solve|arithmetic|multiply|divide|add|subtract)\b)|\b(?:calculate|solve|arithmetic)\b/i.test(String(value||''));
                 const stageDetails={
                   understanding:isMathPrompt?'Reading the numbers and operators in your expression.':'Identifying the request type and relevant context.',
                   searching:'Searching for sources relevant to your question.',
