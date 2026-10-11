@@ -153,8 +153,15 @@ function groundedAnswer(query, sources, engine) {
     .filter(s => s.excerpt);
 
   if (!usable.length) {
-    const sourceLines = (sources || []).slice(0, 3).map((s, i) => (i + 1) + ". " + s.title + "\n   " + s.url).join("\n");
-    return "I found relevant search results, but could not read enough page text to summarize them reliably. Here are the pages to verify:\n\nSources (" + engine + "):\n" + sourceLines;
+    const terms = [...new Set(String(query || "").toLowerCase().match(/[a-z0-9]{4,}/g) || [])].filter(x => !["what", "when", "where", "which", "about", "search", "google", "bing", "wikipedia", "explain", "short", "paragraph", "please", "latest", "current", "sources"].includes(x));
+    const relevant = (sources || []).filter(s => {
+      const haystack = (String(s.title || "") + " " + String(s.url || "") + " " + String(s.text || "")).toLowerCase();
+      const matches = terms.filter(term => haystack.includes(term)).length;
+      return terms.length ? matches >= Math.min(1, terms.length) : false;
+    }).slice(0, 3);
+    if (!relevant.length) return "I couldn't verify a relevant source for that query in this search pass, so I won't present unrelated results as an answer. Try again or ask KAI 51 to search Google, Bing, and Wikipedia.";
+    const sourceLines = relevant.map((s, i) => (i + 1) + ". " + s.title + "\n   " + s.url).join("\n");
+    return "I couldn't extract enough readable page text to summarize confidently. These results match the query; please verify them:\n\nSources (" + engine + "):\n" + sourceLines;
   }
 
   const lead = usable[0];
