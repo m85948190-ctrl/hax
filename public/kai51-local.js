@@ -149,7 +149,7 @@
     const signal=hooks?.signal;const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};ensureActive();
     if(profile==='largest'){
       hooks.onStage?.('largest','Starting the selected KAI 51 Largest 1.7B model');
-      const mod=await import('/kai51-largest-engine.js?v=1');
+      const mod=await import('/kai51-largest-engine.js?v=3');
       const engine=await withTimeout(()=>mod.createKai51LargestEngine({
         onProgress:p=>{try{hooks.onProgress?.(p);emit({...p,profile:'heavy'});}catch{}},
         onReady:info=>{state=write({status:'ready',installed:true,verified:true,model:info?.model||'SmolLM2-1.7B-Instruct',error:null});}
@@ -304,7 +304,7 @@
       try{await loadEngine('local');}catch(e){console.warn('KAI Router: LOCAL download/initialization failed; continuing pipeline',e);}
       try{await loadEngine('github');}catch(e){console.warn('KAI Router: GitHub 360M download/initialization failed; continuing to Largest',e);}
       try{
-        const mod=await import('/kai51-largest-engine.js?v=2');
+        const mod=await import('/kai51-largest-engine.js?v=3');
         await mod.createKai51LargestEngine({onProgress:p=>emit({...p,profile:'largest'}),onReady:info=>emit({profile:'largest',progress:100,status:'KAI 51 Largest 1.7B verified and ready',installed:true,verified:true,lane:'largest',model:info?.model})});
       }catch(e){console.warn('KAI Router: Largest 1.7B is unavailable on this device; 360M/LOCAL remain available',e);}
       return {local:!!window.HAxBROKai51LocalFastEngine?.isReady?.(),github:!!window.HAxBROKai51Engine?.isReady?.(),largest:!!window.HAxBROKai51LargestEngine?.isReady?.()};
