@@ -248,6 +248,20 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       const response=lastAssistant?'You’re right to call that out, bro. My last reply didn’t match what you said. You typed “ghop,” and I should’ve asked what you meant instead of inventing a topic. Sorry.':'I mean to answer your actual message, bro. Tell me which part sounded wrong and I’ll clarify it.';
       return {response,provider:'KAI 51 LOCAL · conversation repair',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
     }
+    // Context-aware casual conversation: respond to the user's actual social/emotional cue.
+    // Keep these narrow and conversational; substantive requests still go to neural inference.
+    if(/\b(?:i'?m|i am|this is|that is|so)\s+(?:so\s+)?boring\b|^ah+[,!\s]+very boring[.!?\s]*$/i.test(userRequest)){
+      const response='Oof, bro 😭 let’s fix that. Want a weird question, a mini game, or should we build something cool?';
+      return {response,provider:'KAI 51 LOCAL · conversation context',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
+    }
+    if(/\b(?:i forgive you|forgive you|you'?re forgiven|its okay i forgive|it'?s okay i forgive)\b/i.test(userRequest)){
+      const response='Thanks, bro ❤️ I’ll take that—and I’ll do better. No more robotic apology loops; I’ll listen to what you actually say.';
+      return {response,provider:'KAI 51 LOCAL · conversation context',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
+    }
+    if(/\b(?:what do you need to be|how can you be|what does it take to be|how to be)\b.{0,45}\b(?:sympathetic|empathetic|sympathy|empathy)\b|\b(?:sympathetic|empathetic)\b.{0,45}\b(?:with me|to me|as an ai|in conversation)\b/i.test(userRequest)){
+      const response='Mostly, bro, I need to listen properly: notice how you’re feeling, take your words seriously, respond without judging, and avoid canned apologies or changing the subject. I don’t feel emotions like a person, but I can still respond with care and understanding. ❤️';
+      return {response,provider:'KAI 51 LOCAL · conversation context',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
+    }
     // Instant local fast path: social one-liners must never wait for neural model startup/inference.
     // Real questions still use the neural model below; no web research or external inference is used here.
     if(isSmallTalk){

@@ -189,6 +189,15 @@ function repairConversation(query, history = []) {
       ? "You’re right to call that out, bro. My last reply didn’t match what you said. I should’ve asked what you meant instead of inventing a topic. Sorry."
       : "I’m trying to answer your actual message, bro. Which part should I clarify?";
   }
+  if (/\b(?:i'?m|i am|this is|that is|so)\s+(?:so\s+)?boring\b|^ah+[,!\s]+very boring[.!?\s]*$/i.test(q)) {
+    return "Oof, bro 😭 let’s fix that. Want a weird question, a mini game, or should we build something cool?";
+  }
+  if (/\b(?:i forgive you|forgive you|you'?re forgiven|its okay i forgive|it'?s okay i forgive)\b/i.test(q)) {
+    return "Thanks, bro ❤️ I’ll take that—and I’ll do better. No more robotic apology loops; I’ll listen to what you actually say.";
+  }
+  if (/\b(?:what do you need to be|how can you be|what does it take to be|how to be)\b.{0,45}\b(?:sympathetic|empathetic|sympathy|empathy)\b|\b(?:sympathetic|empathetic)\b.{0,45}\b(?:with me|to me|as an ai|in conversation)\b/i.test(q)) {
+    return "Mostly, bro, I need to listen properly: notice how you’re feeling, take your words seriously, respond without judging, and avoid canned apologies or changing the subject. I don’t feel emotions like a person, but I can still respond with care and understanding. ❤️";
+  }
   return null;
 }
 
