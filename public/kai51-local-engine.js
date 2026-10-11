@@ -30,9 +30,23 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   }
 
   async function resolveRuntime(){
-    /* This browser exposes WebGPU but fails requestDevice with ShaderF16. Force the supported WASM/Q4 path for both model profiles until a full device-creation probe is available; a failed GPU request must never hold the chat composer hostage. */
+    /* Prefer this visitor's GPU only after a real adapter/device probe. Some browsers expose navigator.gpu but cannot create a compatible device; those must fall back cleanly to WASM/Q4. */
     DEVICE='wasm';
     DTYPE='q4';
+    try{
+      if(!globalThis.navigator?.gpu?.requestAdapter)return;
+      const adapter=await navigator.gpu.requestAdapter();
+      if(!adapter)return;
+      const requiredFeatures=[];
+      if(adapter.features?.has?.('shader-f16'))requiredFeatures.push('shader-f16');
+      const probe=await adapter.requestDevice({requiredFeatures});
+      try{probe.destroy?.()}catch{}
+      DEVICE='webgpu';
+    }catch(error){
+      DEVICE='wasm';
+      DTYPE='q4';
+      console.info('KAI 51 using browser-local WASM/Q4 because WebGPU is unavailable on this device.',String(error?.message||error));
+    }
   }
 
   const progress=(progress,status)=>onProgress({profile:'heavy',progress,status,file:''});
