@@ -53,7 +53,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     }
   }
 
-  const progress=(progress,status)=>onProgress({profile:'heavy',progress,status,file:''});
+  const progress=(progress,status)=>{window.HAxBROKai51EngineDebug={profile:PROFILE,progress,status,at:new Date().toISOString(),device:DEVICE};onProgress({profile:'heavy',progress,status,file:''});};
 
   async function loadTrainingPack(){
     if(trainingPack) return trainingPack;
