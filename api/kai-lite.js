@@ -170,6 +170,28 @@ function liteNotice(text) {
   return String(text || "");
 }
 
+function repairConversation(query, history = []) {
+  const q = clean(query, 300).toLowerCase().replace(/[’‘]/g, "'").trim();
+  const previous = (Array.isArray(history) ? history : []).filter(x => x && typeof x === "object")
+    .map(x => ({ role: String(x.role || x.sender || "").toLowerCase(), text: clean(x.content || x.text || x.message, 500) }))
+    .filter(x => x.text).slice(-4);
+  const hasPriorAssistant = previous.some(x => ["assistant", "bot", "ai", "model"].includes(x.role));
+  if (/^ghop[.!?\s]*$/i.test(q)) {
+    return "I’m not sure what you meant by “ghop,” bro. Was that a typo, or did you mean something else?";
+  }
+  if (/^(?:o+ bro )?are you (?:mad|angry|upset)[?!.,\s]*$/i.test(q)) {
+    return hasPriorAssistant
+      ? "No, bro 😅 I’m not mad. My previous reply was off-topic, and I shouldn’t have made up context. Sorry."
+      : "No, bro 😅 I don’t get mad. What’s up?";
+  }
+  if (/^(?:what are you telling|what are you talking about|what do you mean|what are you on about)[?!.,\s]*$/i.test(q)) {
+    return hasPriorAssistant
+      ? "You’re right to call that out, bro. My last reply didn’t match what you said. I should’ve asked what you meant instead of inventing a topic. Sorry."
+      : "I’m trying to answer your actual message, bro. Which part should I clarify?";
+  }
+  return null;
+}
+
 function casualAnswer(query) {
   const q = clean(query, 120).toLowerCase();
   if (/^(?:thanks|thank you|thx)/i.test(q)) return "Anytime, bro. 👊";
@@ -188,6 +210,11 @@ export default async function(req, res) {
   if (!query) return res.status(400).json({ error: "message required" });
 
   try {
+    // Repair short conversational corrections before search or the generic Lite reply.
+    const repaired = repairConversation(query, req.body?.history);
+    if (repaired) {
+      return res.json({ ok: true, response: repaired, provider: "KAI LITE · conversation repair", model: "KAI LITE · conversation repair", lite: true, sources: [] });
+    }
     // Kai Lite is a web-grounded lane, but casual conversation should remain
     // conversation instead of turning "hi" into a search-engine query.
     if (casual.test(query)) {

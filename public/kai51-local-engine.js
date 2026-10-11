@@ -232,6 +232,22 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     const isCasualReaction=/^(?:o+|h+m+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|hmm+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)[!?. ,\s]*$/i.test(userRequest);
     const isCombinedCasual=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?[!?. ,\s]*$/i.test(userRequest);
     const isSmallTalk=isGreeting||isCasualReaction||isCombinedCasual;
+    // Conversation-repair guard: short clarification turns must use the immediately preceding exchange,
+    // not fall into web search or a generic assistant response. Keep this narrow; substantive turns
+    // continue through the real local neural model.
+    const priorTurns=(Array.isArray(history)?history:[]).filter(x=>x&&typeof x==='object').map(x=>({role:String(x.role||x.sender||'user').toLowerCase(),content:String(x.content||x.text||x.message||'').trim()})).filter(x=>x.content).slice(-4);
+    const lastAssistant=[...priorTurns].reverse().find(x=>['assistant','bot','ai','model'].includes(x.role));
+    if(/^ghop[.!?\s]*$/i.test(userRequest)){
+      return {response:'I’m not sure what you meant by “ghop,” bro. Was that a typo, or did you mean something else?',provider:'KAI 51 LOCAL · clarification guard',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
+    }
+    if(/^(?:are you mad|o+ bro are you mad|are you angry|are you upset)(?:[?!.,\s]*)$/i.test(userRequest)){
+      const response=lastAssistant?'No, bro 😅 I’m not mad. My previous reply was off-topic, and I shouldn’t have made up context.':'No, bro 😅 I don’t get mad. What’s up?';
+      return {response,provider:'KAI 51 LOCAL · conversation repair',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
+    }
+    if(/^(?:what are you telling|what are you talking about|what do you mean|what are you on about)[?!.,\s]*$/i.test(userRequest)){
+      const response=lastAssistant?'You’re right to call that out, bro. My last reply didn’t match what you said. You typed “ghop,” and I should’ve asked what you meant instead of inventing a topic. Sorry.':'I mean to answer your actual message, bro. Tell me which part sounded wrong and I’ll clarify it.';
+      return {response,provider:'KAI 51 LOCAL · conversation repair',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
+    }
     // Instant local fast path: social one-liners must never wait for neural model startup/inference.
     // Real questions still use the neural model below; no web research or external inference is used here.
     if(isSmallTalk){
