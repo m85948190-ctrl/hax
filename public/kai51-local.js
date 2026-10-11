@@ -153,7 +153,7 @@
       const engine=await withTimeout(()=>mod.createKai51LargestEngine({
         onProgress:p=>{try{hooks.onProgress?.(p);emit({...p,profile:'heavy'});}catch{}},
         onReady:info=>{state=write({status:'ready',installed:true,verified:true,model:info?.model||'SmolLM2-1.7B-Instruct',error:null});}
-      }),240000,'KAI 51 Largest 1.7B download/initialization');
+      }),600000,'KAI 51 Largest 1.7B download/initialization');
       ensureActive();
       const result=await withTimeout(()=>engine.generate(message,history,signal),180000,'KAI 51 Largest 1.7B inference');
       ensureActive();
