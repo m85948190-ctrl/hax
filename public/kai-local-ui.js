@@ -182,7 +182,7 @@
     function apiStatusReady(){return !!window.HAxBROLocalKai?.status?.().ready;}
     window.addEventListener('haxbro:kai-local-ready',e=>{if(state.model==='kai'){const p=e.detail?.profile||state.activeProfile;if(p!==state.activeProfile)return;state.preparing=false;state.initProgress=100;state.displayProgress=100;state.overlayReleased=true;button('ready');if(!e.detail?.profile||!window.HAxBROLocalKai?.status?.().models?.[p]?.installed)overlay('hide',100,p==='heavy'?'KAI 51 ready':'KAI FAST ready','initializing')}});
     window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');console.warn('KAI local model is still warming; KAI Lite remains available',detail);overlay('hide',state.initProgress,'KAI 51 continues warming in the background…','download');button('send')}});
-    applyChoice(localStorage.getItem(userModelKey())||'kai-router');
+    const savedChoice=localStorage.getItem(userModelKey());applyChoice(!savedChoice||savedChoice==='kai-largest'?'kai-router':savedChoice);
     window.addEventListener('haxbro:username-changed',()=>applyChoice(localStorage.getItem(userModelKey())||'kai-local'));
     // Do not auto-install or re-initialize KAI on every page visit. The model is prepared on first KAI use.
     // This keeps returning users out of the installation flow and prevents the 100% initialization box from reappearing between chats.
