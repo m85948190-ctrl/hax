@@ -184,6 +184,43 @@
     return generate(message,history);
   }
 
+  async function routerGenerate(message,history=[],hooks={}){
+    const signal=hooks?.signal;
+    const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};
+    const candidates=[
+      {name:'largest',label:'KAI 51 Largest 1.7B',get:()=>window.HAxBROKai51LargestEngine},
+      {name:'github',label:'KAI 51 GitHub 360M',get:()=>window.HAxBROKai51Engine},
+      {name:'local',label:'KAI 51 LOCAL',get:()=>window.HAxBROKai51LocalFastEngine}
+    ];
+    const errors=[];
+    for(const candidate of candidates){
+      ensureActive();
+      let ready=candidate.get();
+      if(!ready?.generate || ready.isReady?.()!==true) continue;
+      try{
+        hooks.onStage?.('router',`KAI Router selected ${candidate.label} — model is ready`);
+        const result=candidate.name==='largest'
+          ? await ready.generate(message,history,signal)
+          : await ready.generate(message,history);
+        ensureActive();
+        if(result?.response) return {...result,lane:candidate.name,router:true,routerReason:'highest-priority ready model'};
+        errors.push(candidate.label+': empty response');
+      }catch(error){
+        if(signal?.aborted)throw error;
+        errors.push(candidate.label+': '+safe(error?.message||error,180));
+        hooks.onStage?.('router-fallback',candidate.label+' failed; trying the next available model');
+      }
+    }
+    ensureActive();
+    hooks.onStage?.('router','No preloaded model is ready; initializing KAI 51 LOCAL recovery');
+    try{
+      const result=await generate(message,history,{signal,onProgress:hooks.onProgress},'local');
+      ensureActive();
+      if(result?.response)return {...result,lane:'local',router:true,routerReason:'recovery model'};
+    }catch(error){if(signal?.aborted)throw error;errors.push('LOCAL: '+safe(error?.message||error,180));}
+    throw new Error('KAI Router could not get a response from 1.7B, 360M, or LOCAL. '+errors.join(' | '));
+  }
+
   function status() {
     state = read();
     return {
@@ -236,6 +273,7 @@
     prepare:maybeInstall,
     generate,
     chat,
+    routerGenerate,
     unifiedGenerate,
     isInstalled:()=>read().status==='ready'&&!!localInstallState(),
     resetForTesting() {
@@ -245,30 +283,28 @@
   };
 
   try { navigator.storage?.persist?.().catch(()=>{}); } catch {}
-  /* Register lightweight LOCAL routing immediately, then warm the smaller 135M
-     neural model in the background so the first chat turn is less likely to wait
-     for model installation. GITHUB's larger 360M model remains on-demand. */
+  /* Ordered per-device model pipeline: LOCAL 135M → GitHub 360M → Largest 1.7B.
+     Downloads are sequential, cached by their runtimes, and independent on each device. */
   setTimeout(()=>maybeInstall().catch(()=>{}),250);
+  let pipelinePromise=null;
   const warmSelectedLocal=()=>{
-    const chosen=window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||'kai-local';
-    if(chosen==='kai-local'){
-      loadEngine('local').catch(e=>console.warn('KAI 51 LOCAL background warm-up failed',e));
-      return;
-    }
-    if(chosen==='kai-github'){
-      // Warm the small local fallback first so a first-turn request can answer quickly,
-      // then begin the larger GitHub model download while the user is already in the workspace.
-      loadEngine('local').then(()=>{
-        const current=window.HAxBROSelectedModel||localStorage.getItem('haxbro_model_choice')||chosen;
-        if(current==='kai-github') return loadEngine('github');
-      }).catch(e=>console.warn('KAI 51 GitHub prewarm failed',e));
-    }
+    if(pipelinePromise)return pipelinePromise;
+    pipelinePromise=(async()=>{
+      try{await loadEngine('local');}catch(e){console.warn('KAI Router: LOCAL download/initialization failed; continuing pipeline',e);}
+      try{await loadEngine('github');}catch(e){console.warn('KAI Router: GitHub 360M download/initialization failed; continuing to Largest',e);}
+      try{
+        const mod=await import('/kai51-largest-engine.js?v=2');
+        await mod.createKai51LargestEngine({onProgress:p=>emit({...p,profile:'largest'}),onReady:info=>emit({profile:'largest',progress:100,status:'KAI 51 Largest 1.7B verified and ready',installed:true,verified:true,lane:'largest',model:info?.model})});
+      }catch(e){console.warn('KAI Router: Largest 1.7B is unavailable on this device; 360M/LOCAL remain available',e);}
+      return {local:!!window.HAxBROKai51LocalFastEngine?.isReady?.(),github:!!window.HAxBROKai51Engine?.isReady?.(),largest:!!window.HAxBROKai51LargestEngine?.isReady?.()};
+    })().finally(()=>{pipelinePromise=null;});
+    return pipelinePromise;
   };
-  /* App Maker must stay interactive on first paint. Heavy ONNX model warm-up is on-demand there; other HAxBRO pages retain the normal background warm-up. */
+  window.HAxBROKai51BootstrapPipeline={start:warmSelectedLocal,status:()=>({local:!!window.HAxBROKai51LocalFastEngine?.isReady?.(),github:!!window.HAxBROKai51Engine?.isReady?.(),largest:!!window.HAxBROKai51LargestEngine?.isReady?.(),running:!!pipelinePromise})};
   if(!window.HAxBRODisableKAI51Warmup){
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',warmSelectedLocal,{once:true});
     else warmSelectedLocal();
-    window.addEventListener('haxbro:model-selected',e=>{if(e?.detail?.model==='kai-local'||e?.detail?.model==='kai-github') warmSelectedLocal();});
+    window.addEventListener('haxbro:model-selected',e=>{if(['kai-local','kai-github','kai-largest','kai-router'].includes(e?.detail?.model))warmSelectedLocal();});
   }
   setInterval(()=>{
     try{

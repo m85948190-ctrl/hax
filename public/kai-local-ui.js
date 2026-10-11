@@ -1,6 +1,6 @@
 (() => {
   const userModelKey=()=>{const n=(localStorage.getItem('haxbro_username')||'anonymous-device').trim().toLowerCase().replace(/[^a-z0-9._-]/g,'_').slice(0,64)||'anonymous-device';return 'haxbro:user:'+n+':model_choice'};
-  const state={model:localStorage.getItem(userModelKey())||'kai-local',preparing:false,activeProfile:'light',initProgress:0,displayProgress:0,progressTimer:null,overlayReleased:false};
+  const state={model:localStorage.getItem(userModelKey())||'kai-router',preparing:false,activeProfile:'light',initProgress:0,displayProgress:0,progressTimer:null,overlayReleased:false};
   const $=id=>document.getElementById(id);
   const send=()=>$('sendBtn');
   function initOverlay(){
@@ -72,14 +72,14 @@
     document.querySelectorAll('.model-option[data-model-choice="openai"],.model-option[data-model-choice="google"],.model-option[data-model-choice="openrouter"],.model-option[data-model-choice="groq"],.model-option[data-model-choice="mistral"]').forEach(el=>el.remove());
   }
   function applyChoice(choice){
-    const allowed=new Set(['kai-local','kai-github','kai-largest','kai-lite']);
+    const allowed=new Set(['kai-router','kai-local','kai-github','kai-largest','kai-lite']);
     state.model=allowed.has(choice)?choice:'kai-local';
     localStorage.setItem(userModelKey(),state.model);
     window.HAxBROSelectedModel=state.model;
     document.documentElement.dataset.haxbroModel=state.model;
     document.querySelectorAll('.model-option').forEach(x=>x.classList.toggle('active',x.dataset.modelChoice===state.model));
     const label=$('selectedModelLabel');
-    if(label)label.textContent=state.model==='kai-lite'?'KAI LITE':state.model==='kai-largest'?'KAI 51 · LARGEST 1.7B':state.model==='kai-github'?'KAI 51 · GITHUB 360M':'KAI 51 · LOCAL';
+    if(label)label.textContent=state.model==='kai-router'?'KAI ROUTER · AUTO':state.model==='kai-lite'?'KAI LITE':state.model==='kai-largest'?'KAI 51 · LARGEST 1.7B':state.model==='kai-github'?'KAI 51 · GITHUB 360M':'KAI 51 · LOCAL';
     if(state.model==='kai-lite') state.preparing=false;
     button('send');
     window.dispatchEvent(new CustomEvent('haxbro:model-selected',{detail:{model:state.model}}));
@@ -182,7 +182,7 @@
     function apiStatusReady(){return !!window.HAxBROLocalKai?.status?.().ready;}
     window.addEventListener('haxbro:kai-local-ready',e=>{if(state.model==='kai'){const p=e.detail?.profile||state.activeProfile;if(p!==state.activeProfile)return;state.preparing=false;state.initProgress=100;state.displayProgress=100;state.overlayReleased=true;button('ready');if(!e.detail?.profile||!window.HAxBROLocalKai?.status?.().models?.[p]?.installed)overlay('hide',100,p==='heavy'?'KAI 51 ready':'KAI FAST ready','initializing')}});
     window.addEventListener('haxbro:kai-local-error',e=>{if(state.model==='kai'&&state.preparing){state.preparing=false;const detail=String(e?.detail||'');console.warn('KAI local model is still warming; KAI Lite remains available',detail);overlay('hide',state.initProgress,'KAI 51 continues warming in the background…','download');button('send')}});
-    applyChoice(localStorage.getItem(userModelKey())||'kai-local');
+    applyChoice(localStorage.getItem(userModelKey())||'kai-router');
     window.addEventListener('haxbro:username-changed',()=>applyChoice(localStorage.getItem(userModelKey())||'kai-local'));
     // Do not auto-install or re-initialize KAI on every page visit. The model is prepared on first KAI use.
     // This keeps returning users out of the installation flow and prevents the 100% initialization box from reappearing between chats.

@@ -57,6 +57,7 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
       isReady:()=>true,
       status:()=>({ready:true,model:MODEL_ID,device:'webgpu',realModel:true,quantization:'q4f16',lane:'largest'})
     };
+    window.HAxBROKai51LargestEngine=engine;
     emit(onProgress,100,'KAI 51 Largest 1.7B ready');
     try{onReady({model:MODEL_ID,device:'webgpu',verified:true,realModel:true,lane:'largest',quantization:'q4f16'});}catch{}
     return engine;

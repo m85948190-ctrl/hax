@@ -222,7 +222,7 @@ function showAppPlatformChoices(value){
     {icon:'📱',label:'Mobile App',detail:'Mobile-first application experience',onClick:async()=>{if(window.HAxBROFutureMaker?.open){await window.HAxBROFutureMaker.open(value+'\n\nSELECTED PLATFORM: Mobile App',true)}else window.dispatchEvent(new CustomEvent('haxbro:open-app-maker',{detail:{prompt:value+'\n\nSELECTED PLATFORM: Mobile App',autoBuild:true}}));}}
   ]);
 }
-async function sendChat(text,opts={}){let value=String(text||'').trim();if(!value)return false;if(sendInFlight&&!opts.internalRetry)return true;const now=Date.now();if(value===lastSendValue&&now-lastSendAt<5000&&!opts.internalRetry)return true;const attemptId=opts.internalRetry?sendAttemptId:sendAttemptId+1;if(!opts.internalRetry){sendAttemptId=attemptId;activeChatController=new AbortController();window.HAxBROActiveChatSignal=activeChatController.signal;clearTimeout(sendWatchdogTimer);sendInFlight=true;lastSendValue=value;lastSendAt=now;sendWatchdogTimer=setTimeout(()=>{if(sendInFlight&&sendAttemptId===attemptId){try{activeChatController?.abort()}catch{}try{activeRealtimeClient?.close?.()}catch{}try{activeStreamReader?.cancel?.()}catch{}sendInFlight=false;setBusy(false);addMessage('KAI did not finish within 120 seconds. The selected model run was stopped; no web-only substitute was used. You can retry or check the selected model.','bot');}},120000)}if(await checkAdmin69(value)){sendInFlight=false;return true}ensureChat();
+async function sendChat(text,opts={}){let value=String(text||'').trim();if(!value)return false;if(sendInFlight&&!opts.internalRetry)return true;const now=Date.now();if(value===lastSendValue&&now-lastSendAt<5000&&!opts.internalRetry)return true;const attemptId=opts.internalRetry?sendAttemptId:sendAttemptId+1;if(!opts.internalRetry){sendAttemptId=attemptId;activeChatController=new AbortController();window.HAxBROActiveChatSignal=activeChatController.signal;clearTimeout(sendWatchdogTimer);sendInFlight=true;lastSendValue=value;lastSendAt=now;const watchdogMs=window.HAxBROSelectedModel==='kai-largest'?600000:120000;sendWatchdogTimer=setTimeout(()=>{if(sendInFlight&&sendAttemptId===attemptId){try{activeChatController?.abort()}catch{}try{activeRealtimeClient?.close?.()}catch{}try{activeStreamReader?.cancel?.()}catch{}sendInFlight=false;setBusy(false);addMessage('KAI did not finish within '+Math.round(watchdogMs/1000)+' seconds. The selected model run was stopped; no web-only substitute was used. You can retry or check the selected model.','bot');}},watchdogMs)}if(await checkAdmin69(value)){sendInFlight=false;return true}ensureChat();
 /* Explicit model picker: KAI 51 LOCAL, KAI 51 GITHUB, or KAI LITE. */
 if(!opts.internalRetry&&window.HAxBROSelectedModel==='kai-lite'&&window.HAxBROKaiLite?.respond){
   addMessage(value,'user');updateKaiMemory(value);if(input){input.value='';resize();}
@@ -248,8 +248,8 @@ if(input)input.value='';resize();try{if(!overdrive){
          LOCAL is the first lane. GITHUB is the precision neural lane.
          LITE is independent and remains the final web-only recovery lane.
          The UI receives one ordered activity stream so stages cannot overwrite/jumble each other. */
-      const selectedModel=window.HAxBROSelectedModel||localStorage.getItem(haxbroUserKey('model_choice'))||'kai-local';
-      if(!opts.fromChoice && (selectedModel==='kai-local'||selectedModel==='kai-github'||selectedModel==='kai-largest')){
+      const selectedModel=window.HAxBROSelectedModel||localStorage.getItem(haxbroUserKey('model_choice'))||'kai-router';
+      if(!opts.fromChoice && (selectedModel==='kai-router'||selectedModel==='kai-local'||selectedModel==='kai-github'||selectedModel==='kai-largest')){
         setBusy(true,selectedModel==='kai-local'?'light':'heavy');
         kaiActivityStart(selectedModel==='kai-local'?'light':'heavy');
         const history=active()?.items?.slice(-12)||[];
@@ -263,7 +263,17 @@ if(input)input.value='';resize();try{if(!overdrive){
           const runtimeState=window.HAxBROKai51Bootstrap?.state?.()||{};if(activeChatController?.signal.aborted||sendAttemptId!==attemptId)return true;
           /* Never substitute KAI LITE just because a neural model is not ready. Start the selected KAI 51 lane and let its bounded model loader report real progress/failure. */
           if(activeChatController?.signal.aborted)throw new DOMException('Response stopped by user','AbortError');
-          if(selectedModel==='kai-local'){
+          if(selectedModel==='kai-router'){
+            kaiActivitySet('thinking','done');
+            mark('router','KAI Router · automatic selection','Choosing the strongest verified model currently ready on this device.','running');
+            result=await window.HAxBROKai51Bootstrap?.routerGenerate?.(value,history,{
+              signal:activeChatController?.signal,
+              onStage:(stage,detail)=>{
+                const key=stage==='router-fallback'?'router-fallback':'router';
+                mark(key,'KAI Router · automatic selection',detail||'Selecting the strongest ready model','running');
+              }
+            });
+          }else if(selectedModel==='kai-local'){
             kaiActivitySet('thinking','done');
             kaiActivitySet('thinking','running','Reading your request and identifying the next step.');
             result=await window.HAxBROKai51Bootstrap?.unifiedGenerate?.(value,history,{
@@ -337,10 +347,13 @@ if(input)input.value='';resize();try{if(!overdrive){
               kaiActivitySet('github','done','GITHUB 360M produced the answer');
             }else if(result.lane==='largest'){
               kaiActivitySet('largest-download','done','KAI 51 Largest 1.7B produced the answer in this browser');
+            }else if(result.router){
+              kaiActivitySet('router','done','KAI Router used '+(result.lane==='largest'?'Largest 1.7B':result.lane==='github'?'GitHub 360M':'LOCAL recovery'));
+              kaiActivitySet('router-fallback','done','Selected model answered successfully');
             }else if(result.lane==='lite'){
               kaiActivitySet('lite','done','KAI LITE response delivered');
             }
-            finish({sources:result.sources||[],local:result.lane==='local',github:result.lane==='github',largest:result.lane==='largest',lite:result.lane==='lite',fallbackLane:result.fallbackLane||null,provider:result.provider||null,model:result.model||null});
+            finish({sources:result.sources||[],local:result.lane==='local',github:result.lane==='github',largest:result.lane==='largest',router:!!result.router,lite:result.lane==='lite',fallbackLane:result.fallbackLane||null,provider:result.provider||null,model:result.model||null,routerReason:result.routerReason||null});
             addMessage(result.response,'bot');
             return true;
           }
@@ -348,8 +361,10 @@ if(input)input.value='';resize();try{if(!overdrive){
         }catch(e){
           if(activeChatController?.signal.aborted||sendAttemptId!==attemptId)return true;
           console.warn('KAI unified lane failed',e);
-          if(selectedModel==='kai-local') kaiActivitySet('understanding','error','LOCAL/GITHUB intelligence pipeline failed');
-          else kaiActivitySet('github','error','GITHUB neural lane unavailable');
+          if(selectedModel==='kai-router') kaiActivitySet('router','error','No available model completed the request');
+          else if(selectedModel==='kai-local') kaiActivitySet('understanding','error','LOCAL/GITHUB intelligence pipeline failed');
+          else if(selectedModel==='kai-largest') kaiActivitySet('largest-download','error','Largest 1.7B neural lane unavailable');
+          else kaiActivitySet('github','error','GITHUB 360M neural lane unavailable');
           addMessage(selectedModel==='kai-largest'
             ? 'KAI 51 Largest 1.7B could not initialize or complete this turn. No silent model substitution was made. Check WebGPU support and retry, or choose KAI 51 GITHUB 360M.'
             : selectedModel==='kai-github'
