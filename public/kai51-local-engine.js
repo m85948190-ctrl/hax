@@ -102,7 +102,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           const headers=new Headers(init?.headers||(typeof Request!=='undefined'&&input instanceof Request?input.headers:undefined));
           if(headers.has('range')) return nativeFetch(endpoint,{...init,headers});
           const size=name==='model_q4.onnx'?386495938:272353302;
-          const chunkSize=8*1024*1024;
+          const chunkSize=4*1024*1024;
           let start=0,downloaded=0;
           const stream=new ReadableStream({
             async pull(controller){
@@ -137,7 +137,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           const headers=new Headers(init?.headers||(typeof Request!=='undefined'&&input instanceof Request?input.headers:undefined));
           if(headers.has('range'))return nativeFetch(endpoint,{...init,headers});
           const size=182400492;
-          const chunkSize=8*1024*1024;
+          const chunkSize=4*1024*1024;
           let start=0;
           const stream=new ReadableStream({
             async pull(controller){

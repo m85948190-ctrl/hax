@@ -85,7 +85,7 @@
       :'KAI 51 GITHUB precision model starting'});
 
     const job=(async()=>{
-      const mod=await import('/kai51-local-engine.js?v=68');
+      const mod=await import('/kai51-local-engine.js?v=69');
       const engine=await mod.createKai51Engine({
         profile:isLocal?'local':'github',
         onProgress:p=>emit({profile:'heavy',...p}),
@@ -304,7 +304,7 @@
       try{await loadEngine('local');}catch(e){console.warn('KAI Router: LOCAL download/initialization failed; continuing pipeline',e);}
       try{await loadEngine('github');}catch(e){console.warn('KAI Router: GitHub 360M download/initialization failed; continuing to Largest',e);}
       try{
-        const mod=await import('/kai51-largest-engine.js?v=3');
+        const mod=await import('/kai51-largest-engine.js?v=4');
         await mod.createKai51LargestEngine({onProgress:p=>emit({...p,profile:'largest'}),onReady:info=>emit({profile:'largest',progress:100,status:'KAI 51 Largest 1.7B verified and ready',installed:true,verified:true,lane:'largest',model:info?.model})});
       }catch(e){console.warn('KAI Router: Largest 1.7B is unavailable on this device; 360M/LOCAL remain available',e);}
       return {local:!!window.HAxBROKai51LocalFastEngine?.isReady?.(),github:!!window.HAxBROKai51Engine?.isReady?.(),largest:!!window.HAxBROKai51LargestEngine?.isReady?.()};
