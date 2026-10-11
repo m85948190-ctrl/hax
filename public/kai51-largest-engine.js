@@ -17,12 +17,25 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
       new Promise((_,reject)=>setTimeout(()=>reject(new Error('WebGPU adapter probe timed out after 8 seconds')),8000))
     ]);
     if(!adapter)throw new Error('WebGPU adapter unavailable. Choose KAI 51 GITHUB 360M on this device.');
-    if(!adapter.features?.has?.('shader-f16')){
+    let shaderF16Works=false;
+    if(adapter.features?.has?.('shader-f16')){
+      try{
+        const probe=await Promise.race([
+          adapter.requestDevice({requiredFeatures:['shader-f16']}),
+          new Promise((_,reject)=>setTimeout(()=>reject(new Error('shader-f16 device probe timed out')),5000))
+        ]);
+        try{probe.destroy?.()}catch{}
+        shaderF16Works=true;
+      }catch(error){
+        emit(onProgress,4,'GPU reports shader-f16 but cannot create a compatible device; switching to q4f32');
+      }
+    }
+    if(!shaderF16Works){
       MODEL_ID='SmolLM2-1.7B-Instruct-q4f32_1-MLC';
       MODEL_URL='https://huggingface.co/mlc-ai/SmolLM2-1.7B-Instruct-q4f32_1-MLC';
       MODEL_LIB='https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/SmolLM2-1.7B-Instruct-q4f32_1_cs1k-webgpu.wasm';
       QUANTIZATION='q4f32';
-      emit(onProgress,4,'This GPU lacks shader-f16; selecting the compatible q4f32 Largest model variant');
+      emit(onProgress,4,'Using the shader-f16-compatible q4f32 Largest model variant');
     }else{
       MODEL_ID='SmolLM2-1.7B-Instruct-q4f16_1-MLC';
       MODEL_URL='https://huggingface.co/mlc-ai/SmolLM2-1.7B-Instruct-q4f16_1-MLC';
