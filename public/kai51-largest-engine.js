@@ -1,9 +1,9 @@
 let enginePromise=null;
 let engine=null;
 let worker=null;
-const MODEL_ID='smollm2-1.7b-instruct-q4f16';
-const MODEL_URL='https://huggingface.co/skillsafe-ai/smollm2-1.7b-instruct-q4f16';
-const MODEL_LIB='https://huggingface.co/skillsafe-ai/smollm2-1.7b-instruct-q4f16/resolve/main/lib/SmolLM2-1.7B-Instruct-q4f16_1-ctx4k_cs1k-webgpu.wasm';
+const MODEL_ID='SmolLM2-1.7B-Instruct-q4f16_1-MLC';
+const MODEL_URL='https://huggingface.co/mlc-ai/SmolLM2-1.7B-Instruct-q4f16_1-MLC';
+const MODEL_LIB='https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/SmolLM2-1.7B-Instruct-q4f16_1_cs1k-webgpu.wasm';
 const emit=(onProgress,progress,status)=>{try{onProgress?.({profile:'heavy',progress,status,file:''});}catch{}};
 export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}}={}){
   if(engine)return engine;
