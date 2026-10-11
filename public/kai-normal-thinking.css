@@ -84,3 +84,23 @@
 .kai-activity-final{border-color:rgba(38,191,232,.24)!important;background:rgba(38,191,232,.06)!important}
 @media(prefers-reduced-motion:reduce){.kai-thinking-pill-dot,.kai-activity-row{animation:none!important}.kai-activity-list{scroll-behavior:auto!important}}
 @media(max-width:700px){.kai-activity{width:calc(100% - 18px)!important;margin-left:9px!important}.kai-activity-head{align-items:flex-start!important;flex-direction:column!important;gap:8px!important}.kai-thinking-pill{min-width:160px!important}.kai-activity-list{height:auto!important;max-height:300px!important;margin-left:0!important;overflow:visible!important}}
+
+/* HAxBRO chat activity: plain inline text + one quiet spinner, never cards. */
+.kai-activity{width:min(620px,calc(100% - 28px))!important;min-height:0!important;margin:4px 0 12px 48px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;filter:none!important;overflow:visible!important}
+.kai-activity:before,.kai-activity-head,.kai-activity-list:after{display:none!important;content:none!important}
+.kai-activity-list{display:flex!important;flex-direction:column!important;gap:5px!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;max-height:none!important;overflow:visible!important}
+.kai-activity-row{position:relative!important;display:flex!important;align-items:center!important;gap:8px!important;min-height:20px!important;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;opacity:1!important;transform:none!important;animation:none!important}
+.kai-activity-row:hover,.kai-activity-row.kai-activity-running,.kai-activity-row.kai-activity-done,.kai-activity-row.kai-activity-pending{border:0!important;background:transparent!important;box-shadow:none!important;opacity:1!important;transform:none!important}
+.kai-activity-row:before{display:none!important;content:none!important}
+.kai-activity-icon,.kai-activity-state{display:none!important}
+.kai-activity-copy{display:flex!important;flex-direction:row!important;align-items:center!important;gap:0!important;min-width:0!important;line-height:1.45!important}
+.kai-activity-copy>span{font:500 13px/1.45 Inter,system-ui,sans-serif!important;font-weight:500!important;color:#667580!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.kai-activity-copy small{display:none!important}
+.kai-activity-row.kai-activity-running .kai-activity-copy>span{font-weight:500!important;color:#566875!important}
+.kai-activity-row.kai-activity-running:after{content:'';display:inline-block;width:10px;height:10px;flex:0 0 10px;border:1.5px solid #26bfe8;border-right-color:transparent;border-radius:50%;animation:kaiSpin .75s linear infinite;order:-1}
+.kai-activity-row.kai-activity-done:after{content:'';display:none}
+.kai-activity-row.kai-activity-error .kai-activity-copy>span{color:#b34c4c!important}
+.kai-activity-row.kai-activity-final{display:none!important}
+.kai-activity.is-complete .kai-activity-row.kai-activity-running:after{display:none}
+@media(max-width:700px){.kai-activity{width:calc(100% - 18px)!important;margin-left:42px!important}.kai-activity-list{gap:4px!important}.kai-activity-copy>span{font-size:12px!important}}
+@media(prefers-reduced-motion:reduce){.kai-activity-row.kai-activity-running:after{animation:none!important}}

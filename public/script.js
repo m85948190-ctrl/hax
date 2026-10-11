@@ -98,10 +98,8 @@ function kaiActivityStart(profile='heavy'){
  const label=profile==='light'?'KAI FAST · LIVE':'KAI 51 · LIVE';
  const estimate=profile==='light'?6:12; thinkingEstimateSec=estimate;
  thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span></span></div><div class="kai-timer"><span class="kai-timer-estimate"><b>'+estimate+'</b></span><span class="kai-timer-live">LIVE <b class="kai-activity-time">0s</b></span></div></div><div class="kai-activity-list"></div>';
- kaiActivityStep('thinking','KAI 51 · thinking','Reading your request and understanding the task','','running');
- kaiActivityStep('interpreting','KAI 51 · interpreting','Interpreting intent, context and required action','','pending');
- kaiActivityStep('searching','KAI 51 · searching','Waiting for research signal','','pending');
- kaiActivityStep('synthesis','KAI 51 · composing','Waiting for the result to be organized','','pending');
+ /* Start with only the real current state. Search/model/build rows are added by their actual pipeline events. */
+ kaiActivityStep('thinking','Thinking','','','running');
  messages.appendChild(thinkingBubble);
  thinkingTimer=setInterval(()=>{
    if(token!==thinkingSeq||thinkingBubble!==bubble){clearInterval(thinkingTimer);thinkingTimer=null;return}
@@ -266,34 +264,38 @@ if(input)input.value='';resize();try{if(!overdrive){
           /* Never substitute KAI LITE just because a neural model is not ready. Start the selected KAI 51 lane and let its bounded model loader report real progress/failure. */
           if(activeChatController?.signal.aborted)throw new DOMException('Response stopped by user','AbortError');
           if(selectedModel==='kai-local'){
-            mark('understanding','KAI 51 · LOCAL · understanding','Reading intent and context','running');
+            kaiActivitySet('thinking','done');
+            mark('understanding','Thinking','Reading intent and context','running');
             result=await window.HAxBROKai51Bootstrap?.unifiedGenerate?.(value,history,{
               signal:activeChatController?.signal,
               onStage:(stage,detail)=>{
                 const labels={
-                  understanding:'KAI 51 · LOCAL · understanding',
-                  searching:'KAI 51 · LOCAL · searching',
-                  analyzing:'KAI 51 · LOCAL · analyzing',
-                  composing:'KAI 51 · LOCAL · composing',
-                  github:'KAI 51 · GITHUB · precision inference',
-                  'local-neural':'KAI 51 · LOCAL · neural synthesis',
-                  'local-neural-progress':'KAI 51 · LOCAL · neural runtime',
-                  lite:'KAI LITE · recovery'
+                  understanding:'Thinking',
+                  searching:'Searching the web',
+                  analyzing:'Thinking',
+                  composing:'Preparing an answer',
+                  github:'Routing to GitHub model',
+                  'local-neural':'Thinking',
+                  'local-neural-progress':'Loading local model',
+                  lite:'Recovering with KAI Lite'
                 };
                 const key=stage==='github'?'github':stage==='lite'?'lite':stage;
                 const label=labels[stage]||'KAI 51 · '+String(stage||'working');
-                if(stage==='searching') kaiActivitySet('understanding','done','Intent understood');
-                if(stage==='analyzing') kaiActivitySet('searching','done','Evidence collected');
-                if(stage==='composing') kaiActivitySet('analyzing','done','Evidence analyzed');
+                if(stage==='searching'){kaiActivitySet('thinking','done');kaiActivitySet('understanding','done');}
+                if(stage==='analyzing'){kaiActivitySet('searching','done');}
+                if(stage==='composing'){kaiActivitySet('analyzing','done');}
+                if(stage==='github'){kaiActivitySet('thinking','done');kaiActivitySet('understanding','done');}
+                if(stage==='local-neural'||stage==='local-neural-progress'){kaiActivitySet('thinking','done');}
                 mark(key,label,detail,'running');
               },
               onHandoff:reason=>{
                 kaiActivitySet('understanding','done','LOCAL → GITHUB handoff');
-                mark('github','KAI 51 · GITHUB · precision inference',reason||'LOCAL requested deeper precision','running');
+                mark('github','Routing to GitHub model',reason||'LOCAL requested deeper precision','running');
               }
             });
           }else{
-            mark('github','KAI 51 · GITHUB','Running the installed neural model directly','running');
+            kaiActivitySet('thinking','done');
+            mark('github','Routing to GitHub model','Running the selected GitHub neural model','running');
             result=await window.HAxBROKai51Bootstrap?.generate?.(value,history,{signal:activeChatController?.signal},'github');
           }
           if(activeChatController?.signal.aborted||sendAttemptId!==attemptId)return true;
