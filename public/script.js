@@ -249,9 +249,9 @@ if(input)input.value='';resize();try{if(!overdrive){
          LITE is independent and remains the final web-only recovery lane.
          The UI receives one ordered activity stream so stages cannot overwrite/jumble each other. */
       const selectedModel=window.HAxBROSelectedModel||localStorage.getItem(haxbroUserKey('model_choice'))||'kai-local';
-      if(!opts.fromChoice && (selectedModel==='kai-local'||selectedModel==='kai-github')){
-        setBusy(true,selectedModel==='kai-github'?'heavy':'light');
-        kaiActivityStart(selectedModel==='kai-github'?'heavy':'light');
+      if(!opts.fromChoice && (selectedModel==='kai-local'||selectedModel==='kai-github'||selectedModel==='kai-largest')){
+        setBusy(true,selectedModel==='kai-local'?'light':'heavy');
+        kaiActivityStart(selectedModel==='kai-local'?'light':'heavy');
         const history=active()?.items?.slice(-12)||[];
         const mark=(key,label,detail,state='running')=>{
           if(state==='running') kaiActivityStep(key,label,detail,'','running');
@@ -305,6 +305,17 @@ if(input)input.value='';resize();try{if(!overdrive){
                 mark('github','Routing to GitHub model',reason||'LOCAL requested deeper precision','running');
               }
             });
+          }else if(selectedModel==='kai-largest'){
+            kaiActivitySet('thinking','done');
+            mark('largest-download','KAI 51 Largest · 1.7B','The larger model downloads only after you select it; first use may take time.','running');
+            result=await window.HAxBROKai51Bootstrap?.generate?.(value,history,{
+              signal:activeChatController?.signal,
+              onStage:(stage,detail)=>mark('largest-download','KAI 51 Largest · 1.7B',detail||'Loading the selected 1.7B model','running'),
+              onProgress:p=>{
+                const pct=Math.max(0,Math.min(100,Math.round(Number(p?.progress)||0)));
+                mark('largest-download','KAI 51 Largest · 1.7B',String(p?.status||'Downloading model')+(pct?' · '+pct+'%':''),'running');
+              }
+            },'largest');
           }else{
             kaiActivitySet('thinking','done');
             mark('github','Routing to GitHub model','Running the selected GitHub neural model','running');
@@ -323,11 +334,13 @@ if(input)input.value='';resize();try{if(!overdrive){
               }
               kaiActivitySet('local-neural-progress','done','Local inference completed');
             }else if(result.lane==='github'){
-              kaiActivitySet('github','done','GITHUB produced the answer');
+              kaiActivitySet('github','done','GITHUB 360M produced the answer');
+            }else if(result.lane==='largest'){
+              kaiActivitySet('largest-download','done','KAI 51 Largest 1.7B produced the answer in this browser');
             }else if(result.lane==='lite'){
               kaiActivitySet('lite','done','KAI LITE response delivered');
             }
-            finish({sources:result.sources||[],local:result.lane==='local',github:result.lane==='github',lite:result.lane==='lite',fallbackLane:result.fallbackLane||null,provider:result.provider||null});
+            finish({sources:result.sources||[],local:result.lane==='local',github:result.lane==='github',largest:result.lane==='largest',lite:result.lane==='lite',fallbackLane:result.fallbackLane||null,provider:result.provider||null,model:result.model||null});
             addMessage(result.response,'bot');
             return true;
           }
@@ -337,9 +350,11 @@ if(input)input.value='';resize();try{if(!overdrive){
           console.warn('KAI unified lane failed',e);
           if(selectedModel==='kai-local') kaiActivitySet('understanding','error','LOCAL/GITHUB intelligence pipeline failed');
           else kaiActivitySet('github','error','GITHUB neural lane unavailable');
-          addMessage(selectedModel==='kai-github'
-            ? 'KAI 51 · GITHUB could not initialize or complete this turn. No KAI LITE substitution was made. Check the model status and retry after it is ready.'
-            : 'KAI 51 · LOCAL could not initialize or complete this turn. No KAI LITE substitution was made. Check the local model status and retry.','bot');
+          addMessage(selectedModel==='kai-largest'
+            ? 'KAI 51 Largest 1.7B could not initialize or complete this turn. No silent model substitution was made. Check WebGPU support and retry, or choose KAI 51 GITHUB 360M.'
+            : selectedModel==='kai-github'
+              ? 'KAI 51 · GITHUB 360M could not initialize or complete this turn. No KAI LITE substitution was made. Check the model status and retry after it is ready.'
+              : 'KAI 51 · LOCAL could not initialize or complete this turn. No KAI LITE substitution was made. Check the local model status and retry.','bot');
           return true;
         }
       }

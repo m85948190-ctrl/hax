@@ -147,6 +147,18 @@
 
   async function generate(message,history=[],hooks={},profile='local') {
     const signal=hooks?.signal;const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};ensureActive();
+    if(profile==='largest'){
+      hooks.onStage?.('largest','Starting the selected KAI 51 Largest 1.7B model');
+      const mod=await import('/kai51-largest-engine.js?v=1');
+      const engine=await withTimeout(()=>mod.createKai51LargestEngine({
+        onProgress:p=>{try{hooks.onProgress?.(p);emit({...p,profile:'heavy'});}catch{}},
+        onReady:info=>{state=write({status:'ready',installed:true,verified:true,model:info?.model||'SmolLM2-1.7B-Instruct',error:null});}
+      }),240000,'KAI 51 Largest 1.7B download/initialization');
+      ensureActive();
+      const result=await withTimeout(()=>engine.generate(message,history,signal),180000,'KAI 51 Largest 1.7B inference');
+      ensureActive();
+      return {...result,lane:'largest'};
+    }
     const forward=e=>{try{if(e?.detail?.profile==='heavy') hooks.onProgress?.(e.detail);}catch{}};
     window.addEventListener('haxbro:kai-local-progress',forward);
     try{

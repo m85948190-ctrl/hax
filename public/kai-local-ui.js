@@ -72,14 +72,14 @@
     document.querySelectorAll('.model-option[data-model-choice="openai"],.model-option[data-model-choice="google"],.model-option[data-model-choice="openrouter"],.model-option[data-model-choice="groq"],.model-option[data-model-choice="mistral"]').forEach(el=>el.remove());
   }
   function applyChoice(choice){
-    const allowed=new Set(['kai-local','kai-github','kai-lite']);
+    const allowed=new Set(['kai-local','kai-github','kai-largest','kai-lite']);
     state.model=allowed.has(choice)?choice:'kai-local';
     localStorage.setItem(userModelKey(),state.model);
     window.HAxBROSelectedModel=state.model;
     document.documentElement.dataset.haxbroModel=state.model;
     document.querySelectorAll('.model-option').forEach(x=>x.classList.toggle('active',x.dataset.modelChoice===state.model));
     const label=$('selectedModelLabel');
-    if(label)label.textContent=state.model==='kai-lite'?'KAI LITE':state.model==='kai-github'?'KAI 51 · GITHUB':'KAI 51 · LOCAL';
+    if(label)label.textContent=state.model==='kai-lite'?'KAI LITE':state.model==='kai-largest'?'KAI 51 · LARGEST 1.7B':state.model==='kai-github'?'KAI 51 · GITHUB 360M':'KAI 51 · LOCAL';
     if(state.model==='kai-lite') state.preparing=false;
     button('send');
     window.dispatchEvent(new CustomEvent('haxbro:model-selected',{detail:{model:state.model}}));
