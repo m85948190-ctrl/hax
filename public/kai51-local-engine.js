@@ -122,7 +122,40 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           return new Response(stream,{status:200,headers:{'Content-Type':'application/octet-stream','Content-Length':String(size),'Accept-Ranges':'bytes'}});
         };
       }else{
-        env.fetch=nativeFetch;
+        /* LOCAL uses a same-origin range proxy for its 182 MB ONNX file.
+           Direct full-file Hugging Face downloads intermittently fail in browsers
+           without exposing a useful HTTP error, while byte ranges are reliable. */
+        env.fetch=async(input,init={})=>{
+          let url='',name='';
+          try{
+            url=typeof input==='string'||input instanceof URL?String(input):String(input?.url||'');
+            name=decodeURIComponent(new URL(url,location.href).pathname.split('/').pop());
+          }catch{}
+          if(!MODEL_ASSETS.has(name))return nativeFetch(input,init);
+          const endpoint='/api/kai-local-model?file='+encodeURIComponent(name);
+          if(name!=='model_q4.onnx')return nativeFetch(endpoint,init);
+          const headers=new Headers(init?.headers||(typeof Request!=='undefined'&&input instanceof Request?input.headers:undefined));
+          if(headers.has('range'))return nativeFetch(endpoint,{...init,headers});
+          const size=182400492;
+          const chunkSize=8*1024*1024;
+          let start=0;
+          const stream=new ReadableStream({
+            async pull(controller){
+              if(start>=size){controller.close();return;}
+              const end=Math.min(size-1,start+chunkSize-1);
+              try{
+                const response=await nativeFetch(endpoint,{headers:{Range:'bytes='+start+'-'+end},cache:'no-store'});
+                if(!response.ok)throw new Error('KAI LOCAL model range '+start+'-'+end+' failed: HTTP '+response.status);
+                const bytes=await response.arrayBuffer();
+                if(!bytes.byteLength)throw new Error('KAI LOCAL model range returned an empty chunk');
+                controller.enqueue(new Uint8Array(bytes));
+                start+=bytes.byteLength;
+                progress(Math.min(94,15+Math.floor(start/size*78)),'Downloading KAI 51 LOCAL model '+Math.round(start/size*100)+'%');
+              }catch(error){controller.error(error);}
+            }
+          });
+          return new Response(stream,{status:200,headers:{'Content-Type':'application/octet-stream','Content-Length':String(size),'Accept-Ranges':'bytes'}});
+        };
       }
       env.useBrowserCache=true;
       env.cacheKey='haxbro-kai51-q4-dual-model-v43';
