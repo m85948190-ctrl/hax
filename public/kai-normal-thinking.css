@@ -93,10 +93,16 @@
 .kai-activity-row:hover,.kai-activity-row.kai-activity-running,.kai-activity-row.kai-activity-done,.kai-activity-row.kai-activity-pending{border:0!important;background:transparent!important;box-shadow:none!important;opacity:1!important;transform:none!important}
 .kai-activity-row:before{display:none!important;content:none!important}
 .kai-activity-icon,.kai-activity-state{display:none!important}
-.kai-activity-copy{display:flex!important;flex-direction:row!important;align-items:center!important;gap:0!important;min-width:0!important;line-height:1.45!important}
-.kai-activity-copy>span{font:500 13px/1.45 Inter,system-ui,sans-serif!important;font-weight:500!important;color:#667580!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
-.kai-activity-copy small{display:none!important}
-.kai-activity-row.kai-activity-running .kai-activity-copy>span{font-weight:500!important;color:#566875!important}
+.kai-activity-copy{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:3px!important;min-width:0!important;line-height:1.45!important}
+.kai-activity-copy>span{font:600 14px/1.45 Inter,system-ui,sans-serif!important;font-weight:600!important;color:#344653!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.kai-activity-copy small{display:block!important;position:relative!important;padding-left:13px!important;margin:0!important;font:400 12px/1.5 Inter,system-ui,sans-serif!important;color:#71808b!important;white-space:normal!important;overflow:visible!important;text-overflow:clip!important}
+.kai-activity-copy small:before{content:'•';position:absolute;left:1px;top:0;color:#26bfe8;font-size:15px;line-height:1.3}
+.kai-activity-row.kai-activity-running .kai-activity-copy>span{font-weight:600!important;color:#243744!important}
+.kai-activity-row.kai-activity-running .kai-activity-copy small{color:#5e707c!important}
+.kai-activity-row.kai-activity-running{align-items:flex-start!important}
+.kai-activity-row.kai-activity-running:after{margin-top:4px!important}
+.kai-activity-row.kai-activity-done .kai-activity-copy>span{color:#63737d!important}
+.kai-activity-row.kai-activity-done .kai-activity-copy small:before{color:#a4b3bc!important}
 .kai-activity-row.kai-activity-running:after{content:'';display:inline-block;width:10px;height:10px;flex:0 0 10px;border:1.5px solid #26bfe8;border-right-color:transparent;border-radius:50%;animation:kaiSpin .75s linear infinite;order:-1}
 .kai-activity-row.kai-activity-done:after{content:'';display:none}
 .kai-activity-row.kai-activity-error .kai-activity-copy>span{color:#b34c4c!important}

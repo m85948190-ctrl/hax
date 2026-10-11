@@ -99,7 +99,7 @@ function kaiActivityStart(profile='heavy'){
  const estimate=profile==='light'?6:12; thinkingEstimateSec=estimate;
  thinkingBubble.innerHTML='<div class="kai-activity-head"><div class="kai-thinking-pill" aria-hidden="true"><span class="kai-thinking-pill-track"><i class="kai-thinking-pill-dot"></i><span class="kai-thinking-pill-label">'+label+'</span></span></div><div class="kai-timer"><span class="kai-timer-estimate"><b>'+estimate+'</b></span><span class="kai-timer-live">LIVE <b class="kai-activity-time">0s</b></span></div></div><div class="kai-activity-list"></div>';
  /* Start with only the real current state. Search/model/build rows are added by their actual pipeline events. */
- kaiActivityStep('thinking','Thinking','','','running');
+ kaiActivityStep('thinking','Thinking','Understanding your request and working out the next step.','','running');
  messages.appendChild(thinkingBubble);
  thinkingTimer=setInterval(()=>{
    if(token!==thinkingSeq||thinkingBubble!==bubble){clearInterval(thinkingTimer);thinkingTimer=null;return}
@@ -265,7 +265,7 @@ if(input)input.value='';resize();try{if(!overdrive){
           if(activeChatController?.signal.aborted)throw new DOMException('Response stopped by user','AbortError');
           if(selectedModel==='kai-local'){
             kaiActivitySet('thinking','done');
-            mark('understanding','Thinking','Reading intent and context','running');
+            kaiActivitySet('thinking','running','Reading your request and identifying the next step.');
             result=await window.HAxBROKai51Bootstrap?.unifiedGenerate?.(value,history,{
               signal:activeChatController?.signal,
               onStage:(stage,detail)=>{
@@ -279,12 +279,12 @@ if(input)input.value='';resize();try{if(!overdrive){
                   'local-neural-progress':'Loading local model',
                   lite:'Recovering with KAI Lite'
                 };
-                const key=stage==='github'?'github':stage==='lite'?'lite':stage;
+                const key=stage==='understanding'?'thinking':stage==='github'?'github':stage==='lite'?'lite':stage;
                 const label=labels[stage]||'KAI 51 · '+String(stage||'working');
-                if(stage==='searching'){kaiActivitySet('thinking','done');kaiActivitySet('understanding','done');}
+                if(stage==='searching'){kaiActivitySet('thinking','done');}
                 if(stage==='analyzing'){kaiActivitySet('searching','done');}
                 if(stage==='composing'){kaiActivitySet('analyzing','done');}
-                if(stage==='github'){kaiActivitySet('thinking','done');kaiActivitySet('understanding','done');}
+                if(stage==='github'){kaiActivitySet('thinking','done');}
                 if(stage==='local-neural'||stage==='local-neural-progress'){kaiActivitySet('thinking','done');}
                 mark(key,label,detail,'running');
               },
