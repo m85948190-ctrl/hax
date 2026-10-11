@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v21-bounded-chat-recovery';
+  const VERSION = 'kai51-unified-controller-v22-failure-based-backup-chain';
   const explicitWebRequest=message=>/\b(?:search (?:the )?(?:web|internet|online)|look up|latest|recent|today|news|price|cost|weather|current version|official source|verify online|check online|find sources|research current)\b/i.test(String(message||''));
   const userScope=()=>{const n=(localStorage.getItem('haxbro_username')||'anonymous-device').trim().toLowerCase().replace(/[^a-z0-9._-]/g,'_').slice(0,64)||'anonymous-device';return n;};
   const KEY = ()=>'haxbro:kai51:'+userScope()+':installation:v15-github-q4';
@@ -187,38 +187,52 @@
   async function routerGenerate(message,history=[],hooks={}){
     const signal=hooks?.signal;
     const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};
-    const candidates=[
-      {name:'largest',label:'KAI 51 Largest 1.7B',get:()=>window.HAxBROKai51LargestEngine},
-      {name:'github',label:'KAI 51 GitHub 360M',get:()=>window.HAxBROKai51Engine},
-      {name:'local',label:'KAI 51 LOCAL',get:()=>window.HAxBROKai51LocalFastEngine}
-    ];
+    const preferred=String(hooks?.preferred||'kai-router');
+    const names=preferred==='kai-largest'?['largest','github','local','lite']
+      :preferred==='kai-github'?['github','local','largest','lite']
+      :preferred==='kai-local'?['local','github','largest','lite']
+      :['largest','github','local','lite'];
+    const labels={largest:'KAI 51 Largest 1.7B',github:'KAI 51 GitHub 360M',local:'KAI 51 LOCAL',lite:'KAI Lite'};
     const errors=[];
-    for(const candidate of candidates){
+    const timeouts={largest:240000,github:120000,local:90000,lite:15000};
+    for(const name of names){
       ensureActive();
-      let ready=candidate.get();
-      if(!ready?.generate || ready.isReady?.()!==true) continue;
+      const label=labels[name];
+      hooks.onStage?.('router',`Trying ${label} (${name===preferred.replace('kai-','')?'selected model':'backup'})`);
       try{
-        hooks.onStage?.('router',`KAI Router selected ${candidate.label} — model is ready`);
-        const result=candidate.name==='largest'
-          ? await ready.generate(message,history,signal)
-          : await ready.generate(message,history);
+        let result;
+        const run=async()=>{
+          if(name==='largest') return generate(message,history,{signal,onProgress:hooks.onProgress,onStage:hooks.onStage},'largest');
+          if(name==='github') return generate(message,history,{signal,onProgress:hooks.onProgress,onStage:hooks.onStage},'github');
+          if(name==='local') return unifiedGenerate(message,history,{signal,onProgress:hooks.onProgress,onStage:hooks.onStage});
+          const lite=window.HAxBROKaiLite;
+          if(!lite?.respond) throw new Error('KAI Lite runtime is unavailable');
+          return lite.respond(message,history,{signal});
+        };
+        result=await Promise.race([
+          run(),
+          new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' timed out after '+Math.round(timeouts[name]/1000)+' seconds')),timeouts[name])),
+          ...(signal?[new Promise((_,reject)=>{if(signal.aborted)reject(new DOMException('Response stopped by user','AbortError'));else signal.addEventListener('abort',()=>reject(new DOMException('Response stopped by user','AbortError')),{once:true})})]:[])
+        ]);
         ensureActive();
-        if(result?.response) return {...result,lane:candidate.name,router:true,routerReason:'highest-priority ready model'};
-        errors.push(candidate.label+': empty response');
+        const response=String(result?.response||'').trim();
+        if(!response) throw new Error(label+' returned an empty response');
+        const previousFailures=errors.slice();
+        if(previousFailures.length){
+          const failed=previousFailures.map(x=>x.split(':')[0]).join(', ');
+          const notice='⚠️ **KAI backup notice:** '+failed+' did not produce a usable answer, so KAI switched to '+label+' for this response.\n\n';
+          hooks.onStage?.('router-fallback',failed+' failed; '+label+' answered successfully');
+          return {...result,response:notice+response,lane:name,router:preferred==='kai-router',fallback:true,fallbackFrom:previousFailures,routerReason:'failure-based backup'};
+        }
+        return {...result,lane:name,router:preferred==='kai-router',fallback:false,routerReason:name===preferred.replace('kai-','')?'selected model answered':'first working model'};
       }catch(error){
         if(signal?.aborted)throw error;
-        errors.push(candidate.label+': '+safe(error?.message||error,180));
-        hooks.onStage?.('router-fallback',candidate.label+' failed; trying the next available model');
+        const reason=safe(error?.message||error,220);
+        errors.push(label+': '+reason);
+        hooks.onStage?.('router-fallback',label+' failed ('+reason+'); trying the next backup');
       }
     }
-    ensureActive();
-    hooks.onStage?.('router','No preloaded model is ready; initializing KAI 51 LOCAL recovery');
-    try{
-      const result=await generate(message,history,{signal,onProgress:hooks.onProgress},'local');
-      ensureActive();
-      if(result?.response)return {...result,lane:'local',router:true,routerReason:'recovery model'};
-    }catch(error){if(signal?.aborted)throw error;errors.push('LOCAL: '+safe(error?.message||error,180));}
-    throw new Error('KAI Router could not get a response from 1.7B, 360M, or LOCAL. '+errors.join(' | '));
+    throw new Error('KAI could not produce an answer. All model attempts failed: '+errors.join(' | '));
   }
 
   function status() {

@@ -263,14 +263,16 @@ if(input)input.value='';resize();try{if(!overdrive){
           const runtimeState=window.HAxBROKai51Bootstrap?.state?.()||{};if(activeChatController?.signal.aborted||sendAttemptId!==attemptId)return true;
           /* Never substitute KAI LITE just because a neural model is not ready. Start the selected KAI 51 lane and let its bounded model loader report real progress/failure. */
           if(activeChatController?.signal.aborted)throw new DOMException('Response stopped by user','AbortError');
-          if(selectedModel==='kai-router'){
+          if(['kai-router','kai-local','kai-github','kai-largest'].includes(selectedModel)){
             kaiActivitySet('thinking','done');
-            mark('router','KAI Router · automatic selection','Choosing the strongest verified model currently ready on this device.','running');
+            const selectedLabel=selectedModel==='kai-largest'?'KAI 51 Largest 1.7B':selectedModel==='kai-github'?'KAI 51 GitHub 360M':selectedModel==='kai-local'?'KAI 51 LOCAL':'KAI Router · automatic selection';
+            mark('router',selectedLabel,'Try the selected model first; if it fails or returns no usable answer, automatically try the backup chain.','running');
             result=await window.HAxBROKai51Bootstrap?.routerGenerate?.(value,history,{
+              preferred:selectedModel,
               signal:activeChatController?.signal,
               onStage:(stage,detail)=>{
                 const key=stage==='router-fallback'?'router-fallback':'router';
-                mark(key,'KAI Router · automatic selection',detail||'Selecting the strongest ready model','running');
+                mark(key,selectedLabel,detail||'Trying the selected model and ordered backups','running');
               }
             });
           }else if(selectedModel==='kai-local'){
@@ -366,10 +368,10 @@ if(input)input.value='';resize();try{if(!overdrive){
           else if(selectedModel==='kai-largest') kaiActivitySet('largest-download','error','Largest 1.7B neural lane unavailable');
           else kaiActivitySet('github','error','GITHUB 360M neural lane unavailable');
           addMessage(selectedModel==='kai-largest'
-            ? 'KAI 51 Largest 1.7B could not initialize or complete this turn. No silent model substitution was made. Check WebGPU support and retry, or choose KAI 51 GITHUB 360M.'
+            ? 'KAI 51 could not produce an answer. The selected Largest 1.7B model and every configured backup were attempted, but none completed successfully. Please check WebGPU/device memory and retry.'
             : selectedModel==='kai-github'
-              ? 'KAI 51 · GITHUB 360M could not initialize or complete this turn. No KAI LITE substitution was made. Check the model status and retry after it is ready.'
-              : 'KAI 51 · LOCAL could not initialize or complete this turn. No KAI LITE substitution was made. Check the local model status and retry.','bot');
+              ? 'KAI could not produce an answer. GitHub 360M and all configured backups were attempted, but none completed successfully. Please retry when the models finish initializing.'
+              : 'KAI could not produce an answer. The selected model and all configured backups were attempted, but none completed successfully. Please retry after checking model initialization.','bot');
           return true;
         }
       }
