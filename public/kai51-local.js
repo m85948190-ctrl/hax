@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v22-failure-based-backup-chain';
+  const VERSION = 'kai51-unified-controller-v23-local-first-lazy-heavy-lanes';
   const explicitWebRequest=message=>/\b(?:search (?:the )?(?:web|internet|online)|look up|latest|recent|today|news|price|cost|weather|current version|official source|verify online|check online|find sources|research current)\b/i.test(String(message||''));
   const userScope=()=>{const n=(localStorage.getItem('haxbro_username')||'anonymous-device').trim().toLowerCase().replace(/[^a-z0-9._-]/g,'_').slice(0,64)||'anonymous-device';return n;};
   const KEY = ()=>'haxbro:kai51:'+userScope()+':installation:v15-github-q4';
@@ -191,7 +191,7 @@
     const names=preferred==='kai-largest'?['largest','github','local','lite']
       :preferred==='kai-github'?['github','local','largest','lite']
       :preferred==='kai-local'?['local','github','largest','lite']
-      :['largest','github','local','lite'];
+      :['local','github','largest','lite'];
     const labels={largest:'KAI 51 Largest 1.7B',github:'KAI 51 GitHub 360M',local:'KAI 51 LOCAL',lite:'KAI Lite'};
     const errors=[];
     /* Keep request latency bounded even while the 1.7B model continues its background first-use download. */
@@ -295,24 +295,16 @@
   };
 
   try { navigator.storage?.persist?.().catch(()=>{}); } catch {}
-  /* Ordered per-device model pipeline: LOCAL 135M → GitHub 360M → Largest 1.7B.
-     Downloads are sequential, cached by their runtimes, and independent on each device. */
+  /* Start only the small LOCAL neural model at boot. GitHub 360M and Largest 1.7B
+     remain on-demand, so three large model initializations cannot compete for RAM,
+     network bandwidth, or WebGPU while a chat response is waiting. */
   setTimeout(()=>maybeInstall().catch(()=>{}),250);
   let pipelinePromise=null;
   const warmSelectedLocal=()=>{
     if(pipelinePromise)return pipelinePromise;
     pipelinePromise=(async()=>{
-      try{await loadEngine('local');}catch(e){console.warn('KAI Router: LOCAL download/initialization failed; continuing pipeline',e);}
-      try{await loadEngine('github');}catch(e){console.warn('KAI Router: GitHub 360M download/initialization failed; continuing to Largest',e);}
-      try{
-        const mod=await import('/kai51-largest-engine.js?v=8');
-        await mod.createKai51LargestEngine({onProgress:p=>emit({...p,profile:'largest'}),onReady:info=>emit({profile:'largest',progress:100,status:'KAI 51 Largest 1.7B verified and ready',installed:true,verified:true,lane:'largest',model:info?.model})});
-      }catch(e){
-        const detail={message:safe(e?.message||e,500),at:new Date().toISOString(),model:'KAI 51 Largest 1.7B'};
-        window.HAxBROKai51PipelineErrors={...(window.HAxBROKai51PipelineErrors||{}),largest:detail};
-        emit({profile:'largest',progress:99,status:'KAI 51 Largest 1.7B failed: '+detail.message,error:detail.message,lane:'largest'});
-        console.warn('KAI Router: Largest 1.7B is unavailable on this device; 360M/LOCAL remain available',e);
-      }
+      try{await loadEngine('local');}
+      catch(e){console.warn('KAI Router: LOCAL model initialization failed; it can retry on the next request',e);}
       return {local:!!window.HAxBROKai51LocalFastEngine?.isReady?.(),github:!!window.HAxBROKai51Engine?.isReady?.(),largest:!!window.HAxBROKai51LargestEngine?.isReady?.()};
     })().finally(()=>{pipelinePromise=null;});
     return pipelinePromise;
@@ -321,7 +313,7 @@
   if(!window.HAxBRODisableKAI51Warmup){
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',warmSelectedLocal,{once:true});
     else warmSelectedLocal();
-    window.addEventListener('haxbro:model-selected',e=>{if(['kai-local','kai-github','kai-largest','kai-router'].includes(e?.detail?.model))warmSelectedLocal();});
+    // Selecting a model is lightweight; its own neural weights load when the user sends a request to that lane.
   }
   setInterval(()=>{
     try{
