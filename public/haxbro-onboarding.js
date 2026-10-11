@@ -1,19 +1,18 @@
 (()=>{'use strict';
-const consent=document.getElementById('haxbroConsentGate');
+const entry=document.getElementById('haxbroEntryGate');
 const intro=document.getElementById('haxbroCinematicIntro');
-const check=document.getElementById('hboTermsCheck');
 const enter=document.getElementById('hboEnterBtn');
-const consentKey='haxbro:onboarding:consent:v1';
-const consentValue=()=>{try{return JSON.parse(localStorage.getItem(consentKey)||'null')}catch{return null}};
-if(consent&&intro){
-  if(consentValue()?.accepted===true){consent.hidden=true}
-  else {consent.hidden=false;intro.style.visibility='hidden'}
-  check?.addEventListener('change',()=>{if(enter)enter.disabled=!check.checked});
+const usernameGate=document.getElementById('usernameGate');
+if(entry&&intro){
+  entry.hidden=false;
+  intro.style.visibility='hidden';
+  if(usernameGate)usernameGate.hidden=true;
   enter?.addEventListener('click',()=>{
-    if(!check?.checked)return;
-    try{localStorage.setItem(consentKey,JSON.stringify({accepted:true,termsVersion:'2026-10-11',privacyVersion:'2026-10-11',acceptedAt:new Date().toISOString()}))}catch{}
-    consent.hidden=true;intro.style.visibility='';
-    window.dispatchEvent(new CustomEvent('haxbro:onboarding-consent-accepted'));
+    entry.hidden=true;
+    intro.hidden=false;
+    intro.style.visibility='';
+    intro.querySelector('video')?.play?.().catch(()=>{});
+    window.dispatchEvent(new CustomEvent('haxbro:onboarding-entry'));
   });
 }
 const slides=[
@@ -31,8 +30,7 @@ function renderProgress(){
  const bar=document.querySelector('#haxbroFeatureSequence .hfs-progress span');if(bar)bar.style.width=currentProgress+'%';
  const foot=document.getElementById('hfsFooterStatus');if(foot)foot.textContent=currentStatus;
  const pct=document.getElementById('hfsPercent');if(pct)pct.textContent=Math.round(currentProgress)+'%';
- if(modelReady())showReady();
-}
+ }
 function progressFrom(e){
  if(modelReady()){currentProgress=100;currentStatus='KAI 51 local model ready · larger model lanes may continue preparing';renderProgress();return}
  const d=e?.detail||{};
@@ -83,10 +81,13 @@ function showWait(){
  renderProgress();
 }
 function finish(){
- if(!modelReady()){showWait();return}
+ if(slideTimer){clearInterval(slideTimer);slideTimer=null}if(waitTimer){clearTimeout(waitTimer);waitTimer=null}
  if(root)root.hidden=true;
  if(intro){intro.hidden=true;intro.style.visibility='';intro.style.opacity='';}
  try{localStorage.setItem('haxbro:onboarding:features:v1',JSON.stringify({seen:true,at:new Date().toISOString()}))}catch{}
+ const savedName=(localStorage.getItem('haxbro_username')||'').trim();
+ if(usernameGate&&!savedName){usernameGate.hidden=false;usernameGate.setAttribute('aria-hidden','false');const field=document.getElementById('usernameInput');if(field){field.value='';setTimeout(()=>field.focus({preventScroll:true}),80)}return}
+ if(usernameGate){usernameGate.hidden=true;usernameGate.setAttribute('aria-hidden','true')}
  document.getElementById('promptInput')?.focus({preventScroll:true});
 }
 function beginSequence(){
@@ -98,9 +99,10 @@ function beginSequence(){
   n++;
   if(n<slides.length){renderSlide(n);return}
   clearInterval(slideTimer);slideTimer=null;tourComplete=true;
-  if(modelReady())showReady();else showWait();
+  if(waitTimer){clearTimeout(waitTimer);waitTimer=null}
+  finish();
  },2500);
- waitTimer=setTimeout(()=>{if(!modelReady())showWait()},10500);
+ waitTimer=setTimeout(()=>{if(!modelReady()){currentStatus='KAI is loading in the background';setStatus(currentStatus)}},10500);
  readyTimer=setTimeout(()=>{if(!modelReady()){currentStatus='KAI installation needs a retry on this device';setStatus(currentStatus);const n=document.getElementById('hfsReadyStatus');if(n)n.textContent=currentStatus}},30*60*1000);
 }
 function setIntroLabel(){
@@ -108,19 +110,19 @@ function setIntroLabel(){
  const state=window.HAxBROKai51Bootstrap?.state?.();
  const seconds=Number(btn.dataset.remaining||30);
  if(modelReady()){btn.disabled=false;btn.textContent='CONTINUE →';const timer=intro.querySelector('[data-hci-countdown]');if(timer)timer.textContent='KAI 51 LOCAL MODEL READY';return}
- if(seconds<=0){btn.disabled=false;btn.textContent='CONTINUE →';const timer=intro.querySelector('[data-hci-countdown]');if(timer)timer.textContent='CONTINUE · INSTALLATION CONTINUES';return}
+ if(seconds<=0){btn.disabled=false;btn.textContent='CONTINUE TO FEATURES →';const timer=intro.querySelector('[data-hci-countdown]');if(timer)timer.textContent='KAI IS LOADING IN THE BACKGROUND';return}
  btn.disabled=true;btn.textContent='CONTINUE · '+seconds+'s';const timer=intro.querySelector('[data-hci-countdown]');if(timer)timer.textContent=state?.status==='installing'?'KAI MODEL INSTALLING':'KAI IS PREPARING';
 }
 if(intro){
  const btn=intro.querySelector('.hci-continue');
  if(btn){
-  let left=30;btn.dataset.remaining='30';setIntroLabel();
+  let left=0;btn.dataset.remaining='0';setIntroLabel();
   const tick=setInterval(()=>{left=Math.max(0,left-1);btn.dataset.remaining=String(left);setIntroLabel();if(left===0||modelReady())clearInterval(tick)},1000);
   window.addEventListener('haxbro:kai51-ready',()=>{btn.dataset.remaining='0';setIntroLabel()});
   btn.addEventListener('click',()=>{if(btn.disabled)return;beginSequence()});
  }
  intro.querySelector('video')?.play?.().catch(()=>{});
 }
-window.addEventListener('haxbro:kai51-ready',()=>{currentProgress=100;currentStatus='KAI 51 local model ready · larger model lanes may continue preparing';renderProgress();if(started)showReady()});
+window.addEventListener('haxbro:kai51-ready',()=>{currentProgress=100;currentStatus='KAI 51 local model ready · larger model lanes may continue preparing';renderProgress()});
 window.addEventListener('haxbro:kai51-bootstrap',e=>{if(e?.detail?.status==='ready'&&modelReady()){currentProgress=100;currentStatus='KAI 51 neural model verified and ready';renderProgress()}});
 })();

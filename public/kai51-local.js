@@ -180,7 +180,8 @@
         }catch(e){console.warn('KAI 51 '+profile.toUpperCase()+' evidence preflight failed; continuing with the selected neural model',e);}
       }
       /* Respect the selected model. Each selected lane must run its own neural weights; never silently substitute another model. */
-      const engine=await withTimeout(()=>loadEngine(profile),90000,'KAI 51 '+profile.toUpperCase()+' model initialization');ensureActive();
+      const modelLoadTimeout=profile==='github'?240000:90000;
+      const engine=await withTimeout(()=>loadEngine(profile),modelLoadTimeout,'KAI 51 '+profile.toUpperCase()+' model initialization');ensureActive();
       const result=await withTimeout(()=>engine.generate(synthesisMessage,history),profile==='local'?60000:90000,'KAI 51 '+profile.toUpperCase()+' inference');ensureActive();
       return {...result,lane:profile==='github'?'github':'local'};
     }finally{window.removeEventListener('haxbro:kai-local-progress',forward);}
@@ -194,14 +195,16 @@
     const signal=hooks?.signal;
     const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};
     const preferred=String(hooks?.preferred||'kai-router');
-    const names=preferred==='kai-largest'?['largest','github','local','lite']
+    const names=hooks?.skipLocal
+      ? (preferred==='kai-largest'?['largest','lite']:['github','largest','lite'])
+      : preferred==='kai-largest'?['largest','github','local','lite']
       :preferred==='kai-github'?['github','local','largest','lite']
       :preferred==='kai-local'?['local','github','largest','lite']
       :['local','github','largest','lite'];
     const labels={largest:'KAI 51 Largest 1.7B',github:'KAI 51 GitHub 360M',local:'KAI 51 LOCAL',lite:'KAI Lite'};
     const errors=[];
     /* Keep request latency bounded even while the 1.7B model continues its background first-use download. */
-    const timeouts={largest:180000,github:90000,local:60000,lite:15000};
+    const timeouts={largest:180000,github:240000,local:60000,lite:15000};
     const bounded=(promise,ms,label,abortSignal)=>new Promise((resolve,reject)=>{let timer;const cleanup=()=>{clearTimeout(timer);abortSignal?.removeEventListener('abort',onAbort)};const onAbort=()=>{cleanup();reject(new DOMException('Response stopped by user','AbortError'))};timer=setTimeout(()=>{cleanup();reject(new Error(label+' timed out after '+Math.round(ms/1000)+' seconds'))},ms);if(abortSignal){if(abortSignal.aborted)return onAbort();abortSignal.addEventListener('abort',onAbort,{once:true})}Promise.resolve(promise).then(value=>{cleanup();resolve(value)},error=>{cleanup();reject(error)})});
     for(const name of names){
       ensureActive();
@@ -272,16 +275,31 @@
     }
     /* Greetings and other non-retrieval turns go to the smaller, dedicated browser-local model.
        This is genuine neural inference, not a phrase table or remote-provider handoff. */
+    let localFailure=null;
     try{
       hooks.onStage?.('local-neural','KAI 51 LOCAL · browser-local neural synthesis');
       const neuralPrompt=turn?.evidencePrompt||message;
       const neural=await withTimeout(()=>generate(neuralPrompt,history,{signal:hooks?.signal,onProgress:p=>hooks.onStage?.('local-neural-progress',p?.status||('KAI 51 LOCAL '+Math.round(Number(p?.progress)||0)+'%'))},'local'),118000,'KAI 51 LOCAL neural synthesis');ensureActive();
       if(neural?.response) return {...neural,lane:'local',combined:true,sources:turn?.sources||[],searchEngines:turn?.searchEngines||[]};
+      localFailure=new Error('KAI 51 LOCAL returned no usable response');
     }catch(e){
       if(hooks?.signal?.aborted)throw e;
-      hooks.onStage?.('local-error','KAI 51 LOCAL neural inference failed');
+      localFailure=e;
+      hooks.onStage?.('local-error','KAI 51 LOCAL neural inference failed; trying the GitHub neural backup');
     }
-    throw new Error('KAI 51 LOCAL intelligence and neural synthesis could not complete this turn; KAI LITE was not substituted.');
+    /* If LOCAL cannot answer, try the real GitHub neural model next, then Largest 1.7B,
+       and only then KAI Lite retrieval. The chosen backup is named in the response. */
+    try{
+      const backupPrompt=turn?.evidencePrompt||message;
+      const backup=await routerGenerate(backupPrompt,history,{signal:hooks?.signal,preferred:'kai-github',skipLocal:true,onStage:hooks?.onStage,onProgress:hooks?.onProgress});ensureActive();
+      const backupResponse=String(backup?.response||'').trim();
+      if(backupResponse){
+        const lane=backup.lane||'github';
+        const label=lane==='largest'?'KAI 51 Largest 1.7B':lane==='lite'?'KAI Lite':'KAI 51 GitHub 360M';
+        return {...backup,response:'⚠️ **KAI backup notice:** KAI 51 LOCAL did not produce a usable answer, so KAI switched to '+label+' for this response.\n\n'+backupResponse,lane,combined:true,fallback:true,fallbackFrom:['KAI 51 LOCAL'],sources:turn?.sources||backup.sources||[],searchEngines:turn?.searchEngines||backup.searchEngines||[]};
+      }
+    }catch(e){if(hooks?.signal?.aborted)throw e;hooks.onStage?.('router-fallback','GitHub 360M and recovery lanes could not complete this turn');}
+    throw new Error('KAI 51 LOCAL and its GitHub/Largest/KAI Lite backup lanes could not complete this turn. '+String(localFailure?.message||'No usable response was returned.'));
   }
 
   window.HAxBROKai51Bootstrap = {
