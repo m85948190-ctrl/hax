@@ -1,9 +1,10 @@
 let enginePromise=null;
 let engine=null;
 let worker=null;
-const MODEL_ID='SmolLM2-1.7B-Instruct-q4f16_1-MLC';
-const MODEL_URL='https://huggingface.co/mlc-ai/SmolLM2-1.7B-Instruct-q4f16_1-MLC';
-const MODEL_LIB='https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/SmolLM2-1.7B-Instruct-q4f16_1_cs1k-webgpu.wasm';
+let MODEL_ID='SmolLM2-1.7B-Instruct-q4f16_1-MLC';
+let MODEL_URL='https://huggingface.co/mlc-ai/SmolLM2-1.7B-Instruct-q4f16_1-MLC';
+let MODEL_LIB='https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/SmolLM2-1.7B-Instruct-q4f16_1_cs1k-webgpu.wasm';
+let QUANTIZATION='q4f16';
 const emit=(onProgress,progress,status)=>{try{onProgress?.({profile:'heavy',progress,status,file:''});}catch{}};
 export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}}={}){
   if(engine)return engine;
@@ -16,6 +17,18 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
       new Promise((_,reject)=>setTimeout(()=>reject(new Error('WebGPU adapter probe timed out after 8 seconds')),8000))
     ]);
     if(!adapter)throw new Error('WebGPU adapter unavailable. Choose KAI 51 GITHUB 360M on this device.');
+    if(!adapter.features?.has?.('shader-f16')){
+      MODEL_ID='SmolLM2-1.7B-Instruct-q4f32_1-MLC';
+      MODEL_URL='https://huggingface.co/mlc-ai/SmolLM2-1.7B-Instruct-q4f32_1-MLC';
+      MODEL_LIB='https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/SmolLM2-1.7B-Instruct-q4f32_1_cs1k-webgpu.wasm';
+      QUANTIZATION='q4f32';
+      emit(onProgress,4,'This GPU lacks shader-f16; selecting the compatible q4f32 Largest model variant');
+    }else{
+      MODEL_ID='SmolLM2-1.7B-Instruct-q4f16_1-MLC';
+      MODEL_URL='https://huggingface.co/mlc-ai/SmolLM2-1.7B-Instruct-q4f16_1-MLC';
+      MODEL_LIB='https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-llm-models/v0_2_84/base/SmolLM2-1.7B-Instruct-q4f16_1_cs1k-webgpu.wasm';
+      QUANTIZATION='q4f16';
+    }
     emit(onProgress,5,'Loading the WebGPU inference runtime');
     const {CreateWebWorkerMLCEngine}=await import('https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm');
     emit(onProgress,8,'Preparing KAI 51 Largest · first-use download may be large');
@@ -56,14 +69,14 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
         if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError');
         const response=String(result?.choices?.[0]?.message?.content||'').trim();
         if(!response)throw new Error('KAI 51 Largest returned an empty answer.');
-        return {response,provider:'KAI 51 LARGEST 1.7B · Hugging Face WebGPU',model:MODEL_ID,local:true,localModel:true,realModel:true,device:'webgpu',quantization:'q4f16',lane:'largest',provenance:'SmolLM2-1.7B-Instruct Q4F16 browser weights on Hugging Face; inference runs in this browser'};
+        return {response,provider:'KAI 51 LARGEST 1.7B · Hugging Face WebGPU',model:MODEL_ID,local:true,localModel:true,realModel:true,device:'webgpu',quantization:QUANTIZATION,lane:'largest',provenance:'Official MLC SmolLM2-1.7B-Instruct browser weights; inference runs in this browser'};
       },
       isReady:()=>true,
-      status:()=>({ready:true,model:MODEL_ID,device:'webgpu',realModel:true,quantization:'q4f16',lane:'largest'})
+      status:()=>({ready:true,model:MODEL_ID,device:'webgpu',realModel:true,quantization:QUANTIZATION,lane:'largest'})
     };
     window.HAxBROKai51LargestEngine=engine;
     emit(onProgress,100,'KAI 51 Largest 1.7B ready');
-    try{onReady({model:MODEL_ID,device:'webgpu',verified:true,realModel:true,lane:'largest',quantization:'q4f16'});}catch{}
+    try{onReady({model:MODEL_ID,device:'webgpu',verified:true,realModel:true,lane:'largest',quantization:QUANTIZATION});}catch{}
     return engine;
   })().catch(error=>{
     const detail={message:String(error?.message||error||'unknown Largest model error').slice(0,700),at:new Date().toISOString(),model:MODEL_ID};
