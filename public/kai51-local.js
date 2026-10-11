@@ -1,5 +1,5 @@
 (() => {
-  const VERSION = 'kai51-unified-controller-v23-local-first-lazy-heavy-lanes';
+  const VERSION = 'kai51-unified-controller-v24-local-evidence-neural-synthesis';
   const explicitWebRequest=message=>/\b(?:search (?:the )?(?:web|internet|online)|look up|latest|recent|today|news|price|cost|weather|current version|official source|verify online|check online|find sources|research current)\b/i.test(String(message||''));
   const userScope=()=>{const n=(localStorage.getItem('haxbro_username')||'anonymous-device').trim().toLowerCase().replace(/[^a-z0-9._-]/g,'_').slice(0,64)||'anonymous-device';return n;};
   const KEY = ()=>'haxbro:kai51:'+userScope()+':installation:v15-github-q4';
@@ -162,20 +162,26 @@
     const forward=e=>{try{if(e?.detail?.profile==='heavy') hooks.onProgress?.(e.detail);}catch{}};
     window.addEventListener('haxbro:kai-local-progress',forward);
     try{
-      /* GITHUB mode shares the same fast conversation and evidence-first web preflight.
-         Only open-ended turns that need neural synthesis should trigger the large release download. */
-      if(profile==='github'&&!hooks?.forceNeural&&window.HAxBROKaiLocalIntelligence?.run){
+      /* LOCAL and GITHUB both retrieve evidence first when the question needs facts.
+         The retrieved evidence is passed into the selected neural model for synthesis;
+         a search result is never silently substituted for the model's own answer. */
+      let synthesisMessage=message;
+      const alreadyHasEvidence=/RETRIEVED WEB \/ WIKIPEDIA \/ HAxBRO KNOWLEDGE EVIDENCE:/i.test(String(message));
+      if((profile==='local'||profile==='github')&&!alreadyHasEvidence&&window.HAxBROKaiLocalIntelligence?.run){
         try{
           const turn=await window.HAxBROKaiLocalIntelligence.run(message,history,{onStage:hooks.onStage,signal});ensureActive();
-          if(turn?.response&&!turn.handoff) return {...turn,lane:'github',provider:'KAI 51 GITHUB · fast conversation/evidence path',model:turn.model||'shared fast local/web path',preflight:true};
-          if(turn?.handoff&&turn?.research&&explicitWebRequest(message)){
-            hooks.onStage?.('searching','KAI 51 GITHUB · research intent identified; continuing to GitHub neural synthesis');
+          if(turn?.response&&!turn.handoff){
+            if(!hooks?.forceNeural||profile==='local') return {...turn,lane:profile,provider:turn.provider||('KAI 51 '+profile.toUpperCase()+' · local tools/evidence'),preflight:true};
+            synthesisMessage='USER REQUEST:\n'+message+'\n\nLOCAL RETRIEVAL RESULT:\n'+turn.response;
+          }else if(turn?.handoff&&turn?.evidencePrompt){
+            synthesisMessage=turn.evidencePrompt;
+            hooks.onStage?.('searching','KAI 51 '+profile.toUpperCase()+' · retrieved evidence ready for neural synthesis');
           }
-        }catch(e){console.warn('KAI 51 GITHUB fast preflight failed; loading neural model',e);}
+        }catch(e){console.warn('KAI 51 '+profile.toUpperCase()+' evidence preflight failed; continuing with the selected neural model',e);}
       }
-      /* Respect the selected model. GITHUB must load and infer with the GITHUB profile; never silently answer with LOCAL or LITE. */
+      /* Respect the selected model. Each selected lane must run its own neural weights; never silently substitute another model. */
       const engine=await withTimeout(()=>loadEngine(profile),90000,'KAI 51 '+profile.toUpperCase()+' model initialization');ensureActive();
-      const result=await withTimeout(()=>engine.generate(message,history),profile==='local'?60000:90000,'KAI 51 '+profile.toUpperCase()+' inference');ensureActive();
+      const result=await withTimeout(()=>engine.generate(synthesisMessage,history),profile==='local'?60000:90000,'KAI 51 '+profile.toUpperCase()+' inference');ensureActive();
       return {...result,lane:profile==='github'?'github':'local'};
     }finally{window.removeEventListener('haxbro:kai-local-progress',forward);}
   }
