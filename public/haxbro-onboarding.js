@@ -34,6 +34,7 @@ function renderProgress(){
  if(modelReady())showReady();
 }
 function progressFrom(e){
+ if(modelReady()){currentProgress=100;currentStatus='KAI 51 local model ready · larger model lanes may continue preparing';renderProgress();return}
  const d=e?.detail||{};
  if(d.status)currentStatus=String(d.status).slice(0,140);
  const p=Number(d.progress);
@@ -42,7 +43,7 @@ function progressFrom(e){
 }
 window.addEventListener('haxbro:kai-local-progress',progressFrom);
 window.addEventListener('haxbro:kai51-bootstrap',progressFrom);
-window.addEventListener('haxbro:kai51-ready',()=>{currentProgress=100;currentStatus='KAI 51 neural model verified and ready';renderProgress()});
+window.addEventListener('haxbro:kai51-ready',()=>{currentProgress=100;currentStatus='KAI 51 local model ready · larger model lanes may continue preparing';renderProgress()});
 function ensureSequence(){
  let root=document.getElementById('haxbroFeatureSequence');if(root)return root;
  root=document.createElement('section');root.id='haxbroFeatureSequence';root.hidden=true;root.setAttribute('aria-label','Discover HAxBRO AI');
@@ -67,7 +68,7 @@ function showReady(){
  main.dataset.ready='yes';
  if(slideTimer){clearInterval(slideTimer);slideTimer=null}if(waitTimer){clearTimeout(waitTimer);waitTimer=null}
  main.innerHTML='<div class="hfs-ready"><div class="hfs-ready-mark" aria-hidden="true">✓</div><div class="hfs-step">DEVICE MODEL VERIFIED</div><h1>Your KAI is <span style="color:#75e9ff">ready.</span></h1><p>The local neural runtime passed its readiness check. Your browser can reuse cached model files on future visits when storage remains available. Larger model lanes may continue preparing in the background.</p><div class="hfs-progress"><span style="width:100%"></span></div><div class="hfs-ready-status" id="hfsReadyStatus">KAI 51 neural model verified and ready</div><button type="button" class="hbo-enter hfs-enter" id="hfsEnterWorkspace">ENTER HAxBRO <span aria-hidden="true">↗</span></button></div><div class="hfs-visual"><img src="/onboarding-ecosystem.svg" alt="HAxBRO connected AI ecosystem illustration"></div>';
- currentProgress=100;currentStatus='KAI 51 neural model verified and ready';renderProgress();
+ currentProgress=100;currentStatus='KAI 51 local model ready · larger model lanes may continue preparing';renderProgress();
  document.getElementById('hfsEnterWorkspace')?.addEventListener('click',finish);
 }
 function showWait(){
@@ -120,6 +121,6 @@ if(intro){
  }
  intro.querySelector('video')?.play?.().catch(()=>{});
 }
-window.addEventListener('haxbro:kai51-ready',()=>{currentProgress=100;currentStatus='KAI 51 neural model verified and ready';renderProgress();if(started)showReady()});
+window.addEventListener('haxbro:kai51-ready',()=>{currentProgress=100;currentStatus='KAI 51 local model ready · larger model lanes may continue preparing';renderProgress();if(started)showReady()});
 window.addEventListener('haxbro:kai51-bootstrap',e=>{if(e?.detail?.status==='ready'&&modelReady()){currentProgress=100;currentStatus='KAI 51 neural model verified and ready';renderProgress()}});
 })();
