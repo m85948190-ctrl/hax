@@ -1,8 +1,9 @@
 (() => {
   const VERSION = 'kai51-unified-controller-v21-bounded-chat-recovery';
   const explicitWebRequest=message=>/\b(?:search (?:the )?(?:web|internet|online)|look up|latest|recent|today|news|price|cost|weather|current version|official source|verify online|check online|find sources|research current)\b/i.test(String(message||''));
-  const KEY = 'haxbro:kai51:installation:v15-github-q4';
-  const LOCAL_KEY = 'haxbro:kai51:local-intelligence:og-v1';
+  const userScope=()=>{const n=(localStorage.getItem('haxbro_username')||'anonymous-device').trim().toLowerCase().replace(/[^a-z0-9._-]/g,'_').slice(0,64)||'anonymous-device';return n;};
+  const KEY = ()=>'haxbro:kai51:'+userScope()+':installation:v15-github-q4';
+  const LOCAL_KEY = ()=>'haxbro:kai51:'+userScope()+':local-intelligence:og-v1';
   const MODEL = 'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const safe = (v,n=12000)=>String(v??'').replace(/\u0000/g,'').slice(0,n);
   const withTimeout=(work,ms,label='KAI 51 request')=>{let timer,abortHandler;const signal=window.HAxBROActiveChatSignal;const races=[Promise.resolve().then(()=>typeof work==='function'?work():work),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(label+' timed out after '+ms+'ms')),ms);})];if(signal)races.push(new Promise((_,reject)=>{abortHandler=()=>reject(new DOMException('Response stopped by user','AbortError'));if(signal.aborted)abortHandler();else signal.addEventListener('abort',abortHandler,{once:true})}));return Promise.race(races).finally(()=>{clearTimeout(timer);if(signal&&abortHandler)signal.removeEventListener('abort',abortHandler)});};
@@ -18,7 +19,7 @@
 
   const read = () => {
     try {
-      const x = JSON.parse(localStorage.getItem(KEY)||'null');
+      const x = JSON.parse(localStorage.getItem(KEY())||'null');
       if (!x || typeof x !== 'object') return defaultState();
       return {
         status: ['not_installed','installing','restoring','ready','error'].includes(x.status) ? x.status : 'not_installed',
@@ -33,7 +34,7 @@
 
   const write = patch => {
     const next = {...read(),...patch,updatedAt:new Date().toISOString()};
-    try { localStorage.setItem(KEY,JSON.stringify(next)); } catch {}
+    try { localStorage.setItem(KEY(),JSON.stringify(next)); } catch {}
     window.HAxBROKai51BootstrapState = next;
     window.dispatchEvent(new CustomEvent('haxbro:kai51-bootstrap',{detail:next}));
     return next;
@@ -50,6 +51,7 @@
     window.__HAxBROKai51LocalFastEnginePromise=null;
   }
   let state = read();
+  window.addEventListener('haxbro:username-changed',()=>{state=read();const localEngine=window.HAxBROKai51LocalFastEngine;const githubEngine=window.HAxBROKai51Engine;const readyEngine=localEngine?.isReady?.()?localEngine:githubEngine?.isReady?.()?githubEngine:null;if(readyEngine)state=write({status:'ready',installed:true,verified:true,model:readyEngine.model||state.model,error:null});});
   let enginePromise = window.HAxBROKai51Engine?.version===ENGINE_VERSION ? (window.__HAxBROKai51EnginePromise||null) : null;
   let localEnginePromise = window.HAxBROKai51LocalFastEngine?.version===LOCAL_ENGINE_VERSION ? (window.__HAxBROKai51LocalFastEnginePromise||null) : null;
 
@@ -113,7 +115,7 @@
 
   function localInstallState(){
     try{
-      const x=JSON.parse(localStorage.getItem(LOCAL_KEY)||'null');
+      const x=JSON.parse(localStorage.getItem(LOCAL_KEY())||'null');
       return x&&x.ready===true?x:null;
     }catch{return null}
   }
@@ -125,7 +127,7 @@
     if(!window.HAxBROKaiLocalIntelligence?.run) throw new Error('KAI 51 LOCAL intelligence is not loaded');
     const existing=localInstallState();
     const info={ready:true,version:window.HAxBROKaiLocalIntelligence.version||'kai51-local-intelligence-v1',installedAt:existing?.installedAt||new Date().toISOString()};
-    try{localStorage.setItem(LOCAL_KEY,JSON.stringify(info));}catch{}
+    try{localStorage.setItem(LOCAL_KEY(),JSON.stringify(info));}catch{}
     window.HAxBROKaiLocalInstalled=true;
     window.HAxBRO_KAI51_LOCAL_READY=true;
     window.dispatchEvent(new CustomEvent('haxbro:kai-local-installed',{detail:info}));
@@ -225,7 +227,7 @@
     unifiedGenerate,
     isInstalled:()=>read().status==='ready'&&!!localInstallState(),
     resetForTesting() {
-      try { localStorage.removeItem(KEY); } catch {}
+      try { localStorage.removeItem(KEY()); } catch {}
       state = write(defaultState());
     }
   };

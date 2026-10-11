@@ -1,6 +1,6 @@
 (() => {
   const username=()=>localStorage.getItem('haxbro_username')||'anonymous-device';
-  const memKey=()=>`haxbro:kai51:${username().replace(/[^a-zA-Z0-9_-]/g,'_')}:memory`;
+  const memKey=()=>`haxbro:kai51:${username().replace(/[^a-zA-Z0-9._-]/g,'_')}:memory`;
   const readMemory=()=>{try{return JSON.parse(localStorage.getItem(memKey())||'{"notes":[]}')}catch{return{notes:[]}}};
   const writeMemory=m=>{try{localStorage.setItem(memKey(),JSON.stringify({notes:(m.notes||[]).slice(-12)}))}catch{}};
   const addMemory=note=>{const m=readMemory();m.notes.push({text:String(note||'').slice(0,500),at:Date.now()});writeMemory(m)};
