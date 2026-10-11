@@ -198,7 +198,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   async function runOnce(messages,generationOptions={}){
     await prepare();
     return pipe(messages,{
-      max_new_tokens:PROFILE==='local'?128:192,
+      max_new_tokens:PROFILE==='local'?64:96,
       do_sample:false,
       repetition_penalty:1.15,
       no_repeat_ngram_size:3,

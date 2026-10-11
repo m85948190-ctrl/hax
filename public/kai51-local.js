@@ -85,7 +85,7 @@
       :'KAI 51 GITHUB precision model starting'});
 
     const job=(async()=>{
-      const mod=await import('/kai51-local-engine.js?v=61');
+      const mod=await import('/kai51-local-engine.js?v=63');
       const engine=await mod.createKai51Engine({
         profile:isLocal?'local':'github',
         onProgress:p=>emit({profile:'heavy',...p}),
@@ -163,7 +163,7 @@
       }
       /* Respect the selected model. GITHUB must load and infer with the GITHUB profile; never silently answer with LOCAL or LITE. */
       const engine=await withTimeout(()=>loadEngine(profile),90000,'KAI 51 '+profile.toUpperCase()+' model initialization');ensureActive();
-      const result=await withTimeout(()=>engine.generate(message,history),30000,'KAI 51 '+profile.toUpperCase()+' inference');ensureActive();
+      const result=await withTimeout(()=>engine.generate(message,history),profile==='local'?60000:90000,'KAI 51 '+profile.toUpperCase()+' inference');ensureActive();
       return {...result,lane:profile==='github'?'github':'local'};
     }finally{window.removeEventListener('haxbro:kai-local-progress',forward);}
   }
