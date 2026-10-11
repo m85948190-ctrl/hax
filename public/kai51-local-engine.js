@@ -232,50 +232,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     const isCasualReaction=/^(?:o+|h+m+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|hmm+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)[!?. ,\s]*$/i.test(userRequest);
     const isCombinedCasual=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?[!?. ,\s]*$/i.test(userRequest);
     const isSmallTalk=isGreeting||isCasualReaction||isCombinedCasual;
-    // Conversation-repair guard: short clarification turns must use the immediately preceding exchange,
-    // not fall into web search or a generic assistant response. Keep this narrow; substantive turns
-    // continue through the real local neural model.
-    const priorTurns=(Array.isArray(history)?history:[]).filter(x=>x&&typeof x==='object').map(x=>({role:String(x.role||x.sender||'user').toLowerCase(),content:String(x.content||x.text||x.message||'').trim()})).filter(x=>x.content).slice(-4);
-    const lastAssistant=[...priorTurns].reverse().find(x=>['assistant','bot','ai','model'].includes(x.role));
-    if(/^ghop[.!?\s]*$/i.test(userRequest)){
-      return {response:'I’m not sure what you meant by “ghop,” bro. Was that a typo, or did you mean something else?',provider:'KAI 51 LOCAL · clarification guard',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
-    }
-    if(/^(?:are you mad|o+ bro are you mad|are you angry|are you upset)(?:[?!.,\s]*)$/i.test(userRequest)){
-      const response=lastAssistant?'No, bro 😅 I’m not mad. My previous reply was off-topic, and I shouldn’t have made up context.':'No, bro 😅 I don’t get mad. What’s up?';
-      return {response,provider:'KAI 51 LOCAL · conversation repair',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
-    }
-    if(/^(?:what are you telling|what are you talking about|what do you mean|what are you on about)[?!.,\s]*$/i.test(userRequest)){
-      const response=lastAssistant?'You’re right to call that out, bro. My last reply didn’t match what you said. You typed “ghop,” and I should’ve asked what you meant instead of inventing a topic. Sorry.':'I mean to answer your actual message, bro. Tell me which part sounded wrong and I’ll clarify it.';
-      return {response,provider:'KAI 51 LOCAL · conversation repair',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
-    }
-    // Context-aware casual conversation: respond to the user's actual social/emotional cue.
-    // Keep these narrow and conversational; substantive requests still go to neural inference.
-    if(/\b(?:i'?m|i am|this is|that is|so)\s+(?:so\s+)?boring\b|^ah+[,!\s]+very boring[.!?\s]*$/i.test(userRequest)){
-      const response='Oof, bro 😭 let’s fix that. Want a weird question, a mini game, or should we build something cool?';
-      return {response,provider:'KAI 51 LOCAL · conversation context',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
-    }
-    if(/\b(?:i forgive you|forgive you|you'?re forgiven|its okay i forgive|it'?s okay i forgive)\b/i.test(userRequest)){
-      const response='Thanks, bro ❤️ I’ll take that—and I’ll do better. No more robotic apology loops; I’ll listen to what you actually say.';
-      return {response,provider:'KAI 51 LOCAL · conversation context',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
-    }
-    if(/\b(?:what do you need to be|how can you be|what does it take to be|how to be)\b.{0,45}\b(?:sympathetic|empathetic|sympathy|empathy)\b|\b(?:sympathetic|empathetic)\b.{0,45}\b(?:with me|to me|as an ai|in conversation)\b/i.test(userRequest)){
-      const response='Mostly, bro, I need to listen properly: notice how you’re feeling, take your words seriously, respond without judging, and avoid canned apologies or changing the subject. I don’t feel emotions like a person, but I can still respond with care and understanding. ❤️';
-      return {response,provider:'KAI 51 LOCAL · conversation context',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,lane:PROFILE};
-    }
-    // Instant local fast path: social one-liners must never wait for neural model startup/inference.
-    // Real questions still use the neural model below; no web research or external inference is used here.
-    if(isSmallTalk){
-      const response=isGreeting||isCombinedCasual
-        ? (isCombinedCasual && /(?:haha|lol|hehe|wow)/i.test(userRequest) ? 'Hey! 😄 What’s up?' : 'Hey! 😊 What’s up?')
-        : /^(?:o+|h+e+h+|l+o+l+|haha+|wow+|whoa+)/i.test(userRequest)
-          ? 'Haha 😄 what’s up?'
-          : /^(?:h+m+|hmm+|🤔)/i.test(userRequest)
-            ? 'What’s on your mind? 🙂'
-            : /^(?:nice|cool|yay+|👍|😂|❤️|😅)/i.test(userRequest)
-              ? '😄'
-              : 'I’m listening. What’s up?';
-      return {response,provider:'KAI 51 LOCAL INSTANT SOCIAL FAST PATH',model:MODEL,local:true,localModel:true,device:DEVICE,realModel:true,quantization:'q4',provenance:PROFILE==='local'?'Public Hugging Face ONNX weights; browser-local inference':'HAxBRO GitHub release kai51-model-latest; browser-local inference',lane:PROFILE};
-    }
+    // Short clarifications and corrections also go through neural inference with the recent dialogue attached.
+    // Everyday conversation is handled by neural inference, not phrase-specific canned answers.
+    // All chat turns, including greetings and social reactions, now use the selected real neural model.
     const generationOptions={};
     // The App Maker's first pass is only a short analysis brief, not the application itself.
     // Classify the actual user request rather than wrapper instructions, otherwise analysis
@@ -297,26 +256,20 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||''))
       .join('\n');
     const conditioning=isSmallTalk?'':[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
-    const isFollowUp=/^(?:why(?:\s|[?!.,]|$)|what about\b|and then\b|then\b|continue\b|go on\b|explain more\b|tell me more\b|expand on\b|what happened next\b|can you elaborate\b|what do you mean\b|(?:can you|could you) explain that\b|how do i do that\b|that\b|it\b|they\b|those\b|this\b|same\b|again\b)/i.test(userRequest);
-    // Do not let an old unrelated chat hijack a standalone new question.
-    const normalizedHistory=(isGreeting||!isFollowUp?[]:(Array.isArray(history)?history:[]))
+    // Keep recent dialogue for EVERY turn, including greetings and emotional/casual messages.
+    // This lets the model understand the flow instead of treating each message as a fresh task.
+    const normalizedHistory=(Array.isArray(history)?history:[])
       .filter(x=>x&&typeof x==='object')
       .map(x=>{
         const rawRole=String(x.role||x.sender||'user').toLowerCase();
         const role=rawRole==='bot'||rawRole==='ai'||rawRole==='model'||rawRole==='assistant'?'assistant':'user';
-        const content=String(x.content||x.text||x.message||'').trim().slice(0,1200);
+        const content=String(x.content||x.text||x.message||'').trim().slice(0,900);
         return {role,content};
       })
-      .filter(x=>x.content && !(x.role==='user' && x.content===prompt))
-      .slice(-6);
-    const messages=isSmallTalk?[
-      {role:'system',content:isGreeting
-        ?'You are KAI 51, a friendly, emotionally steady conversational assistant. Reply to this greeting with exactly one short, natural, warm sentence. Do not mention weather, status, loading, time, or uncertainty unless asked.'
-        :'You are KAI 51, a friendly, emotionally steady conversational assistant. Respond to the user’s short reaction in one brief, natural sentence that fits the tone. Do not invent a topic, mention weather, apologize without a reason, repeat yourself, or claim feelings such as anger.'
-      },
-      {role:'user',content:userRequest}
-    ]:[
-      {role:'system',content:'You are KAI 51, the core intelligence of HAxBRO AI. Answer the latest user message directly. Do not repeat a greeting or generic offer to help when the user asked a specific question. If the user gives a calculation, calculate it. If the user gives a correction or follow-up, respond to that meaning using the conversation. Follow explicit output constraints exactly, including requested sentence counts, formats, and lengths. Never repeat the user message as your answer. Be accurate, concise, and natural.'},
+      .filter(x=>x.content && !(x.role==='user' && (x.content===prompt||x.content===userRequest)))
+      .slice(-8);
+    const messages=[
+      {role:'system',content:'You are KAI 51, the conversational intelligence of HAxBRO AI. Talk naturally like a thoughtful, attentive conversation partner while remaining honest that you are an AI. Treat the latest user message as part of the ongoing conversation, not an isolated phrase. Use the recent dialogue to understand references, emotional tone, jokes, corrections, forgiveness, and follow-up questions. Answer what the user actually means; do not change the subject, invent context, repeat canned apologies, or fall back to generic offers to help. For casual chat, respond casually and warmly; for feelings, acknowledge them without being clinical; for factual or technical questions, answer accurately and explain uncertainty. If the message is unclear, ask one brief, natural clarification. Never claim human feelings or experiences. Follow explicit output formats and length constraints.'},
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
       ...normalizedHistory,
       {role:'user',content:userRequest}
