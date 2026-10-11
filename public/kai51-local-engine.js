@@ -35,11 +35,15 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     DTYPE='q4';
     try{
       if(!globalThis.navigator?.gpu?.requestAdapter)return;
-      const adapter=await navigator.gpu.requestAdapter();
+      const boundedProbe=(work,ms,label)=>Promise.race([
+        Promise.resolve().then(work),
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error(label+' timed out')),ms))
+      ]);
+      const adapter=await boundedProbe(()=>navigator.gpu.requestAdapter(),5000,'WebGPU adapter probe');
       if(!adapter)return;
       const requiredFeatures=[];
       if(adapter.features?.has?.('shader-f16'))requiredFeatures.push('shader-f16');
-      const probe=await adapter.requestDevice({requiredFeatures});
+      const probe=await boundedProbe(()=>adapter.requestDevice({requiredFeatures}),5000,'WebGPU device probe');
       try{probe.destroy?.()}catch{}
       DEVICE='webgpu';
     }catch(error){

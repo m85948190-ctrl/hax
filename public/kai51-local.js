@@ -85,7 +85,7 @@
       :'KAI 51 GITHUB precision model starting'});
 
     const job=(async()=>{
-      const mod=await import('/kai51-local-engine.js?v=69');
+      const mod=await import('/kai51-local-engine.js?v=70');
       const engine=await mod.createKai51Engine({
         profile:isLocal?'local':'github',
         onProgress:p=>emit({profile:'heavy',...p}),
@@ -149,7 +149,7 @@
     const signal=hooks?.signal;const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};ensureActive();
     if(profile==='largest'){
       hooks.onStage?.('largest','Starting the selected KAI 51 Largest 1.7B model');
-      const mod=await import('/kai51-largest-engine.js?v=4');
+      const mod=await import('/kai51-largest-engine.js?v=5');
       const engine=await withTimeout(()=>mod.createKai51LargestEngine({
         onProgress:p=>{try{hooks.onProgress?.(p);emit({...p,profile:'heavy'});}catch{}},
         onReady:info=>{state=write({status:'ready',installed:true,verified:true,model:info?.model||'SmolLM2-1.7B-Instruct',error:null});}
@@ -194,7 +194,8 @@
       :['largest','github','local','lite'];
     const labels={largest:'KAI 51 Largest 1.7B',github:'KAI 51 GitHub 360M',local:'KAI 51 LOCAL',lite:'KAI Lite'};
     const errors=[];
-    const timeouts={largest:240000,github:120000,local:90000,lite:15000};
+    /* Keep request latency bounded even while the 1.7B model continues its background first-use download. */
+    const timeouts={largest:180000,github:90000,local:60000,lite:15000};
     const bounded=(promise,ms,label,abortSignal)=>new Promise((resolve,reject)=>{let timer;const cleanup=()=>{clearTimeout(timer);abortSignal?.removeEventListener('abort',onAbort)};const onAbort=()=>{cleanup();reject(new DOMException('Response stopped by user','AbortError'))};timer=setTimeout(()=>{cleanup();reject(new Error(label+' timed out after '+Math.round(ms/1000)+' seconds'))},ms);if(abortSignal){if(abortSignal.aborted)return onAbort();abortSignal.addEventListener('abort',onAbort,{once:true})}Promise.resolve(promise).then(value=>{cleanup();resolve(value)},error=>{cleanup();reject(error)})});
     for(const name of names){
       ensureActive();
@@ -304,9 +305,14 @@
       try{await loadEngine('local');}catch(e){console.warn('KAI Router: LOCAL download/initialization failed; continuing pipeline',e);}
       try{await loadEngine('github');}catch(e){console.warn('KAI Router: GitHub 360M download/initialization failed; continuing to Largest',e);}
       try{
-        const mod=await import('/kai51-largest-engine.js?v=4');
+        const mod=await import('/kai51-largest-engine.js?v=5');
         await mod.createKai51LargestEngine({onProgress:p=>emit({...p,profile:'largest'}),onReady:info=>emit({profile:'largest',progress:100,status:'KAI 51 Largest 1.7B verified and ready',installed:true,verified:true,lane:'largest',model:info?.model})});
-      }catch(e){console.warn('KAI Router: Largest 1.7B is unavailable on this device; 360M/LOCAL remain available',e);}
+      }catch(e){
+        const detail={message:safe(e?.message||e,500),at:new Date().toISOString(),model:'KAI 51 Largest 1.7B'};
+        window.HAxBROKai51PipelineErrors={...(window.HAxBROKai51PipelineErrors||{}),largest:detail};
+        emit({profile:'largest',progress:99,status:'KAI 51 Largest 1.7B failed: '+detail.message,error:detail.message,lane:'largest'});
+        console.warn('KAI Router: Largest 1.7B is unavailable on this device; 360M/LOCAL remain available',e);
+      }
       return {local:!!window.HAxBROKai51LocalFastEngine?.isReady?.(),github:!!window.HAxBROKai51Engine?.isReady?.(),largest:!!window.HAxBROKai51LargestEngine?.isReady?.()};
     })().finally(()=>{pipelinePromise=null;});
     return pipelinePromise;

@@ -367,11 +367,12 @@ if(input)input.value='';resize();try{if(!overdrive){
           else if(selectedModel==='kai-local') kaiActivitySet('understanding','error','LOCAL/GITHUB intelligence pipeline failed');
           else if(selectedModel==='kai-largest') kaiActivitySet('largest-download','error','Largest 1.7B neural lane unavailable');
           else kaiActivitySet('github','error','GITHUB 360M neural lane unavailable');
+          const failureDetails=String(e?.message||e||'unknown model failure').slice(0,900);
           addMessage(selectedModel==='kai-largest'
-            ? 'KAI 51 could not produce an answer. The selected Largest 1.7B model and every configured backup were attempted, but none completed successfully. Please check WebGPU/device memory and retry.'
+            ? 'KAI 51 could not produce an answer. Largest 1.7B, GitHub 360M, LOCAL, and KAI Lite were attempted in order, but none completed successfully. Details: '+failureDetails
             : selectedModel==='kai-github'
-              ? 'KAI could not produce an answer. GitHub 360M and all configured backups were attempted, but none completed successfully. Please retry when the models finish initializing.'
-              : 'KAI could not produce an answer. The selected model and all configured backups were attempted, but none completed successfully. Please retry after checking model initialization.','bot');
+              ? 'KAI could not produce an answer. GitHub 360M and its configured backups were attempted in order, but none completed successfully. Details: '+failureDetails
+              : 'KAI could not produce an answer. The selected model and all configured backups were attempted in order, but none completed successfully. Details: '+failureDetails,'bot');
           return true;
         }
       }
