@@ -42,7 +42,7 @@ window.addEventListener('haxbro:kai51-ready',()=>{currentProgress=100;currentSta
 function ensureSequence(){
  let root=document.getElementById('haxbroFeatureSequence');if(root)return root;
  root=document.createElement('section');root.id='haxbroFeatureSequence';root.hidden=true;root.setAttribute('aria-label','Discover HAxBRO AI');
- root.innerHTML='<header class="hfs-top"><div class="hfs-brand"><img src="/logo-symbol.svg?v=753" alt=""><span>HAxBRO <span style="color:#75e9ff">AI</span></span></div><div class="hfs-top-label">YOUR PERSONAL AI WORKSPACE</div></header><main class="hfs-main" id="hfsMain"><div class="hfs-copy"><div class="hfs-step" id="hfsStep"></div><h1 id="hfsTitle"></h1><p id="hfsBody"></p><div class="hfs-proof" id="hfsTags"></div></div><div class="hfs-visual"><img id="hfsImage" alt=""></div></main><footer class="hfs-bottom"><div class="hfs-bottom-row"><div class="hfs-dots" role="progressbar" aria-label="Feature introduction" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" id="hfsDots"></div><div class="hfs-status"><i></i><span id="hfsFooterStatus">Preparing your personal KAI copy…</span></div></div><div class="hfs-footer-note">MODEL DOWNLOAD AND INITIALIZATION CONTINUE IN THE BACKGROUND · LOCAL COPIES ARE SAVED WHEN THE BROWSER ALLOWS</div></footer>';
+ root.innerHTML='<header class="hfs-top"><div class="hfs-brand"><img src="/logo-symbol.svg?v=753" alt=""><span>HAxBRO <span style="color:#75e9ff">AI</span></span></div><div class="hfs-top-label">YOUR PERSONAL AI WORKSPACE</div></header><main class="hfs-main" id="hfsMain"><div class="hfs-copy"><div class="hfs-step" id="hfsStep"></div><h1 id="hfsTitle"></h1><p id="hfsBody"></p><div class="hfs-proof" id="hfsTags"></div></div><div class="hfs-visual"><img id="hfsImage" alt=""></div></main><footer class="hfs-bottom"><div class="hfs-bottom-row"><div class="hfs-dots" role="progressbar" aria-label="Feature introduction" aria-valuemin="1" aria-valuemax="4" aria-valuenow="1" id="hfsDots"></div><div class="hfs-slide-nav"><button id="hfsPrev" type="button" aria-label="Previous feature" title="Previous feature">←</button><span id="hfsSlideCount">01 / 04</span><button id="hfsNext" type="button" aria-label="Next feature" title="Next feature">→</button></div><div class="hfs-status"><i></i><span id="hfsFooterStatus">Preparing your personal KAI copy…</span></div></div><div class="hfs-footer-note">MODEL DOWNLOAD AND INITIALIZATION CONTINUE IN THE BACKGROUND · LOCAL COPIES ARE SAVED WHEN THE BROWSER ALLOWS</div></footer>';
  document.body.appendChild(root);return root;
 }
 let root=null,slideIndex=0,slideTimer=null,waitTimer=null,readyTimer=null,started=false,tourComplete=false;
@@ -55,6 +55,8 @@ function renderSlide(index){
  const img=document.getElementById('hfsImage');img.style.animation='none';void img.offsetWidth;img.style.animation='';img.src=s.image;img.alt=s.alt;
  const dots=document.getElementById('hfsDots');dots.innerHTML='';dots.setAttribute('aria-valuenow',String(index+1));
  slides.forEach((_,i)=>{const d=document.createElement('span');d.className='hfs-dot'+(i===index?' active':'');d.setAttribute('aria-hidden','true');dots.appendChild(d)});
+ const count=document.getElementById('hfsSlideCount');if(count)count.textContent=String(index+1).padStart(2,'0')+' / '+String(slides.length).padStart(2,'0');
+ const prev=document.getElementById('hfsPrev');const next=document.getElementById('hfsNext');if(prev)prev.disabled=index===0;if(next)next.setAttribute('aria-label',index===slides.length-1?'Continue to HAxBRO':'Next feature');
  setStatus(currentStatus);
 }
 function showReady(){
@@ -91,10 +93,11 @@ function beginSequence(){
  if(started)return;started=true;
  if(intro){intro.classList.add('hci-exit');intro.style.opacity='0';intro.style.visibility='hidden';intro.querySelector('video')?.pause();}
  root=ensureSequence();root.hidden=false;root.style.opacity='1';renderSlide(0);
+ root.querySelector('#hfsPrev')?.addEventListener('click',()=>renderSlide(Math.max(0,slideIndex-1)));
+ root.querySelector('#hfsNext')?.addEventListener('click',()=>{if(slideIndex<slides.length-1)renderSlide(slideIndex+1);else{tourComplete=true;finish()}});
  let n=0;
  slideTimer=setInterval(()=>{
-  n++;
-  if(n<slides.length){renderSlide(n);return}
+  if(slideIndex<slides.length-1){renderSlide(slideIndex+1);return}
   clearInterval(slideTimer);slideTimer=null;tourComplete=true;
   if(waitTimer){clearTimeout(waitTimer);waitTimer=null}
   finish();
@@ -105,17 +108,16 @@ function beginSequence(){
 function setIntroLabel(){
  const btn=intro?.querySelector('.hci-continue');if(!btn)return;
  const state=window.HAxBROKai51Bootstrap?.state?.();
- const seconds=Number(btn.dataset.remaining||30);
- if(modelReady()){btn.disabled=false;btn.textContent='CONTINUE →';const timer=intro.querySelector('[data-hci-countdown]');if(timer)timer.textContent='KAI 51 LOCAL MODEL READY';return}
- if(seconds<=0){btn.disabled=false;btn.textContent='CONTINUE TO FEATURES →';const timer=intro.querySelector('[data-hci-countdown]');if(timer)timer.textContent='KAI IS LOADING IN THE BACKGROUND';return}
- btn.disabled=true;btn.textContent='CONTINUE · '+seconds+'s';const timer=intro.querySelector('[data-hci-countdown]');if(timer)timer.textContent=state?.status==='installing'?'KAI MODEL INSTALLING':'KAI IS PREPARING';
+ const seconds=Number(btn.dataset.remaining||0);
+ const timer=intro.querySelector('[data-hci-countdown]');
+ if(seconds>0){btn.disabled=true;btn.textContent='CONTINUE AFTER '+seconds+'s';if(timer)timer.textContent='VIDEO EXPERIENCE · '+seconds+' SECONDS REMAINING';return}
+ btn.disabled=false;btn.textContent='CONTINUE TO FEATURES →';if(timer)timer.textContent=modelReady()?'KAI 51 LOCAL MODEL READY':'KAI IS LOADING IN THE BACKGROUND';
 }
 if(intro){
  const btn=intro.querySelector('.hci-continue');
  if(btn){
-  let left=0;btn.dataset.remaining='0';setIntroLabel();
-  const tick=setInterval(()=>{left=Math.max(0,left-1);btn.dataset.remaining=String(left);setIntroLabel();if(left===0||modelReady())clearInterval(tick)},1000);
-  window.addEventListener('haxbro:kai51-ready',()=>{btn.dataset.remaining='0';setIntroLabel()});
+  let left=20;btn.dataset.remaining='20';setIntroLabel();
+  const tick=setInterval(()=>{left=Math.max(0,left-1);btn.dataset.remaining=String(left);setIntroLabel();if(left===0)clearInterval(tick)},1000);
   btn.addEventListener('click',()=>{if(btn.disabled)return;beginSequence()});
  }
  intro.querySelector('video')?.play?.().catch(()=>{});
