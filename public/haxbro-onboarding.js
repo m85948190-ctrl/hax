@@ -4,22 +4,19 @@ const intro=document.getElementById('haxbroCinematicIntro');
 const enter=document.getElementById('hboEnterBtn');
 const usernameGate=document.getElementById('usernameGate');
 if(entry&&intro){
-  entry.hidden=false;
-  intro.style.visibility='hidden';
+  // Skip the redundant ENTER HAxBRO splash. Start with the existing cinematic car intro.
+  entry.hidden=true;
+  intro.hidden=false;
+  intro.style.visibility='';
   if(usernameGate)usernameGate.hidden=true;
-  enter?.addEventListener('click',()=>{
-    entry.hidden=true;
-    intro.hidden=false;
-    intro.style.visibility='';
-    intro.querySelector('video')?.play?.().catch(()=>{});
-    window.dispatchEvent(new CustomEvent('haxbro:onboarding-entry'));
-  });
+  intro.querySelector('video')?.play?.().catch(()=>{});
+  window.dispatchEvent(new CustomEvent('haxbro:onboarding-entry'));
 }
 const slides=[
- {eyebrow:'01 / INTELLIGENCE',title:'Meet your <span>intelligence.</span>',body:'Think through questions, explore ideas, research information, and work with KAI 51 in one focused space.',tags:['KAI 51','LOCAL AI','RESEARCH'],image:'https://www.arbitatechnology.com/_next/image?q=75&url=%2Fai-solutions.png&w=3840',alt:'Cinematic cyan holographic neural brain in a dark futuristic lab'},
- {eyebrow:'02 / APP MAKER',title:'Make your <span>dreams real.</span>',body:'Turn ideas into app concepts, build interfaces, and work through the code behind your projects.',tags:['APP MAKER','CODE','PROTOTYPES'],image:'https://mgx-backend-cdn.metadl.com/generate/images/909862/2026-01-15/b4570676-2efd-4158-8f41-14f06e370179.png',alt:'Immersive futuristic holographic development studio with floating screens'},
- {eyebrow:'03 / CREATION TOOLS',title:'Create. Build. <span>Transform.</span>',body:'Work with code and files, create project assets, and use the Decoder and Encoder tools in your HAxBRO workspace.',tags:['CODE WRITER','FILES','DECODE / ENCODE'],image:'https://cdn.prod.website-files.com/6415ec3ab071a73a2f6defb9/67eba6a1657b5d07e159e2d8_image%20144%20%281%29.png',alt:'Glowing cyan holographic creation panels floating over a futuristic work surface'},
- {eyebrow:'04 / THE ECOSYSTEM',title:'Your ideas. <span>Your universe.</span>',body:'Move between connected workspaces for building, coding, learning, and creating—without losing sight of your next idea.',tags:['ONE WORKSPACE','CONNECTED TOOLS','YOUR PROJECTS'],image:'https://2connect.hu/storage/574/01KH9D69E7CNBD33QYPBF4N39F.jpg',alt:'Cinematic abstract cyan digital network tunnel with luminous data streams'}
+ {eyebrow:'01 / INTELLIGENCE',title:'Meet your <span>intelligence.</span>',body:'Think through questions, explore ideas, research information, and work with KAI 51 in one focused space.',tags:['KAI 51','LOCAL AI','RESEARCH'],image:'/onboarding-kai.png',alt:'Cinematic cyan holographic neural brain in a dark futuristic lab'},
+ {eyebrow:'02 / APP MAKER',title:'Make your <span>dreams real.</span>',body:'Turn ideas into app concepts, build interfaces, and work through the code behind your projects.',tags:['APP MAKER','CODE','PROTOTYPES'],image:'/onboarding-appmaker.png',alt:'Immersive futuristic holographic development studio with floating screens'},
+ {eyebrow:'03 / CREATION TOOLS',title:'Create. Build. <span>Transform.</span>',body:'Work with code and files, create project assets, and use the Decoder and Encoder tools in your HAxBRO workspace.',tags:['CODE WRITER','FILES','DECODE / ENCODE'],image:'/onboarding-creation.png',alt:'Glowing cyan holographic creation panels floating over a futuristic work surface'},
+ {eyebrow:'04 / THE ECOSYSTEM',title:'Your ideas. <span>Your universe.</span>',body:'Move between connected workspaces for building, coding, learning, and creating—without losing sight of your next idea.',tags:['ONE WORKSPACE','CONNECTED TOOLS','YOUR PROJECTS'],image:'/onboarding-ecosystem.jpg',alt:'Cinematic abstract cyan digital network tunnel with luminous data streams'}
 ];
 let currentStatus='Preparing KAI 51 on this device';
 let currentProgress=0;

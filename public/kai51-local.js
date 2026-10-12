@@ -149,7 +149,7 @@
     const signal=hooks?.signal;const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};ensureActive();
     if(profile==='largest'){
       hooks.onStage?.('largest','Starting the selected KAI 51 Largest 1.7B model');
-      const mod=await import('/kai51-largest-engine.js?v=8');
+      const mod=await import('/kai51-largest-engine.js?v=9');
       const engine=await withTimeout(()=>mod.createKai51LargestEngine({
         onProgress:p=>{try{hooks.onProgress?.(p);emit({...p,profile:'heavy'});}catch{}},
         onReady:info=>{state=write({status:'ready',installed:true,verified:true,model:info?.model||'SmolLM2-1.7B-Instruct',error:null});}
@@ -196,15 +196,15 @@
     const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};
     const preferred=String(hooks?.preferred||'kai-router');
     const names=hooks?.skipLocal
-      ? (preferred==='kai-largest'?['largest','lite']:['github','largest','lite'])
+      ? (preferred==='kai-largest'?['largest','github','local','lite']:['github','lite'])
       : preferred==='kai-largest'?['largest','github','local','lite']
-      :preferred==='kai-github'?['github','local','largest','lite']
-      :preferred==='kai-local'?['local','github','largest','lite']
-      :['local','github','largest','lite'];
+      :preferred==='kai-github'?['github','local','lite']
+      :preferred==='kai-local'?['local','github','lite']
+      :['local','github','lite'];
     const labels={largest:'KAI 51 Largest 1.7B',github:'KAI 51 GitHub 360M',local:'KAI 51 LOCAL',lite:'KAI Lite'};
     const errors=[];
     /* Keep request latency bounded even while the 1.7B model continues its background first-use download. */
-    const timeouts={largest:180000,github:240000,local:60000,lite:15000};
+    const timeouts={largest:600000,github:240000,local:60000,lite:15000};
     const bounded=(promise,ms,label,abortSignal)=>new Promise((resolve,reject)=>{let timer;const cleanup=()=>{clearTimeout(timer);abortSignal?.removeEventListener('abort',onAbort)};const onAbort=()=>{cleanup();reject(new DOMException('Response stopped by user','AbortError'))};timer=setTimeout(()=>{cleanup();reject(new Error(label+' timed out after '+Math.round(ms/1000)+' seconds'))},ms);if(abortSignal){if(abortSignal.aborted)return onAbort();abortSignal.addEventListener('abort',onAbort,{once:true})}Promise.resolve(promise).then(value=>{cleanup();resolve(value)},error=>{cleanup();reject(error)})});
     for(const name of names){
       ensureActive();
