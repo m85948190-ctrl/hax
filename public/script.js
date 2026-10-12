@@ -2,8 +2,8 @@ const $=s=>document.querySelector(s),messages=$('#messages'),input=$('#promptInp
 let kaiImageWorker=null,kaiImageRequestId=0;const kaiImagePending=new Map();
 function getKaiImageWorker(){
   if(kaiImageWorker)return kaiImageWorker;
-  const worker=new Worker('/kai-image-worker.js?v=1',{type:'module'});
-  worker.onmessage=event=>{const data=event.data||{};if(data.type!=='result')return;const pending=kaiImagePending.get(data.id);if(!pending)return;kaiImagePending.delete(data.id);clearTimeout(pending.timer);if(data.ok)pending.resolve(String(data.caption||''));else pending.reject(new Error(data.error||'Local image analysis failed'))};
+  const worker=new Worker('/kai-image-worker.js?v=2',{type:'module'});
+  worker.onmessage=event=>{const data=event.data||{};if(data.type==='status'){kaiActivityStep('vision','Local image analysis',String(data.status||'Analyzing image locally'),'','running');return}if(data.type!=='result')return;const pending=kaiImagePending.get(data.id);if(!pending)return;kaiImagePending.delete(data.id);clearTimeout(pending.timer);if(data.ok)pending.resolve(String(data.caption||''));else pending.reject(new Error(data.error||'Local image analysis failed'))};
   worker.onerror=event=>{for(const [id,pending] of kaiImagePending){clearTimeout(pending.timer);pending.reject(new Error('Local image worker failed to load. '+String(event.message||'')));kaiImagePending.delete(id)}try{worker.terminate()}catch{}if(kaiImageWorker===worker)kaiImageWorker=null};
   kaiImageWorker=worker;return worker;
 }
