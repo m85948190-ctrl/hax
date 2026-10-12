@@ -95,13 +95,9 @@ function beginSequence(){
  root=ensureSequence();root.hidden=false;root.style.opacity='1';renderSlide(0);
  root.querySelector('#hfsPrev')?.addEventListener('click',()=>{if(slideTimer){clearInterval(slideTimer);slideTimer=null}renderSlide(Math.max(0,slideIndex-1))});
  root.querySelector('#hfsNext')?.addEventListener('click',()=>{if(slideTimer){clearInterval(slideTimer);slideTimer=null}if(slideIndex<slides.length-1)renderSlide(slideIndex+1);else{tourComplete=true;finish()}});
- let n=0;
- slideTimer=setInterval(()=>{
-  if(slideIndex<slides.length-1){renderSlide(slideIndex+1);return}
-  clearInterval(slideTimer);slideTimer=null;tourComplete=true;
-  if(waitTimer){clearTimeout(waitTimer);waitTimer=null}
-  finish();
- },2500);
+ // Keep the feature photos under visitor control. The arrows advance instantly;
+ // no autoplay timer can race a tap or rush someone past a slide.
+ if(waitTimer){clearTimeout(waitTimer);waitTimer=null}
  waitTimer=setTimeout(()=>{if(!modelReady()){currentStatus='KAI is loading in the background';setStatus(currentStatus)}},10500);
  readyTimer=setTimeout(()=>{if(!modelReady()){currentStatus='KAI installation needs a retry on this device';setStatus(currentStatus);const n=document.getElementById('hfsReadyStatus');if(n)n.textContent=currentStatus}},30*60*1000);
 }
