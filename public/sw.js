@@ -1,8 +1,8 @@
-const CACHE='haxbro-shell-v31';
+const CACHE='haxbro-shell-v32';
 const ASSETS=[
   '/','/index.html','/app/','/app/index.html',
   '/style.css?v=219','/ui-fixes.css?v=218','/responsive-fixes.css?v=218',
-  '/script.js?v=382','/work-canvas.js?v=13','/install.js?v=220',
+  '/script.js?v=383','/work-canvas.js?v=13','/install.js?v=220',
   '/haxbro-cinematic-intro.css?v=3','/haxbro-onboarding.css?v=3','/haxbro-onboarding.js?v=4','/deepx.js?v=2','/onboarding-kai.png','/onboarding-appmaker.png','/onboarding-creation.png','/onboarding-ecosystem.jpg',
   '/kai51-local.js?v=56','/kai51-local-engine.js?v=72','/kai-local-intelligence.js?v=26',
   '/kai-lite.js?v=4','/kai51-largest-engine.js?v=9','/kai-local-model.js?v=6','/kai-local-ui.js?v=9',
