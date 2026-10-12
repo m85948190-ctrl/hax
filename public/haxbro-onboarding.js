@@ -93,8 +93,8 @@ function beginSequence(){
  if(started)return;started=true;
  if(intro){intro.classList.add('hci-exit');intro.style.opacity='0';intro.style.visibility='hidden';intro.querySelector('video')?.pause();}
  root=ensureSequence();root.hidden=false;root.style.opacity='1';renderSlide(0);
- root.querySelector('#hfsPrev')?.addEventListener('click',()=>renderSlide(Math.max(0,slideIndex-1)));
- root.querySelector('#hfsNext')?.addEventListener('click',()=>{if(slideIndex<slides.length-1)renderSlide(slideIndex+1);else{tourComplete=true;finish()}});
+ root.querySelector('#hfsPrev')?.addEventListener('click',()=>{if(slideTimer){clearInterval(slideTimer);slideTimer=null}renderSlide(Math.max(0,slideIndex-1))});
+ root.querySelector('#hfsNext')?.addEventListener('click',()=>{if(slideTimer){clearInterval(slideTimer);slideTimer=null}if(slideIndex<slides.length-1)renderSlide(slideIndex+1);else{tourComplete=true;finish()}});
  let n=0;
  slideTimer=setInterval(()=>{
   if(slideIndex<slides.length-1){renderSlide(slideIndex+1);return}
