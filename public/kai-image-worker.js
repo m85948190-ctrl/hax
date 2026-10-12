@@ -3,7 +3,7 @@ import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers
 let captionerPromise=null;
 function getCaptioner(){
   if(captionerPromise)return captionerPromise;
-  captionerPromise=pipeline('image-to-text','Xenova/vit-gpt2-image-captioning').catch(error=>{captionerPromise=null;throw error});
+  captionerPromise=pipeline('image-to-text','Xenova/vit-gpt2-image-captioning',{progress_callback:info=>{const file=String(info?.file||'model files').split('/').pop();const pct=Number(info?.progress);self.postMessage({type:'status',status:'Loading local image model · '+file+(Number.isFinite(pct)?' · '+Math.round(pct)+'%':'')})}}).catch(error=>{captionerPromise=null;throw error});
   return captionerPromise;
 }
 
