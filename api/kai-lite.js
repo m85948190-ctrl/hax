@@ -87,12 +87,12 @@ function normalizeSearchQuery(message) {
   q = q.replace(/^\s*(?:please\s+)?(?:can you|could you|would you)\s+/i, "");
   q = q.replace(/^\s*(?:search\s+(?:the\s+)?(?:web|internet|online)\s+(?:for\s+)?|search\s+for\s+|compare\s+|comparison\s+|what(?:'s| is)\s+the\s+difference\s+between\s+)/i, "");
   q = q.replace(/^\s*(?:the\s+)?(?:latest|current|recent)\s+(?:official\s+)?/i, "");
-  q = q.replace(/[.!?]\s+(?:explain|describe|discuss|give|show|include|provide)\b[\s\S]*$/i, "");
+  q = q.replace(/[.!?]\s+(?:explain|describe|discuss|give|show|include|provide|answer|summari[sz]e|summari[sz]y|respond|cite|list)\b[\s\S]*$/i, "");
   q = q.replace(/\s+(?:and\s+)?(?:cite|include|provide|give|show|explain|describe|discuss)\s+(?:(?:the|a|an|suitable|short|concrete|quick|main)\s+){0,3}(?:source|sources|example|examples|use case|details|trade-?off|difference|differences|reason|reasons|how it works)[\s\S]*$/i, "");
   q = q.replace(/\boptimistic locking and pessimistic locking\b/i, "optimistic locking vs pessimistic locking");
   q = q.replace(/\bauthorization code flow with client credentials flow\b/i, "authorization code flow vs client credentials flow");
   q = q.replace(/^\s*(?:tell me|give me|share with me|find me|search for|look up|can you tell me|could you tell me)\s+/i, "");
-  q = q.replace(/^\s*(?:what is|what are|who is|who are|define|explain|describe|meaning of|tell me about|how does|how do|why does|why is)\s+/i, "");
+  q = q.replace(/^\s*(?:what is|what are|what was|what were|who is|who are|who was|who were|where is|where are|where was|when is|when was|why does|why is|why was|how does|how do|how is|how was|define|explain|describe|meaning of|tell me about)\s+/i, "");
   q = q.replace(/^\s*(?:one|an?|some|interesting|fun|cool|random|amazing|surprising)\s+/i, "").trim();
   return q || clean(message, 300);
 }
