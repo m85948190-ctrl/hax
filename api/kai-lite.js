@@ -142,10 +142,30 @@ async function searchWeb(query) {
 }
 
 async function enrich(results) {
-  // Fetch source pages concurrently. The previous sequential loop could wait
-  // 2.5 seconds per source and make a single KAI Lite answer take 10–13 seconds.
+  // Fetch source pages concurrently. Prefer the article's readable text over a
+  // generic browser/error page, and use Wikipedia's own rendered article as a
+  // lightweight recovery path when the search provider supplies only a title.
   return Promise.all(results.slice(0, 4).map(async item => {
     let text = item.text || "";
+    if ((!text || text.length < 180) && /wikipedia\.org\/wiki\//i.test(String(item.url||""))) {
+      try {
+        const wiki = await Promise.race([
+          browser.session(async page => {
+            await page.goto(item.url, { waitUntil: "domcontentloaded" });
+            return await page.evaluate(() => ({
+              title: document.querySelector("#firstHeading")?.innerText || document.title || "",
+              text: Array.from(document.querySelectorAll("#mw-content-text .mw-parser-output > p"))
+                .map(p => (p.innerText || p.textContent || "").replace(/\s+/g, " ").trim())
+                .filter(t => t.length > 45 && !/may refer to|disambiguation/i.test(t))
+                .slice(0, 3).join(" ")
+            }));
+          }),
+          new Promise(resolve => setTimeout(() => resolve(null), 1800))
+        ]);
+        if (wiki?.text && wiki.text.length > text.length) text = wiki.text;
+        if (wiki?.title && (!item.title || item.title.length < 3)) item = {...item,title:wiki.title};
+      } catch {}
+    }
     if (!text || text.length < 180) {
       try {
         const html = await Promise.race([
@@ -153,8 +173,6 @@ async function enrich(results) {
           new Promise((_, reject) => setTimeout(() => reject(new Error("source timeout")), 1000))
         ]);
         const scraped = strip(html);
-        // Keep the search engine's useful snippet if page extraction returns a
-        // shorter error/consent page; never overwrite better evidence with worse text.
         if (scraped.length > text.length) text = scraped;
       } catch {}
     }
