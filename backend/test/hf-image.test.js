@@ -64,7 +64,7 @@ test("rejects JSON success payload instead of pretending it is an image", async 
     { env: { HF_TOKEN: "test" }, fetchImpl: async () => fakeResponse({ contentType: "application/json", json: { error: "not ready" } }) }
   );
   assert.equal(result.statusCode, 502);
-  assert.match(result.body.error, /JSON/);
+  assert.equal(result.body.error, "not ready");
 });
 
 test("request adapter rejects malformed JSON and non-POST methods", async () => {
