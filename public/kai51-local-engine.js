@@ -135,7 +135,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
         env.fetch=async(input,init={})=>nativeFetch(input,init);
       }
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-q4-dual-model-v43';
+      env.cacheKey='haxbro-kai51-q4-dual-model-v44';
 
       await resolveRuntime();
       /* The training pack is optional prompt conditioning; never block model startup on its network request. */
