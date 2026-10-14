@@ -7,7 +7,7 @@ env.useBrowserCache = false;
 
 console.log("LIVE NO-KEY MODEL TEST: downloading public model assets and loading", model);
 console.log("No Hugging Face inference token is read or required; generation runs locally on this runner.");
-const generator = await pipeline("text-generation", model, { dtype: "q4", device: "wasm" });
+const generator = await pipeline("text-generation", model, { dtype: "q4", device: "cpu" });
 const prompt = "You are KAI 51, a helpful assistant. Answer in one short sentence: What is 2 + 2?";
 const result = await generator(prompt, {
   max_new_tokens: 48,
