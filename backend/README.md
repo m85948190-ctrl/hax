@@ -11,6 +11,7 @@ This directory is the migration target for HAxBRO backend code. **Vercel is not 
 ## Model lanes
 The registry in `src/model-registry.js` is explicit:
 - **KAI LOCAL:** `onnx-community/gemma-3-270m-it-ONNX` — browser-local, lightweight text lane.
+- **KAI TINY:** `StentorLabs/Stentor-30M-Instruct` — 30.4M parameter instruction-tuned text model.
 - **KAI LIGHT:** `HuggingFaceTB/SmolLM2-360M-Instruct` — 360M parameter instruction model.
 - **KAI HEAVY:** `HuggingFaceTB/SmolLM2-1.7B-Instruct` — 1.7B parameter instruction model.
 - **HAxBRO Image:** `stabilityai/stable-diffusion-3-medium-diffusers` — separate text-to-image model through Hugging Face inference.
@@ -20,7 +21,7 @@ The image-generation adapter is `src/hf-image.js`. Its route contract is `POST {
 ## Image endpoint environment
 - `HF_TOKEN` — required, server-side Hugging Face token with inference permission.
 - `HF_TEXT_ENDPOINT` — optional text endpoint override if the selected model is not hosted on the default serverless inference route.
-- `HF_HEAVY_TEXT_MODEL` / `HF_LIGHT_TEXT_MODEL` — optional model ID overrides.
+- `HF_HEAVY_TEXT_MODEL` / `HF_TINY_TEXT_MODEL` / `HF_LIGHT_TEXT_MODEL` — optional model ID overrides.
 - `HF_IMAGE_MODEL` — optional image model override; defaults to the registry image model.
 - `HF_IMAGE_ENDPOINT` — optional endpoint override, useful for a dedicated provider/model endpoint.
 
