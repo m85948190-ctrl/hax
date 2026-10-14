@@ -15,7 +15,7 @@ The registry in `src/model-registry.js` is explicit:
 - **KAI HEAVY:** `HuggingFaceTB/SmolLM2-1.7B-Instruct` — 1.7B parameter instruction model.
 - **HAxBRO Image:** `stabilityai/stable-diffusion-3-medium-diffusers` — separate text-to-image model through Hugging Face inference.
 
-The image-generation adapter is `src/hf-image.js`. Its route contract is `POST { prompt }`; it returns a JSON response containing `dataUrl` and `imageBase64`. It does **not** call OpenAI DALL·E. It uses Hugging Face's image inference endpoint and reports failures instead of silently switching to another vendor.
+The image-generation adapter is `src/hf-image.js`. Its route contract is `POST { prompt }`; it returns a JSON response containing `dataUrl` and `imageBase64`. It does **not** call OpenAI DALL·E. It uses Hugging Face's image inference endpoint and reports failures instead of silently switching to another vendor. The existing KAI core in `lib/core.js` now calls the same `src/hf-text.js` adapter, so the model route is shared rather than duplicated.
 
 ## Image endpoint environment
 - `HF_TOKEN` — required, server-side Hugging Face token with inference permission.
@@ -27,7 +27,7 @@ The image-generation adapter is `src/hf-image.js`. Its route contract is `POST {
 Never place `HF_TOKEN` in frontend JavaScript or commit it to GitHub. Configure it only in the chosen backend runtime's secret settings.
 
 ## Important runtime boundary
-GitHub is the source-control and automation layer, not a permanent HTTP execution environment. GitHub Actions can lint, test, package, and trigger deployment, but it does not provide a continuously running API endpoint. A non-Vercel runtime must be selected and authorized before Hatchable can call this backend. Until then, the existing Hatchable backend remains active.
+GitHub is the source-control and automation layer, not a permanent HTTP execution environment. GitHub Actions can lint, test, package, and trigger deployment, but it does not provide a continuously running API endpoint. The tests use mocked model responses unless a separately configured live-inference smoke test is run with a valid secret. A non-Vercel runtime must be selected and authorized before Hatchable can call this backend. Until then, the existing Hatchable backend remains active.
 
 ## Migration policy
 1. Do not disable or delete existing Hatchable routes before parity tests pass.
