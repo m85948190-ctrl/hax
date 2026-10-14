@@ -22,12 +22,12 @@ export const MODEL_REGISTRY = Object.freeze({
     source: "https://huggingface.co/StentorLabs/Stentor-30M-Instruct"
   }),
   light: Object.freeze({
-    id: "HuggingFaceTB/SmolLM2-360M-Instruct",
+    id: "onnx-community/SmolLM2-360M-Instruct-ONNX",
     label: "KAI LIGHT · SmolLM2 360M",
     parameters: "360M",
-    execution: "browser-local-or-configured-hugging-face-runtime",
+    execution: "browser-local",
     task: "text-generation",
-    source: "https://huggingface.co/HuggingFaceTB/SmolLM2-360M-Instruct"
+    source: "https://huggingface.co/onnx-community/SmolLM2-360M-Instruct-ONNX"
   }),
   heavy: Object.freeze({
     id: "HuggingFaceTB/SmolLM2-1.7B-Instruct",
@@ -46,7 +46,7 @@ export const MODEL_REGISTRY = Object.freeze({
   })
 });
 
-export const TEXT_FALLBACK_ORDER = Object.freeze(["heavy", "tiny", "light", "local"]);
+export const TEXT_FALLBACK_ORDER = Object.freeze(["local", "light"]);
 
 export function getModelProfile(profile) {
   const model = MODEL_REGISTRY[profile];
