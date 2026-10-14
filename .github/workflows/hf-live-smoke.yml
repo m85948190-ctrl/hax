@@ -1,0 +1,41 @@
+name: HAxBRO live Hugging Face smoke test
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_live_inference:
+        description: "Actually call the 1.7B and 30M Hugging Face models (uses inference quota)"
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  live-models:
+    if: ${{ inputs.run_live_inference == true }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check required secret
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::Add HF_TOKEN in repository Settings > Secrets and variables > Actions. Use a fine-grained Hugging Face token with Inference Providers permission."
+            exit 2
+          fi
+      - name: Test real 1.7B and 30M inference
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_TEXT_ENDPOINT: ${{ vars.HF_TEXT_ENDPOINT }}
+          HF_HEAVY_TEXT_MODEL: ${{ vars.HF_HEAVY_TEXT_MODEL }}
+          HF_TINY_TEXT_MODEL: ${{ vars.HF_TINY_TEXT_MODEL }}
+        run: node backend/scripts/live-model-smoke.js

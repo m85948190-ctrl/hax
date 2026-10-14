@@ -4,22 +4,11 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   // Both use public CORS-enabled ONNX weights and run inference inside the user's browser.
   const PROFILE=profile==='local'?'local':'github';
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
-  const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
-  const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v15-creative-fallback':'kai51-github-360m-q4-v35-creative-fallback';
-  const MODEL_ASSETS=new Set([
-    'config.json',
-    'generation_config.json',
-    'MODEL-MANIFEST.json',
-    'model_q4.onnx',
-    'model_q4f16.onnx',
-    'special_tokens_map.json',
-    'tokenizer.json',
-    'tokenizer_config.json'
-  ]);
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v16-github-only':'kai51-github-360m-q4-v36-github-only';
   let DEVICE='wasm';
   let DTYPE='q4';
-  let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
+  let pipe=null, loading=null, generationChain=Promise.resolve();
+  let trainingPack={ok:true,canonical:true,source:'github-built-in-defaults',rules:[],examples:[]};
 
   async function disposePipe(){
     const current=pipe;
@@ -30,7 +19,6 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   }
 
   async function resolveRuntime(){
-    /* Prefer this visitor's GPU only after a real adapter/device probe. Some browsers expose navigator.gpu but cannot create a compatible device; those must fall back cleanly to WASM/Q4. */
     DEVICE='wasm';
     DTYPE='q4';
     try{
@@ -53,31 +41,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     }
   }
 
-  const progress=(progress,status)=>{window.HAxBROKai51EngineDebug={profile:PROFILE,progress,status,at:new Date().toISOString(),device:DEVICE};onProgress({profile:'heavy',progress,status,file:''});};
+  const progress=(progress,status)=>{window.HAxBROKai51EngineDebug={profile:PROFILE,progress,status,at:new Date().toISOString(),device:DEVICE};onProgress({profile:PROFILE,progress,status,file:''});};
 
-  async function loadTrainingPack(){
-    if(trainingPack) return trainingPack;
-    if(trainingPromise) return trainingPromise;
-    trainingPromise=(async()=>{
-      const controller=new AbortController();
-      let timer;
-      try{
-        const request=fetch(TRAINING_SYNC,{headers:{Accept:'application/json'},cache:'no-store',signal:controller.signal});
-        const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('training sync timed out after 3.5 seconds'));},3500);});
-        const r=await Promise.race([request,timeout]);
-        if(!r.ok) throw new Error('training sync HTTP '+r.status);
-        const d=await r.json();
-        if(!d?.ok||!d?.canonical) throw new Error('invalid Hatchable training pack');
-        trainingPack=d;
-        try{localStorage.setItem('haxbro:kai51:training-pack',JSON.stringify({savedAt:Date.now(),pack:d}));}catch{}
-        return d;
-      }catch(e){
-        try{const cached=JSON.parse(localStorage.getItem('haxbro:kai51:training-pack')||'null'); if(cached?.pack) return trainingPack=cached.pack;}catch{}
-        return trainingPack={ok:true,canonical:true,source:'HATCHABLE',rules:[] ,examples:[],warning:String(e?.message||e).slice(0,180)};
-      }finally{clearTimeout(timer);trainingPromise=null;}
-    })();
-    return trainingPromise;
-  }
 
   async function prepare(){
     if(pipe) return {ok:true,model:MODEL,device:DEVICE,realModel:true};
@@ -88,58 +53,15 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       const {env,pipeline}=await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1');
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
-      // Keep browser-side inference local after the public ONNX weights are downloaded.
+      /* Public ONNX model files are downloaded directly from Hugging Face in the browser.
+         No server-side inference API, API token, Hatchable proxy, or GitHub release proxy is used. */
       env.allowLocalModels=false;
       env.allowRemoteModels=true;
-      /* LOCAL fetches its smaller ONNX model from the public Hugging Face distribution.
-         GITHUB fetches HAxBRO's release assets through /api/kai-model using byte ranges. */
-      const nativeFetch=globalThis.fetch.bind(globalThis);
-      if(PROFILE==='github'){
-        /* The precision lane uses HAxBRO's actual GitHub release assets. The release
-           endpoint requires byte ranges for the large ONNX file, so stream it in
-           resumable 8 MiB ranges instead of issuing a single oversized request. */
-        env.fetch=async(input,init={})=>{
-          let url='',name='';
-          try{
-            url=typeof input==='string'||input instanceof URL?String(input):String(input?.url||'');
-            name=decodeURIComponent(new URL(url,location.href).pathname.split('/').pop());
-          }catch{}
-          if(!MODEL_ASSETS.has(name)) return nativeFetch(input,init);
-          const endpoint='/api/kai-model?file='+encodeURIComponent(name);
-          if(name!=='model_q4.onnx'&&name!=='model_q4f16.onnx') return nativeFetch(endpoint,init);
-          const headers=new Headers(init?.headers||(typeof Request!=='undefined'&&input instanceof Request?input.headers:undefined));
-          if(headers.has('range')) return nativeFetch(endpoint,{...init,headers});
-          const size=name==='model_q4.onnx'?386495938:272353302;
-          const chunkSize=4*1024*1024;
-          let start=0,downloaded=0;
-          const stream=new ReadableStream({
-            async pull(controller){
-              if(start>=size){controller.close();return;}
-              const end=Math.min(size-1,start+chunkSize-1);
-              try{
-                const response=await nativeFetch(endpoint,{headers:{Range:'bytes='+start+'-'+end},cache:'no-store'});
-                if(!response.ok) throw new Error('GitHub model range '+start+'-'+end+' failed: HTTP '+response.status);
-                const bytes=await response.arrayBuffer();
-                if(!bytes.byteLength) throw new Error('GitHub model range returned an empty chunk');
-                controller.enqueue(new Uint8Array(bytes));
-                start+=bytes.byteLength;downloaded+=bytes.byteLength;
-                progress(Math.min(94,15+Math.floor(downloaded/size*78)),'Downloading KAI 51 GITHUB model '+Math.round(downloaded/size*100)+'%');
-              }catch(error){controller.error(error);}
-            }
-          });
-          return new Response(stream,{status:200,headers:{'Content-Type':'application/octet-stream','Content-Length':String(size),'Accept-Ranges':'bytes'}});
-        };
-      }else{
-        /* Fetch LOCAL model assets directly from Hugging Face in the visitor's browser.
-           This avoids relaying the ~182 MB ONNX model through Hatchable for every visitor. */
-        env.fetch=async(input,init={})=>nativeFetch(input,init);
-      }
+      env.fetch=globalThis.fetch.bind(globalThis);
       env.useBrowserCache=true;
-      env.cacheKey='haxbro-kai51-q4-dual-model-v44';
+      env.cacheKey='haxbro-kai51-q4-dual-model-v45-no-key-browser';
 
       await resolveRuntime();
-      /* The training pack is optional prompt conditioning; never block model startup on its network request. */
-      if(PROFILE!=='local') await loadTrainingPack();
       progress(15,preferCache
         ? 'Restoring available KAI 51 neural chunks from browser cache'
         : (PROFILE==='local'?'Installing the KAI 51 LOCAL 135M Q4 fast model':'Installing the KAI 51 GITHUB 360M Q4 precision model'));
@@ -267,7 +189,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       .slice(0,PROFILE==='local'?0:3)
       .map(x=>'EXAMPLE REQUEST: '+String(x.prompt||'')+'\nCONTRACT: '+String(x.response_contract||''))
       .join('\n');
-    const conditioning=isSmallTalk?'':[rules?'Relevant HATCHABLE KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant HATCHABLE KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
+    const conditioning=isSmallTalk?'':[rules?'Relevant built-in KAI 51 BEHAVIOR RULES:\n'+rules:'',examples?'Relevant built-in KAI 51 EXAMPLES:\n'+examples:''].filter(Boolean).join('\n\n');
     // Keep recent dialogue for EVERY turn, including greetings and emotional/casual messages.
     // This lets the model understand the flow instead of treating each message as a fresh task.
     const normalizedHistory=(Array.isArray(history)?history:[])
@@ -408,9 +330,9 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       externalChatProviders:false,
       cache:VERSION,
       quantization:'q4',
-      trainingSource:'HATCHABLE',
-      trainingVersion:trainingPack?.pack?.version||trainingPack?.pack?.version||null,
-      trainingChecksum:trainingPack?.pack?.checksum||null,
+      trainingSource:'github-built-in-defaults',
+      trainingVersion:null,
+      trainingChecksum:null,
       provenance:'Public Hugging Face ONNX weights; browser-local inference',
       lane:PROFILE
     })

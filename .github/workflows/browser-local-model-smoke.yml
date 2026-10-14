@@ -1,0 +1,32 @@
+name: HAxBRO no-key local model smoke test
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "public/kai51-local-engine.js"
+      - "public/kai51-local.js"
+      - "public/kai-lite.js"
+      - "public/kai-local-model.js"
+      - "backend/scripts/local-model-smoke.mjs"
+      - ".github/workflows/browser-local-model-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-local-inference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Transformers.js runtime
+        run: npm install --no-save @huggingface/transformers@3.8.1
+      - name: Run real no-key local inference
+        run: node backend/scripts/local-model-smoke.mjs
