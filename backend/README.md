@@ -19,7 +19,9 @@ The image-generation adapter is `src/hf-image.js`. Its route contract is `POST {
 
 ## Image endpoint environment
 - `HF_TOKEN` — required, server-side Hugging Face token with inference permission.
-- `HF_IMAGE_MODEL` — optional model override; defaults to the registry image model.
+- `HF_TEXT_ENDPOINT` — optional text endpoint override if the selected model is not hosted on the default serverless inference route.
+- `HF_HEAVY_TEXT_MODEL` / `HF_LIGHT_TEXT_MODEL` — optional model ID overrides.
+- `HF_IMAGE_MODEL` — optional image model override; defaults to the registry image model.
 - `HF_IMAGE_ENDPOINT` — optional endpoint override, useful for a dedicated provider/model endpoint.
 
 Never place `HF_TOKEN` in frontend JavaScript or commit it to GitHub. Configure it only in the chosen backend runtime's secret settings.
