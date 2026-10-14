@@ -97,8 +97,21 @@ function normalizeSearchQuery(message) {
   return q || clean(message, 300);
 }
 
+async function firstPartySearch(query) {
+  const response = await fetch("https://haxbro.hatchable.site/api/kai/search", {
+    method: "POST",
+    headers: { "content-type": "application/json", "accept": "application/json" },
+    body: JSON.stringify({ query, mode: "fast" })
+  });
+  if (!response.ok) throw new Error("KAI web search HTTP " + response.status);
+  const data = await response.json();
+  if (!data?.ok || !Array.isArray(data.sources) || !data.sources.length) throw new Error("KAI web search returned no grounded sources");
+  return { engine: data.engine || "KAI 51 Web + Wikipedia", results: data.sources.map(s => ({ title: clean(s.title, 300), url: String(s.url || ""), text: clean(s.text, 9000) })) };
+}
+
 async function searchWeb(query) {
   const outcomes = await Promise.allSettled([
+    firstPartySearch(query),
     googleSearch(query).then(results => ({ engine: "Google Web", results })),
     bingSearch(query).then(results => ({ engine: "Bing Web", results }))
   ]);
