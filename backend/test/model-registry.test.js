@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { MODEL_REGISTRY, TEXT_FALLBACK_ORDER, getModelProfile, describeModelProfiles } from "../src/model-registry.js";
 
-test("registry contains explicit local, light, heavy and image models", () => {
+test("registry contains explicit local, tiny, light, heavy and image models", () => {
   assert.equal(MODEL_REGISTRY.local.id, "onnx-community/gemma-3-270m-it-ONNX");
   assert.equal(MODEL_REGISTRY.tiny.id, "StentorLabs/Stentor-30M-Instruct");
   assert.equal(MODEL_REGISTRY.tiny.parameters, "30.4M");
