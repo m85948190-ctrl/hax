@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "backend/**"
+      - "api/**"
+      - "lib/**"
+      - "package.json"
       - ".github/workflows/backend-ci.yml"
   push:
     branches: [main, haxbro-github-backend-no-vercel-20261014]
