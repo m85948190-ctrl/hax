@@ -138,7 +138,10 @@ async function enrich(results) {
           browser.html(item.url),
           new Promise((_, reject) => setTimeout(() => reject(new Error("source timeout")), 1000))
         ]);
-        text = strip(html);
+        const scraped = strip(html);
+        // Keep the search engine's useful snippet if page extraction returns a
+        // shorter error/consent page; never overwrite better evidence with worse text.
+        if (scraped.length > text.length) text = scraped;
       } catch {}
     }
     return { ...item, text };
