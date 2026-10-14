@@ -44,7 +44,7 @@ test("routes light profile to the 360M model", async () => {
     { env: { HF_TOKEN: "test" }, fetchImpl: async () => jsonResponse([{ generated_text: "Hello." }]) }
   );
   assert.equal(result.statusCode, 200);
-  assert.equal(result.body.model, "HuggingFaceTB/SmolLM2-360M-Instruct");
+  assert.equal(result.body.model, "onnx-community/SmolLM2-360M-Instruct-ONNX");
 });
 
 test("does not pretend the local browser model is server inference", async () => {
