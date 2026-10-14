@@ -8,7 +8,7 @@
   function queryFor(message){
     return clean(message)
       .replace(/^\s*(?:please\s+)?(?:can you|could you|would you|tell me|explain|help me)\s+/i,'')
-      .replace(/^\s*(?:what is|what are|what was|what were|who is|who are|who was|who were|where is|where are|where was|when did|when was|why does|why do|why was|how does|how do|how is|how are)\s+/i,'')
+      .replace(/^\s*(?:what is|what are|who is|who are|where is|where are|when did|when was|why does|why do|how does|how do|how is|how are)\s+/i,'')
       .replace(/\b(?:explain it simply|explain simply|in simple terms|in simple words|briefly|please)\b/ig,' ')
       .replace(/^\s*(?:the\s+)?(?:current|latest|recent)\s+/i,'')
       .replace(/\b(?:give|provide|include|cite|list|show)\s+(?:me\s+)?(?:a\s+)?(?:(?:short|brief|accurate|concise|detailed|simple)\s+){0,3}(?:answer|summary|response|sources?|citations?|references?)\b.*$/i,' ')
