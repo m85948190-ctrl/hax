@@ -106,7 +106,7 @@
   }
 
   async function searchFast(query,signal){
-    const deadline=new Promise(resolve=>setTimeout(()=>resolve({web:null,wiki:[]}),3100));
+    const deadline=new Promise(resolve=>setTimeout(()=>resolve({web:null,wiki:[]}),12000));
     const retrieval=Promise.all([
       searchWeb(query,'fast',signal).catch(()=>null),
       searchWikipedia(query).catch(()=>[])
