@@ -79,7 +79,7 @@
     document.documentElement.dataset.haxbroModel=state.model;
     document.querySelectorAll('.model-option').forEach(x=>x.classList.toggle('active',x.dataset.modelChoice===state.model));
     const label=$('selectedModelLabel');
-    if(label)label.textContent=state.model==='kai-router'?'KAI ROUTER · AUTO':state.model==='kai-lite'?'KAI LITE':state.model==='kai-largest'?'KAI 51 · GOOGLE GEMMA 3 1B':state.model==='kai-github'?'KAI 51 · GITHUB 360M':'KAI 51 · LOCAL';
+    if(label)label.textContent=state.model==='kai-router'?'KAI ROUTER · AUTO':state.model==='kai-lite'?'KAI LITE':state.model==='kai-largest'?'KAI 51 · GOOGLE GEMMA 3 270M':state.model==='kai-github'?'KAI 51 · GITHUB 360M':'KAI 51 · LOCAL';
     if(state.model==='kai-lite') state.preparing=false;
     button('send');
     window.dispatchEvent(new CustomEvent('haxbro:model-selected',{detail:{model:state.model}}));

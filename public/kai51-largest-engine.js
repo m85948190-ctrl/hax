@@ -3,7 +3,7 @@ let engine=null;
 let worker=null;
 let requestId=0;
 const pending=new Map();
-const MODEL_ID='onnx-community/gemma-3-1b-it-ONNX';
+const MODEL_ID='onnx-community/gemma-3-270m-it-ONNX';
 const emit=(onProgress,progress,status,file='')=>{try{onProgress?.({profile:'largest',progress,status,file});}catch{}};
 function rejectPending(error){
   for(const item of pending.values())item.reject(error);
@@ -14,7 +14,7 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
   if(enginePromise)return enginePromise;
   enginePromise=(async()=>{
     emit(onProgress,1,'Checking browser-local Gemma 3 runtime');
-    worker=new Worker('/kai51-largest-worker.js?v=6',{type:'module'});
+    worker=new Worker('/kai51-largest-worker.js?v=7',{type:'module'});
     worker.onmessage=event=>{
       const data=event.data||{};
       if(data.type==='progress'){emit(onProgress,data.progress,data.status,data.file);return;}
@@ -53,11 +53,11 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
           return {role,content};
         }).filter(x=>x.content);
         const messages=[
-          {role:'system',content:'You are KAI 51, powered by Google Gemma 3 1B Instruct running locally in the user’s browser. Be clear, accurate, thoughtful and conversational. Do not claim to browse or use tools unless evidence is supplied. State uncertainty instead of inventing facts. Follow the user’s requested format.'},
+          {role:'system',content:'You are KAI 51, powered by Google Gemma 3 270M Instruct running locally in the user’s browser. Be clear, accurate, thoughtful and conversational. Do not claim to browse or use tools unless evidence is supplied. State uncertainty instead of inventing facts. Follow the user’s requested format.'},
           ...recent,
           {role:'user',content:String(message||'').trim()}
         ];
-        emit(onProgress,98,'Generating with Google Gemma 3 1B locally');
+        emit(onProgress,98,'Generating with Google Gemma 3 270M locally');
         const work=ask('generate',{messages});
         let abortHandler;
         const aborted=new Promise((_,reject)=>{
@@ -70,14 +70,14 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
         finally{if(abortHandler)signal.removeEventListener('abort',abortHandler);}
         if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError');
         const response=String(result?.response||'').trim();
-        if(!response)throw new Error('Google Gemma 3 1B returned an empty answer.');
-        return {response,provider:'KAI 51 · GOOGLE GEMMA 3 1B · LOCAL',model:MODEL_ID,local:true,localModel:true,realModel:true,device:result.device||'webgpu-or-wasm',quantization:'q4',lane:'largest',provenance:'Google Gemma 3 1B Instruct ONNX weights; model inference runs in this browser without an AI API'};
+        if(!response)throw new Error('Google Gemma 3 270M returned an empty answer.');
+        return {response,provider:'KAI 51 · GOOGLE GEMMA 3 270M · LOCAL',model:MODEL_ID,local:true,localModel:true,realModel:true,device:result.device||'webgpu-or-wasm',quantization:'q4',lane:'largest',provenance:'Google Gemma 3 270M Instruct ONNX weights; model inference runs in this browser without an AI API'};
       },
       isReady:()=>true,
       status:()=>({ready:true,model:MODEL_ID,device:'worker-webgpu-or-wasm',realModel:true,quantization:'q4',lane:'largest'})
     };
     window.HAxBROKai51LargestEngine=engine;
-    emit(onProgress,100,'Google Gemma 3 1B ready');
+    emit(onProgress,100,'Google Gemma 3 270M ready');
     try{onReady({model:MODEL_ID,device:info.device||'worker-webgpu-or-wasm',verified:true,realModel:true,lane:'largest',quantization:'q4'});}catch{}
     return engine;
   })().catch(error=>{

@@ -292,7 +292,7 @@ if(input)input.value='';resize();try{if(!overdrive){
           if(activeChatController?.signal.aborted)throw new DOMException('Response stopped by user','AbortError');
           if(['kai-router','kai-local','kai-github','kai-largest'].includes(selectedModel)){
             kaiActivitySet('thinking','done');
-            const selectedLabel=selectedModel==='kai-largest'?'KAI 51 · Google Gemma 3 1B':selectedModel==='kai-github'?'KAI 51 GitHub 360M':selectedModel==='kai-local'?'KAI 51 LOCAL':'KAI Router · automatic selection';
+            const selectedLabel=selectedModel==='kai-largest'?'KAI 51 · Google Gemma 3 270M':selectedModel==='kai-github'?'KAI 51 GitHub 360M':selectedModel==='kai-local'?'KAI 51 LOCAL':'KAI Router · automatic selection';
             mark('router',selectedLabel,'Try the selected model first; if it fails or returns no usable answer, automatically try the backup chain.','running');
             result=await window.HAxBROKai51Bootstrap?.routerGenerate?.(value,history,{
               preferred:selectedModel,
@@ -346,13 +346,13 @@ if(input)input.value='';resize();try{if(!overdrive){
             });
           }else if(selectedModel==='kai-largest'){
             kaiActivitySet('thinking','done');
-            mark('largest-download','KAI 51 · Google Gemma 3 1B','Google Gemma downloads only after you select it; first use may take time.','running');
+            mark('largest-download','KAI 51 · Google Gemma 3 270M','Google Gemma downloads only after you select it; first use may take time.','running');
             result=await window.HAxBROKai51Bootstrap?.generate?.(value,history,{
               signal:activeChatController?.signal,
-              onStage:(stage,detail)=>mark('largest-download','KAI 51 · Google Gemma 3 1B',detail||'Loading the selected Google Gemma model','running'),
+              onStage:(stage,detail)=>mark('largest-download','KAI 51 · Google Gemma 3 270M',detail||'Loading the selected Google Gemma model','running'),
               onProgress:p=>{
                 const pct=Math.max(0,Math.min(100,Math.round(Number(p?.progress)||0)));
-                mark('largest-download','KAI 51 · Google Gemma 3 1B',String(p?.status||'Downloading Gemma model')+(pct?' · '+pct+'%':''),'running');
+                mark('largest-download','KAI 51 · Google Gemma 3 270M',String(p?.status||'Downloading Gemma model')+(pct?' · '+pct+'%':''),'running');
               }
             },'largest');
           }else{
@@ -375,9 +375,9 @@ if(input)input.value='';resize();try{if(!overdrive){
             }else if(result.lane==='github'){
               kaiActivitySet('github','done','GITHUB 360M produced the answer');
             }else if(result.lane==='largest'){
-              kaiActivitySet('largest-download','done','Google Gemma 3 1B produced the answer locally in this browser');
+              kaiActivitySet('largest-download','done','Google Gemma 3 270M produced the answer locally in this browser');
             }else if(result.router){
-              kaiActivitySet('router','done','KAI Router used '+(result.lane==='largest'?'Google Gemma 3 1B':result.lane==='github'?'GitHub 360M':'LOCAL recovery'));
+              kaiActivitySet('router','done','KAI Router used '+(result.lane==='largest'?'Google Gemma 3 270M':result.lane==='github'?'GitHub 360M':'LOCAL recovery'));
               kaiActivitySet('router-fallback','done','Selected model answered successfully');
             }else if(result.lane==='lite'){
               kaiActivitySet('lite','done','KAI LITE response delivered');
@@ -392,7 +392,7 @@ if(input)input.value='';resize();try{if(!overdrive){
           console.warn('KAI unified lane failed',e);
           if(selectedModel==='kai-router') kaiActivitySet('router','error','No available model completed the request');
           else if(selectedModel==='kai-local') kaiActivitySet('understanding','error','LOCAL/GITHUB intelligence pipeline failed');
-          else if(selectedModel==='kai-largest') kaiActivitySet('largest-download','error','Google Gemma 3 1B local lane unavailable');
+          else if(selectedModel==='kai-largest') kaiActivitySet('largest-download','error','Google Gemma 3 270M local lane unavailable');
           else kaiActivitySet('github','error','GITHUB 360M neural lane unavailable');
           const failureDetails=String(e?.message||e||'unknown model failure').slice(0,900);
           addMessage(selectedModel==='kai-largest'

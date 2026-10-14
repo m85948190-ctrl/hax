@@ -148,14 +148,14 @@
   async function generate(message,history=[],hooks={},profile='local') {
     const signal=hooks?.signal;const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};ensureActive();
     if(profile==='largest'){
-      hooks.onStage?.('largest','Starting Google Gemma 3 1B Instruct locally');
-      const mod=await import('/kai51-largest-engine.js?v=11');
+      hooks.onStage?.('largest','Starting Google Gemma 3 270M Instruct locally');
+      const mod=await import('/kai51-largest-engine.js?v=12');
       const engine=await withTimeout(()=>mod.createKai51LargestEngine({
         onProgress:p=>{try{hooks.onProgress?.(p);emit({...p,profile:'heavy'});}catch{}},
-        onReady:info=>{window.HAxBROKai51GemmaState={status:'ready',installed:true,verified:true,model:info?.model||'onnx-community/gemma-3-1b-it-ONNX',updatedAt:new Date().toISOString()};}
-      }),600000,'Google Gemma 3 1B download/initialization');
+        onReady:info=>{window.HAxBROKai51GemmaState={status:'ready',installed:true,verified:true,model:info?.model||'onnx-community/gemma-3-270m-it-ONNX',updatedAt:new Date().toISOString()};}
+      }),600000,'Google Gemma 3 270M download/initialization');
       ensureActive();
-      const result=await withTimeout(()=>engine.generate(message,history,signal),180000,'Google Gemma 3 1B inference');
+      const result=await withTimeout(()=>engine.generate(message,history,signal),180000,'Google Gemma 3 270M inference');
       ensureActive();
       return {...result,lane:'largest'};
     }
@@ -201,7 +201,7 @@
       :preferred==='kai-github'?['github','local','lite']
       :preferred==='kai-local'?['local','github','lite']
       :['local','github','lite'];
-    const labels={largest:'Google Gemma 3 1B',github:'KAI 51 GitHub 360M',local:'KAI 51 LOCAL',lite:'KAI Lite'};
+    const labels={largest:'Google Gemma 3 270M',github:'KAI 51 GitHub 360M',local:'KAI 51 LOCAL',lite:'KAI Lite'};
     const errors=[];
     /* Keep request latency bounded while the optional Google Gemma 3 1B model downloads on first use. */
     const timeouts={largest:600000,github:240000,local:60000,lite:15000};
@@ -287,7 +287,7 @@
       localFailure=e;
       hooks.onStage?.('local-error','KAI 51 LOCAL neural inference failed; trying the GitHub neural backup');
     }
-    /* If LOCAL cannot answer, try the real GitHub neural model next, then Google Gemma 3 1B,
+    /* If LOCAL cannot answer, try the real GitHub neural model next, then Google Gemma 3 270M,
        and only then KAI Lite retrieval. The chosen backup is named in the response. */
     try{
       const backupPrompt=turn?.evidencePrompt||message;
@@ -295,7 +295,7 @@
       const backupResponse=String(backup?.response||'').trim();
       if(backupResponse){
         const lane=backup.lane||'github';
-        const label=lane==='largest'?'Google Gemma 3 1B':lane==='lite'?'KAI Lite':'KAI 51 GitHub 360M';
+        const label=lane==='largest'?'Google Gemma 3 270M':lane==='lite'?'KAI Lite':'KAI 51 GitHub 360M';
         return {...backup,response:'⚠️ **KAI backup notice:** KAI 51 LOCAL did not produce a usable answer, so KAI switched to '+label+' for this response.\n\n'+backupResponse,lane,combined:true,fallback:true,fallbackFrom:['KAI 51 LOCAL'],sources:turn?.sources||backup.sources||[],searchEngines:turn?.searchEngines||backup.searchEngines||[]};
       }
     }catch(e){if(hooks?.signal?.aborted)throw e;hooks.onStage?.('router-fallback','GitHub 360M and recovery lanes could not complete this turn');}
@@ -319,7 +319,7 @@
   };
 
   try { navigator.storage?.persist?.().catch(()=>{}); } catch {}
-  /* Start only the small LOCAL neural model at boot. GitHub 360M and Google Gemma 3 1B
+  /* Start only the small LOCAL neural model at boot. GitHub 360M and Google Gemma 3 270M
      remain on-demand, so three large model initializations cannot compete for RAM,
      network bandwidth, or WebGPU while a chat response is waiting. */
   setTimeout(()=>maybeInstall().catch(()=>{}),250);

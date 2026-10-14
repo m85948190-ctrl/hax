@@ -1,6 +1,6 @@
 import { env, pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@next';
 
-const MODEL_ID='onnx-community/gemma-3-1b-it-ONNX';
+const MODEL_ID='onnx-community/gemma-3-270m-it-ONNX';
 let generator=null;
 let loading=null;
 let activeDevice='webgpu';
@@ -17,32 +17,32 @@ function describeRuntimeError(error,device='browser'){
 }
 function progressCallback(info={}){
   const progress=Number(info.progress);
-  send('progress',{progress:Number.isFinite(progress)?progress:0,status:String(info.status||info.file||'Downloading Gemma 3 1B'),file:String(info.file||'')});
+  send('progress',{progress:Number.isFinite(progress)?progress:0,status:String(info.status||info.file||'Downloading Gemma 3 270M'),file:String(info.file||'')});
 }
 async function load(){
   if(generator)return {model:MODEL_ID,device:activeDevice};
   if(loading)return loading;
   loading=(async()=>{
-    send('progress',{progress:2,status:'Preparing Google Gemma 3 1B Instruct'});
+    send('progress',{progress:2,status:'Preparing Google Gemma 3 270M Instruct'});
     let firstError=null;
     const choices=[];
     if(self.navigator?.gpu)choices.push('webgpu');
     choices.push('wasm');
     for(const device of choices){
       try{
-        send('progress',{progress:device==='webgpu'?5:50,status:'Loading Gemma 3 1B with '+device.toUpperCase()});
+        send('progress',{progress:device==='webgpu'?5:50,status:'Loading Gemma 3 270M with '+device.toUpperCase()});
         generator=await pipeline('text-generation',MODEL_ID,{
           dtype:device==='webgpu'?'q4f16':'q4',
           device,
           progress_callback:progressCallback
         });
         activeDevice=device;
-        send('progress',{progress:96,status:'Running Gemma 3 1B self-test'});
+        send('progress',{progress:96,status:'Running Gemma 3 270M self-test'});
         const prompt=[{role:'user',content:'Reply with exactly: Gemma 3 local model ready.'}];
         const out=await generator(prompt,{max_new_tokens:24,do_sample:false});
         const text=extractText(out);
         if(!text)throw new Error('Gemma 3 self-test returned no text.');
-        send('progress',{progress:100,status:'Google Gemma 3 1B ready · '+device.toUpperCase()});
+        send('progress',{progress:100,status:'Google Gemma 3 270M ready · '+device.toUpperCase()});
         return {model:MODEL_ID,device:activeDevice};
       }catch(error){
         firstError=new Error(describeRuntimeError(error,device));
@@ -79,7 +79,7 @@ self.onmessage=async event=>{
       const system=messages.find(x=>x?.role==='system')?.content||'You are KAI 51, a helpful, accurate assistant. Do not invent sources or claim to browse unless evidence is supplied.';
       const turns=messages.filter(x=>x&&x.role!=='system'&&String(x.content||'').trim());
       const chat=[{role:'system',content:String(system).slice(0,2200)},...turns.map(x=>({role:['assistant','model','bot','ai'].includes(String(x.role||'').toLowerCase())?'assistant':'user',content:String(x.content||'').slice(0,5000)}))];
-      send('progress',{progress:98,status:'Generating with Google Gemma 3 1B locally'});
+      send('progress',{progress:98,status:'Generating with Google Gemma 3 270M locally'});
       const output=await generator(chat,{max_new_tokens:512,do_sample:true,temperature:0.35,top_p:0.9});
       const response=extractText(output);
       if(!response)throw new Error('Gemma 3 returned an empty answer.');
