@@ -269,6 +269,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     // Classify and validate against the user's real request, not that wrapper.
     const requestMatch=prompt.match(/USER REQUEST:\s*([\s\S]*?)(?=\n\nRETRIEVED WEB \/ WIKIPEDIA \/ HAxBRO KNOWLEDGE EVIDENCE:|\n\nNo reliable retrieved evidence was available\.|$)/i);
     const userRequest=String(requestMatch?.[1]||prompt).trim();
+    // Keep the evidence wrapper in the actual model input. The prior code extracted USER REQUEST for classification, then accidentally sent only that question to the neural model and discarded all retrieved sources.
+    const modelUserContent=requestMatch?prompt:userRequest;
     const isGreeting=/^(?:hi|hello|hey|yo|howdy|good morning|good afternoon|good evening|what'?s up|sup)(?:\s+bro)?[!,.?\s]*$/i.test(userRequest);
     const isCasualReaction=/^(?:o+|h+m+|h+e+h+|l+o+l+|haha+|wow+|whoa+|huh+|hmm+|uh+|um+|nice|cool|yay+|bruh|bro+|okay+|ok+|👍|😂|❤️|😅|🤔)[!?. ,\s]*$/i.test(userRequest);
     const isCombinedCasual=/^(?:(?:haha+|lol+|hehe+|wow+)[,\s]+)?(?:hi|hello|hey|yo|sup)(?:[,\s]+(?:haha+|lol+|hehe+))?[!?. ,\s]*$/i.test(userRequest);
@@ -313,7 +315,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       {role:'system',content:'You are KAI 51, the conversational intelligence of HAxBRO AI. Talk naturally like a thoughtful, attentive conversation partner while remaining honest that you are an AI. Treat the latest user message as part of the ongoing conversation, not an isolated phrase. Use the recent dialogue to understand references, emotional tone, jokes, corrections, forgiveness, and follow-up questions. Answer what the user actually means; do not change the subject, invent context, repeat canned apologies, or fall back to generic offers to help. For casual chat, respond casually and warmly; for feelings, acknowledge them without being clinical; for factual or technical questions, answer accurately and explain uncertainty. If the message is unclear, ask one brief, natural clarification. Never claim human feelings or experiences. Follow explicit output formats and length constraints.'},
       ...(conditioning?[{role:'system',content:conditioning}]:[]),
       ...normalizedHistory,
-      {role:'user',content:userRequest}
+      {role:'user',content:modelUserContent}
     ];
 
     const job=generationChain.then(async()=>{
@@ -360,7 +362,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
           :'You are KAI 51, the core intelligence of HAxBRO AI. Your previous draft was wrong because it greeted the user, repeated their question, or looped. Answer the actual request now; never echo it. Follow explicit sentence-count and formatting instructions exactly. Be specific, useful, concise, and natural. Example: User asks “What can you help me with?” Answer: “I can help research factual questions, explain concepts, write and debug code, and plan or build apps. What are you working on?” Use this as a style example, not as a fixed response to unrelated questions.'},
         ...(conditioning?[{role:'system',content:conditioning}]:[]),
         ...normalizedHistory,
-        {role:'user',content:userRequest}
+        {role:'user',content:modelUserContent}
       ];
       try{
         const retryJob=generationChain.then(()=>runOnce(repairMessages,{max_new_tokens:PROFILE==='local'?96:144,do_sample:false,repetition_penalty:1.12,no_repeat_ngram_size:3}));

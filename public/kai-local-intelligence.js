@@ -8,7 +8,7 @@
   function queryFor(message){
     return clean(message)
       .replace(/^\s*(?:please\s+)?(?:can you|could you|would you|tell me|explain|help me)\s+/i,'')
-      .replace(/^\s*(?:what is|what are|who is|who are|where is|where are|when did|when was|why does|why do|how does|how do|how is|how are)\s+/i,'')
+      .replace(/^\s*(?:what is|what are|what was|what were|who is|who are|who was|who were|where is|where are|where was|when did|when was|why does|why do|why was|how does|how do|how is|how are)\s+/i,'')
       .replace(/\b(?:explain it simply|explain simply|in simple terms|in simple words|briefly|please)\b/ig,' ')
       .replace(/^\s*(?:the\s+)?(?:current|latest|recent)\s+/i,'')
       .replace(/[?!.]+$/,'').replace(/\s+/g,' ').trim().slice(0,700);
@@ -63,7 +63,7 @@
     if(/\b(?:how are you|what can you do|what can you help me with|what do you think|tell me about yourself|who are you|what is your name|can we talk|let's talk|lets talk|remember that|what do you remember about me|what answer style do i prefer|i feel|i think|i prefer|i like|call me|my name is|forget everything|clear my memory)\b/i.test(t)) return false;
     // Research only when the wording signals a factual lookup, current information,
     // verification, or explicit research intent—not merely because a sentence is long.
-    return /\b(?:what is|what are|who is|who are|where is|where are|when did|when was|when is|why could|how could|how can|latest|recent|today|news|price|cost|version|release|update|current|weather|comparing|comparisons|evidence|sources?|research|look up|find out|verify|check|search|according to|statistics|study|paper|official|explains|tell me about|meanings|history|fact|facts|population|capital|definition|calculation|conversion)\b/i.test(t);
+    return /\b(?:what is|what are|what was|what were|who is|who are|who was|who were|where is|where are|where was|when did|when was|when is|why was|why could|how could|how can|latest|recent|today|news|price|cost|version|release|update|current|weather|comparing|comparisons|evidence|sources?|research|look up|find out|verify|check|search|according to|statistics|study|paper|official|explains|tell me about|meanings|history|fact|facts|population|capital|definition|calculation|conversion)\b/i.test(t);
   }
 
   async function searchWeb(query,mode='fast',signal){
