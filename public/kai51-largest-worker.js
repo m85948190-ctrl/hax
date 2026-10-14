@@ -11,6 +11,10 @@ env.allowRemoteModels=true;
 env.useBrowserCache=true;
 
 function send(type,data={}){self.postMessage({type,...data});}
+function describeRuntimeError(error,device='browser'){
+  const raw=String(error?.message||error||'unknown runtime error');
+  return /^\\d+$/.test(raw)?'Google Gemma 3 local '+String(device).toUpperCase()+' inference failed with internal runtime code '+raw+'. This browser could not initialize the model; check WebGPU support and available memory. No API fallback was used.':raw;
+}
 function progressCallback(info={}){
   const progress=Number(info.progress);
   send('progress',{progress:Number.isFinite(progress)?progress:0,status:String(info.status||info.file||'Downloading Gemma 3 1B'),file:String(info.file||'')});
@@ -41,9 +45,9 @@ async function load(){
         send('progress',{progress:100,status:'Google Gemma 3 1B ready · '+device.toUpperCase()});
         return {model:MODEL_ID,device:activeDevice};
       }catch(error){
-        firstError=error;
+        firstError=new Error(describeRuntimeError(error,device));
         generator=null;
-        send('progress',{progress:device==='webgpu'?42:98,status:'Gemma 3 '+device.toUpperCase()+' initialization failed: '+String(error?.message||error).slice(0,180)});
+        send('progress',{progress:device==='webgpu'?42:98,status:'Gemma 3 '+device.toUpperCase()+' initialization failed: '+describeRuntimeError(error,device).slice(0,180)});
       }
     }
     throw firstError||new Error('Gemma 3 could not initialize on this browser.');
@@ -85,6 +89,6 @@ self.onmessage=async event=>{
       send('generated',{id,response,model:MODEL_ID,device:activeDevice});
     }
   }catch(error){
-    send('error',{id,message:String(error?.message||error||'Gemma 3 worker error').slice(0,900)});
+    send('error',{id,message:describeRuntimeError(error,activeDevice).slice(0,900)});
   }
 };
