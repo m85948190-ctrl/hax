@@ -14,7 +14,7 @@
     if(d.profile==='largest'){
       x.classList.remove('is-ready');
       const pct=x.querySelector('.hook-pct');if(pct)pct.textContent=clamp(d.progress)+'%';
-      const lite=x.querySelector('.hook-lite');if(lite)lite.textContent='· '+String(d.status||'KAI 51 LARGEST 1.7B INSTALLING').toUpperCase();
+      const lite=x.querySelector('.hook-lite');if(lite)lite.textContent='· '+String(d.status||'GOOGLE GEMMA 3 1B INSTALLING').toUpperCase();
       return;
     }
     if(state.status==='ready'&&state.installed&&state.verified){

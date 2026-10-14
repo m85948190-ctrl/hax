@@ -1,4 +1,83 @@
-import { WebWorkerMLCEngineHandler } from 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.85/+esm';
+import { env, pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@next';
 
-const handler = new WebWorkerMLCEngineHandler();
-self.onmessage = event => handler.onmessage(event);
+const MODEL_ID='onnx-community/gemma-3-1b-it-ONNX';
+let generator=null;
+let loading=null;
+let activeDevice='webgpu';
+let sequence=0;
+
+env.allowLocalModels=false;
+env.allowRemoteModels=true;
+env.useBrowserCache=true;
+
+function send(type,data={}){self.postMessage({type,...data});}
+function progressCallback(info={}){
+  const progress=Number(info.progress);
+  send('progress',{progress:Number.isFinite(progress)?progress:0,status:String(info.status||info.file||'Downloading Gemma 3 1B'),file:String(info.file||'')});
+}
+async function load(){
+  if(generator)return {model:MODEL_ID,device:activeDevice};
+  if(loading)return loading;
+  loading=(async()=>{
+    send('progress',{progress:2,status:'Preparing Google Gemma 3 1B Instruct'});
+    let firstError=null;
+    const choices=[];
+    if(self.navigator?.gpu)choices.push('webgpu');
+    choices.push('wasm');
+    for(const device of choices){
+      try{
+        send('progress',{progress:device==='webgpu'?5:50,status:'Loading Gemma 3 1B with '+device.toUpperCase()});
+        generator=await pipeline('text-generation',MODEL_ID,{
+          dtype:'q4',
+          device,
+          progress_callback:progressCallback
+        });
+        activeDevice=device;
+        send('progress',{progress:96,status:'Running Gemma 3 1B self-test'});
+        const out=await generator([{role:'user',content:'Reply with exactly: Gemma 3 local model ready.'}],{max_new_tokens:24,do_sample:false});
+        const text=extractText(out);
+        if(!text)throw new Error('Gemma 3 self-test returned no text.');
+        send('progress',{progress:100,status:'Google Gemma 3 1B ready · '+device.toUpperCase()});
+        return {model:MODEL_ID,device:activeDevice};
+      }catch(error){
+        firstError=error;
+        generator=null;
+        send('progress',{progress:device==='webgpu'?42:98,status:'Gemma 3 '+device.toUpperCase()+' initialization failed: '+String(error?.message||error).slice(0,180)});
+      }
+    }
+    throw firstError||new Error('Gemma 3 could not initialize on this browser.');
+  })().finally(()=>{loading=null;});
+  return loading;
+}
+function extractText(output){
+  const item=Array.isArray(output)?output[0]:output;
+  const generated=item?.generated_text;
+  if(typeof generated==='string')return generated.trim();
+  if(Array.isArray(generated)){
+    const last=generated.slice().reverse().find(x=>x?.role==='assistant'||x?.role==='model')||generated[generated.length-1];
+    return String(last?.content||last?.text||'').trim();
+  }
+  return String(item?.text||item?.content||'').trim();
+}
+self.onmessage=async event=>{
+  const msg=event.data||{};
+  const id=msg.id;
+  try{
+    if(msg.type==='load'){
+      const info=await load();
+      send('loaded',{id,...info});
+      return;
+    }
+    if(msg.type==='generate'){
+      await load();
+      const messages=Array.isArray(msg.messages)?msg.messages:[{role:'user',content:String(msg.message||'')}];
+      send('progress',{progress:98,status:'Generating with Google Gemma 3 1B locally'});
+      const output=await generator(messages,{max_new_tokens:512,do_sample:true,temperature:0.35,top_p:0.9});
+      const response=extractText(output);
+      if(!response)throw new Error('Gemma 3 returned an empty answer.');
+      send('generated',{id,response,model:MODEL_ID,device:activeDevice});
+    }
+  }catch(error){
+    send('error',{id,message:String(error?.message||error||'Gemma 3 worker error').slice(0,900)});
+  }
+};
