@@ -4,7 +4,6 @@ const model = "onnx-community/SmolLM2-135M-Instruct-ONNX-MHA";
 env.allowLocalModels = false;
 env.allowRemoteModels = true;
 env.useBrowserCache = false;
-env.cacheDir = process.env.HF_HOME || undefined;
 
 console.log("LIVE NO-KEY MODEL TEST: downloading public model assets and loading", model);
 console.log("No Hugging Face inference token is read or required; generation runs locally on this runner.");
