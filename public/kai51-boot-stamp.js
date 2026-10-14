@@ -62,11 +62,11 @@
       mount();
       const title=document.getElementById('kai51BootTitle');
       const body=document.getElementById('kai51BootText');
-      if(title) title.textContent='KAI 51 · LOCAL INTELLIGENCE READY';
-      if(body) body.textContent='The original HAxBRO local intelligence lane is initialized. KAI 51 · GITHUB will continue its neural installation separately.';
-      document.getElementById('kai51BootFill').style.width='100%';
-      document.getElementById('kai51BootPercent').textContent='100%';
-      document.getElementById('kai51BootStatus').textContent='LOCAL ready · GITHUB installing next';
+      if(title) title.textContent='KAI 51 · LOCAL RETRIEVAL READY';
+      if(body) body.textContent='Web retrieval is ready. The local neural model downloads only when first needed, helping conserve Hatchable bandwidth.';
+      document.getElementById('kai51BootFill').style.width='0%';
+      document.getElementById('kai51BootPercent').textContent='0%';
+      document.getElementById('kai51BootStatus').textContent='LOCAL retrieval ready · neural model not yet verified';
       return;
     }
     const incoming=Math.max(0,Math.min(99,Math.round(Number(d.progress)||0)));

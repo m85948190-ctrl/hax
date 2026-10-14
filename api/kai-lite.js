@@ -170,7 +170,10 @@ function groundedAnswer(query, sources, engine) {
     const relevant = (sources || []).filter(s => {
       const haystack = (String(s.title || "") + " " + String(s.url || "") + " " + String(s.text || "")).toLowerCase();
       const matches = terms.filter(term => haystack.includes(term)).length;
-      return terms.length ? matches >= Math.min(1, terms.length) : false;
+      // For multi-word queries require more than one matching topic term; a single
+      // generic word such as "engine" must not make an unrelated page look relevant.
+      const requiredMatches = terms.length >= 2 ? Math.min(2, Math.ceil(terms.length * 0.5)) : 1;
+      return terms.length ? matches >= requiredMatches : false;
     }).slice(0, 3);
     if (!relevant.length) return "I couldn't verify a relevant source for that query in this search pass, so I won't present unrelated results as an answer. Try again or ask KAI 51 to search Google, Bing, and Wikipedia.";
     const sourceLines = relevant.map((s, i) => (i + 1) + ". " + s.title + "\n   " + s.url).join("\n");

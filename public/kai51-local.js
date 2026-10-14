@@ -129,9 +129,10 @@
     const info={ready:true,version:window.HAxBROKaiLocalIntelligence.version||'kai51-local-intelligence-v1',installedAt:existing?.installedAt||new Date().toISOString()};
     try{localStorage.setItem(LOCAL_KEY(),JSON.stringify(info));}catch{}
     window.HAxBROKaiLocalInstalled=true;
-    window.HAxBRO_KAI51_LOCAL_READY=true;
+    /* This flag means retrieval/orchestration is initialized, not that neural weights
+       are installed. Only the model's successful self-test may set KAI51_LOCAL_READY. */
     window.dispatchEvent(new CustomEvent('haxbro:kai-local-installed',{detail:info}));
-    emit({profile:'local',progress:100,status:'KAI 51 · LOCAL installed and ready',installed:true,verified:true});
+    emit({profile:'local',progress:0,status:'KAI 51 LOCAL retrieval ready · neural model loads on first request',installed:false,verified:false});
     return info;
   }
 
@@ -171,8 +172,12 @@
         try{
           const turn=await window.HAxBROKaiLocalIntelligence.run(message,history,{onStage:hooks.onStage,signal});ensureActive();
           if(turn?.response&&!turn.handoff){
-            if(!hooks?.forceNeural||profile==='local') return {...turn,lane:profile,provider:turn.provider||('KAI 51 '+profile.toUpperCase()+' · local tools/evidence'),preflight:true};
-            synthesisMessage='USER REQUEST:\n'+message+'\n\nLOCAL RETRIEVAL RESULT:\n'+turn.response;
+            /* Only source-backed retrieval belongs in the evidence wrapper. Casual
+               turns and calculations still go to neural inference as the original request. */
+            if((Array.isArray(turn.sources)&&turn.sources.length)||(Array.isArray(turn.searchEngines)&&turn.searchEngines.length)){
+              synthesisMessage='USER REQUEST:\n'+message+'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+turn.response;
+              hooks.onStage?.('synthesizing','KAI 51 '+profile.toUpperCase()+' · neural synthesis with retrieved context');
+            }
           }else if(turn?.handoff&&turn?.evidencePrompt){
             synthesisMessage=turn.evidencePrompt;
             hooks.onStage?.('searching','KAI 51 '+profile.toUpperCase()+' · retrieved evidence ready for neural synthesis');
@@ -263,7 +268,14 @@
     if(local?.run){
       try{
         turn=await local.run(message,history,hooks);ensureActive();
-        if(turn?.response&&!turn.handoff) return {...turn,lane:'local',combined:true};
+        if(turn?.response&&!turn.handoff){
+          /* A retrieval result is never the final answer. Attach it only when there
+             are real sources; ordinary conversation goes to the neural model directly. */
+          if((Array.isArray(turn.sources)&&turn.sources.length)||(Array.isArray(turn.searchEngines)&&turn.searchEngines.length)){
+            turn={...turn,evidencePrompt:'USER REQUEST:\n'+message+'\n\nRETRIEVED WEB / WIKIPEDIA / HAxBRO KNOWLEDGE EVIDENCE:\n'+turn.response};
+            hooks.onStage?.('local-neural','KAI 51 LOCAL · synthesizing retrieved evidence with the real neural model');
+          }
+        }
         if(turn?.handoff&&turn?.research&&explicitWebRequest(message)){
           hooks.onStage?.('searching','KAI 51 LOCAL · evidence gathered; continuing to local neural synthesis');
         }
