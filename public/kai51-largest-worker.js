@@ -38,9 +38,9 @@ async function load(){
         });
         activeDevice=device;
         send('progress',{progress:96,status:'Running Gemma 3 1B self-test'});
-        const prompt='<start_of_turn>user\nReply with exactly: Gemma 3 local model ready.<end_of_turn>\n<start_of_turn>model\n';
+        const prompt=[{role:'user',content:'Reply with exactly: Gemma 3 local model ready.'}];
         const out=await generator(prompt,{max_new_tokens:24,do_sample:false});
-        const text=extractText(out,prompt);
+        const text=extractText(out);
         if(!text)throw new Error('Gemma 3 self-test returned no text.');
         send('progress',{progress:100,status:'Google Gemma 3 1B ready · '+device.toUpperCase()});
         return {model:MODEL_ID,device:activeDevice};
@@ -78,13 +78,10 @@ self.onmessage=async event=>{
       const messages=Array.isArray(msg.messages)?msg.messages:[{role:'user',content:String(msg.message||'')}];
       const system=messages.find(x=>x?.role==='system')?.content||'You are KAI 51, a helpful, accurate assistant. Do not invent sources or claim to browse unless evidence is supplied.';
       const turns=messages.filter(x=>x&&x.role!=='system'&&String(x.content||'').trim());
-      let prompt='<start_of_turn>user\nSYSTEM INSTRUCTIONS:\n'+String(system).slice(0,2200)+'\n\n';
-      if(turns.length){prompt+=String(turns[0].content||'').slice(0,5000)+'<end_of_turn>\n';for(const turn of turns.slice(1)){const role=['assistant','model','bot','ai'].includes(String(turn.role||'').toLowerCase())?'model':'user';prompt+='<start_of_turn>'+role+'\n'+String(turn.content||'').slice(0,5000)+'<end_of_turn>\n';}}
-      else prompt+='Hello<end_of_turn>\n';
-      prompt+='<start_of_turn>model\n';
+      const chat=[{role:'system',content:String(system).slice(0,2200)},...turns.map(x=>({role:['assistant','model','bot','ai'].includes(String(x.role||'').toLowerCase())?'assistant':'user',content:String(x.content||'').slice(0,5000)}))];
       send('progress',{progress:98,status:'Generating with Google Gemma 3 1B locally'});
-      const output=await generator(prompt,{max_new_tokens:512,do_sample:true,temperature:0.35,top_p:0.9});
-      const response=extractText(output,prompt);
+      const output=await generator(chat,{max_new_tokens:512,do_sample:true,temperature:0.35,top_p:0.9});
+      const response=extractText(output);
       if(!response)throw new Error('Gemma 3 returned an empty answer.');
       send('generated',{id,response,model:MODEL_ID,device:activeDevice});
     }
