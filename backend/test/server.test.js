@@ -25,7 +25,7 @@ test("models endpoint exposes local, light, heavy and image profiles", async () 
     const res = await fetch(base + "/api/models");
     const data = await res.json();
     assert.equal(res.status, 200);
-    assert.deepEqual(data.models.map(x => x.key), ["local", "light", "heavy", "image"]);
+    assert.deepEqual(data.models.map(x => x.key), ["local", "tiny", "light", "heavy", "image"]);
   });
 });
 
