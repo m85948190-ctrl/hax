@@ -5,8 +5,7 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   const PROFILE=profile==='local'?'local':'github';
   const MODEL=PROFILE==='local'?'onnx-community/SmolLM2-135M-Instruct-ONNX-MHA':'onnx-community/SmolLM2-360M-Instruct-ONNX';
   const MODEL_RELEASE=PROFILE==='local'?'local-fast-135m':'kai51-model-latest';
-  const TRAINING_SYNC='/api/kai-training-sync';
-  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v15-creative-fallback':'kai51-github-360m-q4-v35-creative-fallback';
+  const VERSION=PROFILE==='local'?'kai51-local-135m-q4-v16-github-only':'kai51-github-360m-q4-v36-github-only';
   const MODEL_ASSETS=new Set([
     'config.json',
     'generation_config.json',
@@ -19,7 +18,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   ]);
   let DEVICE='wasm';
   let DTYPE='q4';
-  let pipe=null, loading=null, generationChain=Promise.resolve(), trainingPack=null, trainingPromise=null;
+  let pipe=null, loading=null, generationChain=Promise.resolve();
+  let trainingPack={ok:true,canonical:true,source:'github-built-in-defaults',rules:[],examples:[]};
 
   async function disposePipe(){
     const current=pipe;
@@ -30,7 +30,6 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
   }
 
   async function resolveRuntime(){
-    /* Prefer this visitor's GPU only after a real adapter/device probe. Some browsers expose navigator.gpu but cannot create a compatible device; those must fall back cleanly to WASM/Q4. */
     DEVICE='wasm';
     DTYPE='q4';
     try{
@@ -53,31 +52,8 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
     }
   }
 
-  const progress=(progress,status)=>{window.HAxBROKai51EngineDebug={profile:PROFILE,progress,status,at:new Date().toISOString(),device:DEVICE};onProgress({profile:'heavy',progress,status,file:''});};
+  const progress=(progress,status)=>{window.HAxBROKai51EngineDebug={profile:PROFILE,progress,status,at:new Date().toISOString(),device:DEVICE};onProgress({profile:PROFILE,progress,status,file:''});};
 
-  async function loadTrainingPack(){
-    if(trainingPack) return trainingPack;
-    if(trainingPromise) return trainingPromise;
-    trainingPromise=(async()=>{
-      const controller=new AbortController();
-      let timer;
-      try{
-        const request=fetch(TRAINING_SYNC,{headers:{Accept:'application/json'},cache:'no-store',signal:controller.signal});
-        const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>{controller.abort();reject(new Error('training sync timed out after 3.5 seconds'));},3500);});
-        const r=await Promise.race([request,timeout]);
-        if(!r.ok) throw new Error('training sync HTTP '+r.status);
-        const d=await r.json();
-        if(!d?.ok||!d?.canonical) throw new Error('invalid Hatchable training pack');
-        trainingPack=d;
-        try{localStorage.setItem('haxbro:kai51:training-pack',JSON.stringify({savedAt:Date.now(),pack:d}));}catch{}
-        return d;
-      }catch(e){
-        try{const cached=JSON.parse(localStorage.getItem('haxbro:kai51:training-pack')||'null'); if(cached?.pack) return trainingPack=cached.pack;}catch{}
-        return trainingPack={ok:true,canonical:true,source:'HATCHABLE',rules:[] ,examples:[],warning:String(e?.message||e).slice(0,180)};
-      }finally{clearTimeout(timer);trainingPromise=null;}
-    })();
-    return trainingPromise;
-  }
 
   async function prepare(){
     if(pipe) return {ok:true,model:MODEL,device:DEVICE,realModel:true};
@@ -138,8 +114,6 @@ export async function createKai51Engine({onProgress=()=>{},onReady=()=>{},prefer
       env.cacheKey='haxbro-kai51-q4-dual-model-v44';
 
       await resolveRuntime();
-      /* The training pack is optional prompt conditioning; never block model startup on its network request. */
-      if(PROFILE!=='local') await loadTrainingPack();
       progress(15,preferCache
         ? 'Restoring available KAI 51 neural chunks from browser cache'
         : (PROFILE==='local'?'Installing the KAI 51 LOCAL 135M Q4 fast model':'Installing the KAI 51 GITHUB 360M Q4 precision model'));
