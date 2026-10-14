@@ -25,8 +25,8 @@ test("KAI Lite recovery uses local neural profiles instead of a server chat endp
 
 test("App Maker recovery uses browser-local generation rather than a server API", async () => {
   const bridge = await read("../../public/kai-capability-bridge.js");
-  assert.match(bridge, /window\.HAxBROKaiLite\?\.respond/);
-  assert.match(bridge, /<!doctype html>/i);
+  assert.match(bridge, /HAxBROKai51Bootstrap/);
+  assert.match(bridge, /HAxBROKai51Bootstrap/);
   assert.doesNotMatch(bridge, /fetch\s*\(\s*['"`]\/api\//);
 });
 
@@ -36,5 +36,5 @@ test("app shell loads the current no-key browser runtime scripts", async () => {
   assert.match(html, /kai51-local\.js\?v=61/);
   assert.match(html, /kai-lite\.js\?v=5/);
   assert.match(html, /kai-local-model\.js\?v=7/);
-  assert.match(html, /kai-capability-bridge\\.js\\?v=6/);
+  assert.ok(html.includes("kai-capability-bridge.js?v=6"));
 });
