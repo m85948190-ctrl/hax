@@ -105,7 +105,7 @@ async function searchWeb(query) {
   const candidates = outcomes.filter(x => x.status === "fulfilled" && Array.isArray(x.value.results) && x.value.results.length).map(x => x.value);
   if (!candidates.length) throw new Error("Google and Bing returned no usable results");
   const stopWords = new Set(["the","and","for","with","from","what","who","when","where","which","give","include","provide","explain","compare","comparison","difference","differences","trade","off","use","case","example","examples","latest","official","release","source","sources","search","web","database","flow","main","suitable","short","concrete"]);
-  const terms = clean(query, 500).toLowerCase().split(/\\W+/).filter(x => x.length > 2 && !stopWords.has(x));
+  const terms = clean(query, 500).toLowerCase().split(/\W+/).filter(x => x.length > 2 && !stopWords.has(x));
   const score = candidate => candidate.results.reduce((sum, item) => {
     const text = (String(item.title || "") + " " + String(item.text || "")).toLowerCase();
     return sum + terms.reduce((n, term) => n + (text.includes(term) ? 2 : 0), 0) + (String(item.text || "").length > 100 ? 1 : 0);
