@@ -29,6 +29,15 @@ test("routes heavy profile to the 1.7B model", async () => {
   assert.match(call.url, /SmolLM2-1\.7B-Instruct/);
 });
 
+test("routes tiny profile to the requested 30M model", async () => {
+  const result = await generateHuggingFaceText(
+    { prompt: "Say hello", profile: "tiny" },
+    { env: { HF_TOKEN: "test" }, fetchImpl: async () => jsonResponse([{ generated_text: "Hello from the tiny model." }]) }
+  );
+  assert.equal(result.statusCode, 200);
+  assert.equal(result.body.model, "StentorLabs/Stentor-30M-Instruct");
+});
+
 test("routes light profile to the 360M model", async () => {
   const result = await generateHuggingFaceText(
     { prompt: "Say hello", profile: "light" },
