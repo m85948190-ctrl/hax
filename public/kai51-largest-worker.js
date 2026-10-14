@@ -25,14 +25,12 @@ async function load(){
   loading=(async()=>{
     send('progress',{progress:2,status:'Preparing Google Gemma 3 270M Instruct'});
     let firstError=null;
-    const choices=[];
-    if(self.navigator?.gpu)choices.push('webgpu');
-    choices.push('wasm');
+    const choices=['wasm'];
     for(const device of choices){
       try{
         send('progress',{progress:device==='webgpu'?5:50,status:'Loading Gemma 3 270M with '+device.toUpperCase()});
         generator=await pipeline('text-generation',MODEL_ID,{
-          dtype:device==='webgpu'?'q4f16':'q4',
+          dtype:'fp32',
           device,
           progress_callback:progressCallback
         });
