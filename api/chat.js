@@ -1,6 +1,5 @@
 import { complete } from 'lib/core';
 import { KAI_NATIVE_ONLY } from 'lib/kai-native-test-mode';
-import { db } from 'hatchable';
 import { decodeInput, testSuite } from 'lib/kai-decoder';
 import { detectLanguage, speechLocale } from 'lib/kai51-language';
 
@@ -71,7 +70,7 @@ export default async function(req,res){
   const imageData=typeof body.imageData==='string'&&/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(body.imageData)?body.imageData.slice(0,4200000):'';
   if(!prompt&&!imageData)return res.status(400).json({error:'prompt or image required.'});
   if(prompt.length>12000)return res.status(400).json({error:'prompt required (max 12000 characters).'});
-  const urlMatch=prompt.match(/https?:\/\/[^\s<>"')]+/i);  if(urlMatch && /\b(?:investigate|inspect|analy[sz]e|scan|check|look\s+into|x-ray|source\s+code|website|site|link)\b/i.test(prompt)){try{const target=urlMatch[0].replace(/[.,!?;:]+$/,'');const deepxSteps=[{label:'KAI 51 received the investigation request',detail:'public URL detected'},{label:'Sending signal to DEEPX',detail:'KAI 51 → DEEPX handoff'},{label:'Opening public target',detail:target},{label:'Reading response headers and HTML source',detail:'public response only'},{label:'Extracting source structure, scripts, links and metadata',detail:'DEEPX source map'},{label:'Checking exposure and technology signals',detail:'non-destructive analysis'},{label:'Correlating evidence and building report',detail:'structured output'}];const rr=await fetch('https://haxbro.hatchable.site/api/deepx',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'auto',url:target,input:''})});const rd=await rr.json().catch(()=>({}));if(rr.ok&&rd.ok){const r=rd.result||{};const report=['DEEPX INVESTIGATION REPORT','', 'Target: '+(r.target||target),'HTTP status: '+(r.httpStatus??'unknown'),'Technologies: '+((r.technologies||[]).join(', ')||'none detected'),'Public links: '+(r.publicLinks?.length??0),'External scripts: '+(r.scripts?.length??0),'Source size: '+(r.responseSizeBytes??'unknown')+' bytes','', 'Source X-Ray:',JSON.stringify(r.pageXray?.layers||[],null,2),'', 'Security / exposure signals:',JSON.stringify(r.securitySignals||[],null,2),'', 'Source code map:',JSON.stringify(r.sourceCode||{},null,2)].join('\\n');return res.json({response:withChatEmoji('KAI 51 → DEEPX\\n\\n'+report),mode:requestedMode,provider:'DEEPX / KAI 51 LOCAL',model:'DEEPX',responseMs:0,status:'deepx-complete',kaiAgent:'KAI 51',kaiIdentity:'local-first-orchestrator',deepx:true,deepxSteps,deepxReport:r});}}catch(e){console.error('DEEPX handoff error',e)}}
+  const urlMatch=prompt.match(/https?:\/\/[^\s<>"')]+/i);  if(urlMatch && /\b(?:investigate|inspect|analy[sz]e|scan|check|look\s+into|x-ray|source\s+code|website|site|link)\b/i.test(prompt)){try{const target=urlMatch[0].replace(/[.,!?;:]+$/,'');const deepxSteps=[{label:'KAI 51 received the investigation request',detail:'public URL detected'},{label:'Sending signal to DEEPX',detail:'KAI 51 → DEEPX handoff'},{label:'Opening public target',detail:target},{label:'Reading response headers and HTML source',detail:'public response only'},{label:'Extracting source structure, scripts, links and metadata',detail:'DEEPX source map'},{label:'Checking exposure and technology signals',detail:'non-destructive analysis'},{label:'Correlating evidence and building report',detail:'structured output'}];const rr=await fetch(new URL('/api/deepx', (req.headers['x-forwarded-proto'] || 'https') + '://' + (req.headers.host || 'localhost')).toString(),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'auto',url:target,input:''})});const rd=await rr.json().catch(()=>({}));if(rr.ok&&rd.ok){const r=rd.result||{};const report=['DEEPX INVESTIGATION REPORT','', 'Target: '+(r.target||target),'HTTP status: '+(r.httpStatus??'unknown'),'Technologies: '+((r.technologies||[]).join(', ')||'none detected'),'Public links: '+(r.publicLinks?.length??0),'External scripts: '+(r.scripts?.length??0),'Source size: '+(r.responseSizeBytes??'unknown')+' bytes','', 'Source X-Ray:',JSON.stringify(r.pageXray?.layers||[],null,2),'', 'Security / exposure signals:',JSON.stringify(r.securitySignals||[],null,2),'', 'Source code map:',JSON.stringify(r.sourceCode||{},null,2)].join('\\n');return res.json({response:withChatEmoji('KAI 51 → DEEPX\\n\\n'+report),mode:requestedMode,provider:'DEEPX / KAI 51 LOCAL',model:'DEEPX',responseMs:0,status:'deepx-complete',kaiAgent:'KAI 51',kaiIdentity:'local-first-orchestrator',deepx:true,deepxSteps,deepxReport:r});}}catch(e){console.error('DEEPX handoff error',e)}}
   const decoderIntent=/\b(?:decode|decrypt|decipher|encoded|encoding|cipher|ciphertext|base64|rot13|hex|morse|binary|obfuscated)\b/i.test(prompt);
   if(prompt && decoderIntent){
     const decoderHintMatch=prompt.match(/\b(?:using|with|as)\s+(?:the\s+)?(rot13|base64|hex|binary|morse|caesar|atbash|url(?:\s+encoding)?|base32|base58|base85)\b/i);
@@ -96,27 +95,11 @@ export default async function(req,res){
   const localAgent=kaiId?`\n\nKAI-61 LOCAL ID: ${kaiId}. This is only an identifier supplied by the user's browser; do not store it.`:'';
   // Native-only test: preserve provider configuration, but never execute an external model.
   const modelChoice='kai';
-  let astraWindowStarted=null;
-  if(!KAI_NATIVE_ONLY && modelChoice==='astra'){
-    if(!username)return res.status(400).json({error:'Choose a HAxBRO username before using ChatGPT Astra.'});
-    const now=Date.now(),windowMs=2*60*60*1000;
-    const existing=await db.query('SELECT username, window_started_at, request_count FROM haxbro_astra_usage WHERE username = $1',[username]);
-    const row=existing.rows[0];
-    const started=row?new Date(row.window_started_at).getTime():0;
-    if(row&&now-started<windowMs&&Number(row.request_count)>=10){
-      const retryAt=new Date(started+windowMs).toISOString();
-      return res.status(429).json({error:'ChatGPT Astra is limited to 10 requests per 2 hours for each HAxBRO user.',astraLimit:10,astraWindowHours:2,retryAt});
-    }
-    astraWindowStarted=(!row||now-started>=windowMs)?new Date(now).toISOString():new Date(started).toISOString();
-  }
   const modeSystem=requestedMode==='expert'?EXPERT_SYSTEM:requestedMode==='work'?WORK_SYSTEM:NORMAL_SYSTEM;
   const system=BASE_SYSTEM+'\n\n'+modeSystem+'\n\n'+CREATOR_RULE+identity+localAgent+godEngineContext;
   try{
-    const searchMode=body.searchMode==='quick'?'quick':body.searchMode==='deep'?'deep':'normal';
+    const searchMode=body.searchMode==='normal'?'normal':body.searchMode==='quick'?'quick':'deep';
     const result=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:1200,username,history,memory:kaiMemory,imageData,modelChoice,searchMode});
-    if(modelChoice==='astra'&&astraWindowStarted){
-      await db.query('INSERT INTO haxbro_astra_usage (username, window_started_at, request_count, updated_at) VALUES ($1, $2, 1, NOW()) ON CONFLICT (username) DO UPDATE SET window_started_at = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.window_started_at ELSE EXCLUDED.window_started_at END, request_count = CASE WHEN haxbro_astra_usage.window_started_at = EXCLUDED.window_started_at THEN haxbro_astra_usage.request_count + 1 ELSE 1 END, updated_at = NOW()',[username,astraWindowStarted]);
-    }
     const responseText=godEngineRoute ? `GODENGINE RECOMMENDATION — ${godEngineRoute.category}: ${godEngineRoute.label}\n${godEngineRoute.url}\n\n${result.text}` : result.text;
     return res.json({response:withChatEmoji(responseText),mode:requestedMode,provider:result.provider,model:result.model,responseMs:result.elapsedMs,status:result.status,failoverAttempts:result.attempts||[],knowledgeSource:'HAxBRO',kaiAgent:'KAI 51',kaiIdentity:'HAxBRO AI',kaiId:kaiId||null,language,speechLocale:speechLocale(language.code),webSteps:result.sources||[],sources:result.sources||[],knowledgeContext:result.knowledgeContext||null,toolResults:result.knowledgeContext?.toolResults||[],steps:result.steps||[],godEngineResource:godEngineRoute?.label||null});
   }catch(err){
