@@ -2,7 +2,7 @@ name: HAxBRO backend CI
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, haxbro-github-backend-no-vercel-20261014]
     paths:
       - "backend/**"
       - ".github/workflows/backend-ci.yml"
