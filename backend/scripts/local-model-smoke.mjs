@@ -14,8 +14,15 @@ const result = await generator(prompt, {
   do_sample: false,
   return_full_text: false
 });
-const text = String(result?.[0]?.generated_text ?? "").trim();
+const item = Array.isArray(result) ? result[0] : result;
+const generated = item?.generated_text;
+const text = (typeof generated === "string"
+  ? generated
+  : Array.isArray(generated)
+    ? String(generated.filter(message => message?.role === "assistant").at(-1)?.content ?? generated.at(-1)?.content ?? "")
+    : String(item?.text ?? item?.response ?? "")).trim();
 console.log("MODEL:", model);
+console.log("RAW_RESULT_SHAPE:", JSON.stringify(result).slice(0, 1800));
 console.log("GENERATED_TEXT:", text);
 if (!text) throw new Error("The local model returned an empty answer.");
 if (!/\b4\b|four/i.test(text)) {
