@@ -22,8 +22,8 @@ export async function generateHuggingFaceText(
       error: "The LOCAL model runs in the user's browser; call the browser-local engine instead of the server inference endpoint."
     });
   }
-  if (profile !== "heavy" && profile !== "light") {
-    return result(400, { ok: false, error: "profile must be local, light, or heavy." });
+  if (profile !== "heavy" && profile !== "light" && profile !== "tiny") {
+    return result(400, { ok: false, error: "profile must be local, tiny, light, or heavy." });
   }
 
   const token = env.HF_TOKEN || env.HUGGINGFACEHUB_API_TOKEN;
@@ -31,7 +31,9 @@ export async function generateHuggingFaceText(
 
   const model = String(profile === "heavy"
     ? env.HF_HEAVY_TEXT_MODEL || MODEL_REGISTRY.heavy.id
-    : env.HF_LIGHT_TEXT_MODEL || MODEL_REGISTRY.light.id);
+    : profile === "tiny"
+      ? env.HF_TINY_TEXT_MODEL || MODEL_REGISTRY.tiny.id
+      : env.HF_LIGHT_TEXT_MODEL || MODEL_REGISTRY.light.id);
   const endpoint = env.HF_TEXT_ENDPOINT ||
     `https://router.huggingface.co/hf-inference/models/${encodeURIComponent(model).replace(/%2F/gi, "/")}`;
   const controller = new AbortController();
