@@ -98,7 +98,7 @@ export default async function(req,res){
   const modeSystem=requestedMode==='expert'?EXPERT_SYSTEM:requestedMode==='work'?WORK_SYSTEM:NORMAL_SYSTEM;
   const system=BASE_SYSTEM+'\n\n'+modeSystem+'\n\n'+CREATOR_RULE+identity+localAgent+godEngineContext;
   try{
-    const searchMode=body.searchMode==='quick'?'quick':body.searchMode==='deep'?'deep':'normal';
+    const searchMode=body.searchMode==='normal'?'normal':body.searchMode==='quick'?'quick':'deep';
     const result=await complete({system,prompt:imageData?(prompt||'Analyze this image and describe what you see.'):prompt,maxTokens:1200,username,history,memory:kaiMemory,imageData,modelChoice,searchMode});
     const responseText=godEngineRoute ? `GODENGINE RECOMMENDATION — ${godEngineRoute.category}: ${godEngineRoute.label}\n${godEngineRoute.url}\n\n${result.text}` : result.text;
     return res.json({response:withChatEmoji(responseText),mode:requestedMode,provider:result.provider,model:result.model,responseMs:result.elapsedMs,status:result.status,failoverAttempts:result.attempts||[],knowledgeSource:'HAxBRO',kaiAgent:'KAI 51',kaiIdentity:'HAxBRO AI',kaiId:kaiId||null,language,speechLocale:speechLocale(language.code),webSteps:result.sources||[],sources:result.sources||[],knowledgeContext:result.knowledgeContext||null,toolResults:result.knowledgeContext?.toolResults||[],steps:result.steps||[],godEngineResource:godEngineRoute?.label||null});
