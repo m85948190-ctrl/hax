@@ -29,6 +29,32 @@ test("models endpoint exposes local, light, heavy and image profiles", async () 
   });
 });
 
+test("chat endpoint keeps the LOCAL browser lane separate from server inference", async () => {
+  await withServer({ env: {}, fetchImpl: async () => { throw Error("must not fetch"); } }, async base => {
+    const res = await fetch(base + "/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt: "Hello", profile: "local" })
+    });
+    const data = await res.json();
+    assert.equal(res.status, 409);
+    assert.match(data.error, /browser/);
+  });
+});
+
+test("chat endpoint requires runtime HF_TOKEN for remote models", async () => {
+  await withServer({ env: {}, fetchImpl: async () => { throw Error("must not fetch"); } }, async base => {
+    const res = await fetch(base + "/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ prompt: "Hello", profile: "heavy" })
+    });
+    const data = await res.json();
+    assert.equal(res.status, 503);
+    assert.match(data.error, /HF_TOKEN/);
+  });
+});
+
 test("image endpoint returns explicit configuration error without token", async () => {
   await withServer({ env: {}, fetchImpl: async () => { throw Error("must not fetch"); } }, async base => {
     const res = await fetch(base + "/api/images/generate", {
