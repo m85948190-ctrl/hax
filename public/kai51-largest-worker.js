@@ -37,12 +37,9 @@ async function load(){
           progress_callback:progressCallback
         });
         activeDevice=device;
-        send('progress',{progress:96,status:'Checking Gemma 3 270M inference'});
-        const prompt=[{role:'user',content:'Reply with exactly: Gemma 3 local model ready.'}];
-        const out=await generator(prompt,{max_new_tokens:24,do_sample:false});
-        const text=extractText(out);
-        if(!text)throw new Error('Gemma 3 self-test returned no text.');
-        send('progress',{progress:100,status:'Google Gemma 3 270M ready · '+device.toUpperCase()});
+        // Loading the pipeline is enough to report model readiness. Do not generate a hidden
+        // self-test answer here: that extra inference delayed the user's first real message.
+        send('progress',{progress:100,status:'Google Gemma 3 270M loaded · '+device.toUpperCase()});
         return {model:MODEL_ID,device:activeDevice};
       }catch(error){
         firstError=new Error(describeRuntimeError(error,device));

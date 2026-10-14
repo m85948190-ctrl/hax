@@ -149,7 +149,7 @@
     const signal=hooks?.signal;const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};ensureActive();
     if(profile==='largest'){
       hooks.onStage?.('largest','Starting Google Gemma 3 270M Instruct locally');
-      const mod=await import('/kai51-largest-engine.js?v=14');
+      const mod=await import('/kai51-largest-engine.js?v=15');
       const engine=await withTimeout(()=>mod.createKai51LargestEngine({
         onProgress:p=>{try{hooks.onProgress?.(p);emit({...p,profile:'heavy'});}catch{}},
         onReady:info=>{window.HAxBROKai51GemmaState={status:'ready',installed:true,verified:true,model:info?.model||'onnx-community/gemma-3-270m-it-ONNX',updatedAt:new Date().toISOString()};}

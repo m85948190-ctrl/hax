@@ -14,7 +14,7 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
   if(enginePromise)return enginePromise;
   enginePromise=(async()=>{
     emit(onProgress,1,'Checking browser-local Gemma 3 runtime');
-    worker=new Worker('/kai51-largest-worker.js?v=9',{type:'module'});
+    worker=new Worker('/kai51-largest-worker.js?v=10',{type:'module'});
     worker.onmessage=event=>{
       const data=event.data||{};
       if(data.type==='progress'){emit(onProgress,data.progress,data.status,data.file);return;}
