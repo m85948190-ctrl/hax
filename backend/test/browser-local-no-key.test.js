@@ -32,9 +32,9 @@ test("App Maker recovery uses browser-local generation rather than a server API"
 
 test("app shell loads the current no-key browser runtime scripts", async () => {
   const html = await read("../../public/app/index.html");
-  assert.match(html, /kai51-local-engine\.js\?v=75/);
+  assert.ok(html.includes("kai51-local-engine.js?v=75"));
   assert.match(html, /kai51-local\.js\?v=61/);
   assert.match(html, /kai-lite\.js\?v=5/);
-  assert.match(html, /kai-local-model\.js\?v=7/);
+  assert.ok(html.includes("kai-local-model.js?v=8"));
   assert.ok(html.includes("kai-capability-bridge.js?v=6"));
 });
