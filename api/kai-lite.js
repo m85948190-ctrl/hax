@@ -110,19 +110,33 @@ async function firstPartySearch(query) {
 }
 
 async function searchWeb(query) {
+  const stopWords = new Set(["the","and","for","with","from","what","who","when","where","which","give","include","provide","explain","compare","comparison","difference","differences","trade","off","use","case","example","examples","latest","official","release","source","sources","search","web","database","flow","main","suitable","short","concrete","answer","please","about"]);
+  const terms = clean(query, 500).toLowerCase().split(/\W+/).filter(x => x.length > 2 && !stopWords.has(x));
+  const rank = results => (results || []).map(item => {
+    const title = String(item.title || "").toLowerCase();
+    const haystack = (title + " " + String(item.url || "") + " " + String(item.text || "")).toLowerCase();
+    const matches = terms.filter(term => haystack.includes(term)).length;
+    const titleMatches = terms.filter(term => title.includes(term)).length;
+    const required = terms.length >= 2 ? Math.min(2, Math.ceil(terms.length * 0.5)) : 1;
+    return { ...item, _score: matches + titleMatches * 2, _relevant: terms.length > 0 && matches >= required };
+  }).filter(item => item._relevant).sort((a, b) => b._score - a._score).map(({_score,_relevant,...item}) => item);
+
+  // Prefer the first-party combined Google/Bing/Wikipedia search when it has a
+  // genuinely relevant source. Do not let a large pile of unrelated Bing results
+  // outscore one exact Wikipedia result.
+  try {
+    const firstParty = await firstPartySearch(query);
+    const relevant = rank(firstParty.results);
+    if (relevant.length) return { ...firstParty, results: relevant.slice(0, 8) };
+  } catch {}
+
   const outcomes = await Promise.allSettled([
-    firstPartySearch(query),
     googleSearch(query).then(results => ({ engine: "Google Web", results })),
     bingSearch(query).then(results => ({ engine: "Bing Web", results }))
   ]);
-  const candidates = outcomes.filter(x => x.status === "fulfilled" && Array.isArray(x.value.results) && x.value.results.length).map(x => x.value);
-  if (!candidates.length) throw new Error("Google and Bing returned no usable results");
-  const stopWords = new Set(["the","and","for","with","from","what","who","when","where","which","give","include","provide","explain","compare","comparison","difference","differences","trade","off","use","case","example","examples","latest","official","release","source","sources","search","web","database","flow","main","suitable","short","concrete"]);
-  const terms = clean(query, 500).toLowerCase().split(/\W+/).filter(x => x.length > 2 && !stopWords.has(x));
-  const score = candidate => candidate.results.reduce((sum, item) => {
-    const text = (String(item.title || "") + " " + String(item.text || "")).toLowerCase();
-    return sum + terms.reduce((n, term) => n + (text.includes(term) ? 2 : 0), 0) + (String(item.text || "").length > 100 ? 1 : 0);
-  }, 0);
+  const candidates = outcomes.filter(x => x.status === "fulfilled" && Array.isArray(x.value.results) && x.value.results.length).map(x => ({...x.value, results:rank(x.value.results)})).filter(x => x.results.length);
+  if (!candidates.length) throw new Error("Google and Bing returned no relevant results");
+  const score = candidate => Math.max(...candidate.results.map(item => terms.filter(term => (String(item.title||"")+" "+String(item.text||"")).toLowerCase().includes(term)).length));
   candidates.sort((a, b) => score(b) - score(a));
   return candidates[0];
 }
