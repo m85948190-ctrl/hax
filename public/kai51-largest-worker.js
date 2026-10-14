@@ -25,17 +25,19 @@ async function load(){
   loading=(async()=>{
     send('progress',{progress:2,status:'Preparing Google Gemma 3 270M Instruct'});
     let firstError=null;
-    const choices=['wasm'];
+    // Prefer the smaller Q4F16 weights on WebGPU. Only use the proven FP32/WASM path
+    // when this browser cannot initialize the quantized GPU path; do not start with a 1.1 GB download.
+    const choices=['webgpu','wasm'];
     for(const device of choices){
       try{
-        send('progress',{progress:device==='webgpu'?5:50,status:'Loading Gemma 3 270M with '+device.toUpperCase()});
+        send('progress',{progress:device==='webgpu'?5:50,status:device==='webgpu'?'Trying compact Gemma Q4F16 on WebGPU':'GPU path unavailable · trying Gemma FP32 on CPU'});
         generator=await pipeline('text-generation',MODEL_ID,{
-          dtype:'fp32',
+          dtype:device==='webgpu'?'q4f16':'fp32',
           device,
           progress_callback:progressCallback
         });
         activeDevice=device;
-        send('progress',{progress:96,status:'Running Gemma 3 270M self-test'});
+        send('progress',{progress:96,status:'Checking Gemma 3 270M inference'});
         const prompt=[{role:'user',content:'Reply with exactly: Gemma 3 local model ready.'}];
         const out=await generator(prompt,{max_new_tokens:24,do_sample:false});
         const text=extractText(out);
@@ -78,7 +80,8 @@ self.onmessage=async event=>{
       const turns=messages.filter(x=>x&&x.role!=='system'&&String(x.content||'').trim());
       const chat=[{role:'system',content:String(system).slice(0,2200)},...turns.map(x=>({role:['assistant','model','bot','ai'].includes(String(x.role||'').toLowerCase())?'assistant':'user',content:String(x.content||'').slice(0,5000)}))];
       send('progress',{progress:98,status:'Generating with Google Gemma 3 270M locally'});
-      const output=await generator(chat,{max_new_tokens:512,do_sample:true,temperature:0.35,top_p:0.9});
+      // Keep everyday replies short and responsive; users can ask follow-up questions for detail.
+      const output=await generator(chat,{max_new_tokens:96,do_sample:true,temperature:0.35,top_p:0.9});
       const response=extractText(output);
       if(!response)throw new Error('Gemma 3 returned an empty answer.');
       send('generated',{id,response,model:MODEL_ID,device:activeDevice});

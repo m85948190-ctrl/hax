@@ -14,7 +14,7 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
   if(enginePromise)return enginePromise;
   enginePromise=(async()=>{
     emit(onProgress,1,'Checking browser-local Gemma 3 runtime');
-    worker=new Worker('/kai51-largest-worker.js?v=8',{type:'module'});
+    worker=new Worker('/kai51-largest-worker.js?v=9',{type:'module'});
     worker.onmessage=event=>{
       const data=event.data||{};
       if(data.type==='progress'){emit(onProgress,data.progress,data.status,data.file);return;}
@@ -37,11 +37,10 @@ export async function createKai51LargestEngine({onProgress=()=>{},onReady=()=>{}
     // The worker owns the model so a first-use download or inference does not freeze chat UI.
     const info=await Promise.race([
       ask('load'),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Gemma 3 download/initialization is taking too long. Keep this tab open and retry; no remote API was used.')),600000))
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Gemma 3 startup exceeded 180 seconds; stopping this model attempt so chat cannot hang for 10 minutes.')),180000))
     ]);
     if(info?.model!==MODEL_ID)throw new Error('Gemma 3 model identity check failed.');
-    const selfTest=await ask('generate',{messages:[{role:'user',content:'Reply with exactly: Gemma 3 local model ready.'}]});
-    if(!String(selfTest?.response||'').trim())throw new Error('Gemma 3 self-test returned no text.');
+    // The worker already runs and validates one inference during load(); avoid a second cold-start generation here.
     engine={
       model:MODEL_ID,
       async generate(message,history=[],signal){

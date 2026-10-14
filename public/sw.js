@@ -1,11 +1,11 @@
-const CACHE='haxbro-shell-v38';
+const CACHE='haxbro-shell-v39';
 const ASSETS=[
   '/','/index.html','/app/','/app/index.html',
   '/style.css?v=219','/ui-fixes.css?v=218','/responsive-fixes.css?v=218',
   '/script.js?v=387','/work-canvas.js?v=13','/install.js?v=220',
   '/haxbro-cinematic-intro.css?v=3','/haxbro-onboarding.css?v=3','/haxbro-onboarding.js?v=4','/deepx.js?v=2','/onboarding-kai.png','/onboarding-appmaker.png','/onboarding-creation.png','/onboarding-ecosystem.jpg',
-  '/kai-image-worker.js?v=3','/kai51-local.js?v=58','/kai51-local-engine.js?v=72','/kai-local-intelligence.js?v=26',
-  '/kai-lite.js?v=4','/kai51-largest-engine.js?v=13','/kai51-largest-worker.js?v=8','/kai-local-model.js?v=6','/kai-local-ui.js?v=9','/kai51-runtime-indicator.js?v=5',
+  '/kai-image-worker.js?v=3','/kai51-local.js?v=59','/kai51-local-engine.js?v=72','/kai-local-intelligence.js?v=26',
+  '/kai-lite.js?v=4','/kai51-largest-engine.js?v=14','/kai51-largest-worker.js?v=9','/kai-local-model.js?v=6','/kai-local-ui.js?v=9','/kai51-runtime-indicator.js?v=5',
   '/decoding-partner.js?v=3','/encryptor-machine.js?v=1','/deepx.js?v=2','/pro-mode.js?v=1',
   '/workspace-bridge.js?v=1','/kai-predictive-timer.js?v=1','/site.webmanifest?v=744',
   '/logo-symbol.svg?v=753','/terms.html','/privacy.html'

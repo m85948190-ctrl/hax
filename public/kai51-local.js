@@ -149,13 +149,13 @@
     const signal=hooks?.signal;const ensureActive=()=>{if(signal?.aborted)throw new DOMException('Response stopped by user','AbortError')};ensureActive();
     if(profile==='largest'){
       hooks.onStage?.('largest','Starting Google Gemma 3 270M Instruct locally');
-      const mod=await import('/kai51-largest-engine.js?v=13');
+      const mod=await import('/kai51-largest-engine.js?v=14');
       const engine=await withTimeout(()=>mod.createKai51LargestEngine({
         onProgress:p=>{try{hooks.onProgress?.(p);emit({...p,profile:'heavy'});}catch{}},
         onReady:info=>{window.HAxBROKai51GemmaState={status:'ready',installed:true,verified:true,model:info?.model||'onnx-community/gemma-3-270m-it-ONNX',updatedAt:new Date().toISOString()};}
       }),600000,'Google Gemma 3 270M download/initialization');
       ensureActive();
-      const result=await withTimeout(()=>engine.generate(message,history,signal),180000,'Google Gemma 3 270M inference');
+      const result=await withTimeout(()=>engine.generate(message,history,signal),45000,'Google Gemma 3 270M inference');
       ensureActive();
       return {...result,lane:'largest'};
     }
