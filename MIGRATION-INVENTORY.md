@@ -1,6 +1,6 @@
 # HAxBRO Hatchable-to-GitHub Migration Inventory
 
-**Status: inventory only; migration is not complete.** This file is based on the current Hatchable project file listing for project `proj_cPoy7TbTYZPq` (version 1175) on 2026-10-14. It intentionally does not change the live frontend or disable existing routes.
+**Status: inventory only; migration is not complete. Vercel is explicitly excluded.** This file is based on the current Hatchable project file listing for project `proj_cPoy7TbTYZPq` (version 1175) on 2026-10-14. It intentionally does not change the live frontend or disable existing routes.
 
 ## Snapshot
 - Total files listed: 296
@@ -10,7 +10,7 @@
 - Registered deployed API functions reported by Hatchable: 96 (includes route aliases and framework-generated pages, so this is not necessarily a 1:1 count of API source files).
 
 ## Migration rule
-GitHub becomes the source of truth for source code, tool implementations, tests, model assets/release references, and deployment workflows. The current public frontend stays at `https://haxbro.hatchable.site`. Do not switch the frontend API base until replacement endpoints are deployed and smoke-tested. Do not delete or disable current Hatchable functions before parity checks.
+GitHub becomes the source of truth for backend source code, tool implementations, tests, model assets/release references, and CI automation. Vercel is not part of the plan. The current public frontend stays at `https://haxbro.hatchable.site`. GitHub Actions can test and package the code but is not a permanent API server; a non-Vercel runtime must be selected before the frontend can call the replacement API. Do not switch the frontend API base until replacement endpoints are deployed and smoke-tested. Do not delete or disable current Hatchable functions before parity checks.
 
 ## Backend API source files
 - `api/admin/stats.js`
@@ -307,5 +307,5 @@ The scan also found a provider request in `api/kai/builder-agent.js` and `api/ul
 7. Change only the frontend API base/config after tests pass; keep the existing public URL and UI.
 8. Retain a rollback path until production traffic is verified.
 
-## Current KAI backend draft caveats
+## Current KAI backend draft caveats (runtime-neutral migration still required)
 The existing PR #2 adds a server-side `/api/chat` draft and retrieval code, but it does not port the full set of backend routes. It also requires a configured model endpoint/token and has not been verified end-to-end. Do not mark this migration complete based on syntax checks or a successful deploy command alone.
