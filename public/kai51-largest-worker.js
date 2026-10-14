@@ -28,7 +28,7 @@ async function load(){
       try{
         send('progress',{progress:device==='webgpu'?5:50,status:'Loading Gemma 3 1B with '+device.toUpperCase()});
         generator=await pipeline('text-generation',MODEL_ID,{
-          dtype:'q4',
+          dtype:device==='webgpu'?'q4f16':'q4',
           device,
           progress_callback:progressCallback
         });
