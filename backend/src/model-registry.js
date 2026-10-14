@@ -6,18 +6,18 @@
  */
 export const MODEL_REGISTRY = Object.freeze({
   local: Object.freeze({
-    id: "onnx-community/gemma-3-270m-it-ONNX",
-    label: "KAI LOCAL · Gemma 3 270M",
-    parameters: "270M",
+    id: "onnx-community/SmolLM2-135M-Instruct-ONNX-MHA",
+    label: "KAI LOCAL · SmolLM2 135M",
+    parameters: "135M",
     execution: "browser-local",
     task: "text-generation",
-    source: "https://huggingface.co/onnx-community/gemma-3-270m-it-ONNX"
+    source: "https://huggingface.co/onnx-community/SmolLM2-135M-Instruct-ONNX-MHA"
   }),
   tiny: Object.freeze({
     id: "StentorLabs/Stentor-30M-Instruct",
     label: "KAI TINY · Stentor 30M",
     parameters: "30.4M",
-    execution: "hugging-face-inference",
+    execution: "model-catalog-only-not-yet-browser-compatible",
     task: "text-generation",
     source: "https://huggingface.co/StentorLabs/Stentor-30M-Instruct"
   }),
@@ -33,7 +33,7 @@ export const MODEL_REGISTRY = Object.freeze({
     id: "HuggingFaceTB/SmolLM2-1.7B-Instruct",
     label: "KAI HEAVY · SmolLM2 1.7B",
     parameters: "1.7B",
-    execution: "browser-local-or-configured-hugging-face-runtime",
+    execution: "remote-inference-requires-token-or-separate-local-runtime",
     task: "text-generation",
     source: "https://huggingface.co/HuggingFaceTB/SmolLM2-1.7B-Instruct"
   }),
