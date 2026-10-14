@@ -36,5 +36,5 @@ test("app shell loads the current no-key browser runtime scripts", async () => {
   assert.match(html, /kai51-local\.js\?v=61/);
   assert.match(html, /kai-lite\.js\?v=5/);
   assert.match(html, /kai-local-model\.js\?v=7/);
-  assert.match(html, /kai-capability-bridge\.js\?v=5/);
+  assert.match(html, /kai-capability-bridge\\.js\\?v=6/);
 });
