@@ -40,8 +40,8 @@
     return next;
   };
 
-  const ENGINE_VERSION='kai51-github-360m-q4-v35-creative-fallback';
-  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v15-creative-fallback';
+  const ENGINE_VERSION='kai51-github-360m-q4-v36-github-only';
+  const LOCAL_ENGINE_VERSION='kai51-local-135m-q4-v16-github-only';
   if(window.HAxBROKai51Engine && window.HAxBROKai51Engine.version!==ENGINE_VERSION){
     window.HAxBROKai51Engine=null;
     window.__HAxBROKai51EnginePromise=null;
