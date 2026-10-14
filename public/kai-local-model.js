@@ -25,11 +25,11 @@
     const bootstrap = window.HAxBROKai51Bootstrap;
     if (!bootstrap?.generate) throw new Error('KAI 51 browser-local runtime is not loaded.');
     const current = status();
-    if (current.ready && bootstrap.generate) {
+    if ((current.ready || current.status === 'ready' || current.verified) && bootstrap.generate) {
       try { return await bootstrap.generate(q, history, options, 'local'); }
       catch (error) {
         if (error?.name === 'AbortError') throw error;
-        return window.HAxBROKaiLite?.respond?.(q, history, options);
+        return await window.HAxBROKaiLite?.respond?.(q, history, options);
       }
     }
     return window.HAxBROKaiLite?.respond?.(q, history, options);
