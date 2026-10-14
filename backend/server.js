@@ -2,6 +2,7 @@ import { createServer as nodeCreateServer } from "node:http";
 import { health } from "./src/health.js";
 import { describeModelProfiles } from "./src/model-registry.js";
 import { handleHuggingFaceImageRequest } from "./src/hf-image.js";
+import { generateHuggingFaceText } from "./src/hf-text.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
 const ALLOWED_ORIGIN_DEFAULT = "https://haxbro.hatchable.site";
@@ -58,6 +59,18 @@ export function createHaxbroServer({ env = process.env, fetchImpl = globalThis.f
         headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
         body: { ok: true, models: describeModelProfiles() }
       });
+    }
+    if (url.pathname === "/api/chat" && req.method === "POST") {
+      try {
+        const input = await readJson(req);
+        return send(res, await generateHuggingFaceText(input, { env, fetchImpl }));
+      } catch (error) {
+        return send(res, {
+          statusCode: error.statusCode || 400,
+          headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+          body: { ok: false, error: error.statusCode === 413 ? "Request body too large." : String(error.message || "Invalid request").slice(0, 300) }
+        });
+      }
     }
     if (url.pathname === "/api/images/generate" && req.method === "POST") {
       try {
